@@ -1,0 +1,43 @@
+By Titku.
+SEKRIT!!!
+This level is so sekrit you will never ever find it ever. Especially not by turning on "see the unseeable" and noticing the win object that leads here on level3. (That does remind me, "see the unseeable" should probably force tiles like fakeblack to show as something unique and recognizably fake. Well... Coming Soon! tm)
+Also, fun fact: This level is the reason the MUSIC and OPTIONS sections were originally added to leveldata, and why the "pauseold" option was added. Seriously!
+===MAP===
+                    ~           
+     ~                          
+  WW    WW   WWWWWW    WWWWWW ~ 
+~ %%    %%  W%%~ %%W  W%%  %%W  
+  %% WW %%  %%    %%  %%  ~ %%  
+//%%/%% %% /%%////%%  %%  //%%//
+///%W%%W%///%%W//W%%//%%W//W%%//
+///%%//%%////%%WW%%////%%WW%%///
+////////////////////////////////
+/..//..//..//..//..//..//..//../
+########################/..//../
+BBBBBBBBBBBBBBBBBBBBBBB#######./
+B####################BBBBBBBB###
+B#..................#BBBBBBBBBBB
+B#..CCCC.CCCC.C..C..#BBBBBBBBBBB
+B#..C....C....C.C...#BBBBBBBBBBB
+B#...CC..CC...CC....#BBBBBBBBBBB
+B#.....C.C....C.C...###########B
+B#..CCCC.CCCC.C..C............#B
+B#............................#B
+B#..CCCC.CCC.CCC.C............#B
+B#..C..C..C...C..C..#########.#B
+B#..CCC...C...C..C..#BBBBBBB#.#B
+B#..C..C..C...C.....#BBBBBBB#.#B
+B#..C..C.CCC..C..C..#BBBBBBB#.#B
+B#..................#BBBBBBB#.#B
+B####################BBBBBBB#.#B
+BBBBBBBBBBBBBBBBBBBBBBBBBBBB#.#B
+BBBBBBBBBBBBBBBBBBBBBBBBB####.#B
+####################BBBBB#.P..#B
+%%%%%%%%%%%%%%%%%%%#BBBBB#.####B
+%%%%%%%%%%%%%%%%%%%#BBBBB#1#BBBB
+===EXITS===
+level3alt
+===MUSIC===
+roller 1
+===OPTIONS===
+pauseold
