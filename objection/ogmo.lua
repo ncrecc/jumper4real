@@ -97,7 +97,7 @@ function ogmo:setup(x, y, options)
 			gost = true
 		end
 	end
-	if not gost then playeramt = playeramt + 1 end
+	if not gost then game.playeramt = game.playeramt + 1 end
 	return ogmo:new(x, y, tilesize, tilesize, gost)
 end
 
@@ -216,7 +216,7 @@ function ogmo:movement(dt)
 		self.y = self.y_clamped
 	end
 	
-	if self.y > 512 then self:die()
+	if self.y > 512 then self:die() end
 end
 
 function ogmo:keypressed(key)
@@ -235,12 +235,12 @@ function ogmo:jump()
 			self.tempfriction = self.walljumptempfriction
 			self.tempfrictiontimer = self.walljumptempfrictiontimer
 		end
-		if not self.gost then music:playsfx("ogmo jump") end
+		if not self.gost then audio.playsfx("ogmo jump") end
 		self.justjumped = true
 	elseif self.jumps > 0 then
 		self.vmom = (self.vmom * self.jumpzaniness) - self.jumpheight
 		self.jumps = self.jumps - 1
-		if not self.gost then music:playsfx("ogmo jump") end
+		if not self.gost then audio.playsfx("ogmo jump") end
 		self.justjumped = true
 	end
 end
@@ -248,18 +248,18 @@ end
 function ogmo:die(vanish) --"vanish" arg is for if you are gost's block and you've been touched by an ogmo
 	if not self.alive then print ("todo: you died, but you're already dead? figure this out. postmovecollision is being called after you're already dead") else
 		if vanish then
-			music:playsfx("gostblock vanish")
+			audio.playsfx("gostblock vanish")
 			print("gost's block vanished")
 		end
-		if not self.gost then music:playsfx("ogmo die") end
+		if not self.gost then audio.playsfx("ogmo die") end
 		self.alive = false
 		self.solid = false
 		if not self.gost then
-			liveplayeramt = liveplayeramt - 1
-			if liveplayeramt > 0 then print("ogmo is dead! players remaining: " .. liveplayeramt) end
+			game.liveplayeramt = game.liveplayeramt - 1
+			if game.liveplayeramt > 0 then print("ogmo is dead! players remaining: " .. game.liveplayeramt) end
 		elseif not vanish then
-			for i=1, #loadedobjects do
-				obj = loadedobjects[i]
+			for i=1, #game.loadedobjects do
+				obj = game.loadedobjects[i]
 				if obj.type == "ogmo" and not obj.gost then
 					obj:die()
 					break
@@ -274,16 +274,16 @@ function ogmo:draw()
 		if not self.gost then love.graphics.draw(graphics:load("ogmo"), self.x_clamped, self.y_clamped)
 		else love.graphics.draw(graphics:load("gostsblock"), self.x_clamped, self.y_clamped) end
 	end
-	--if playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
+	--if game.playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
 end
 
 function ogmo:horiCollision(checkonly)
 --90% of this and vertcollision are hot garbage and make no sense but work correctly if all objects/tiles are the same height and width as ogmo
 	checkonly = checkonly or false
-	for y_tiled=1, #tilemap do
-		for x_tiled=1, #tilemap[y_tiled] do
-			for i=1, #tilemap[y_tiled][x_tiled] do
-				if tiles[tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height) then
+	for y_tiled=1, #game.tilemap do
+		for x_tiled=1, #game.tilemap[y_tiled] do
+			for i=1, #game.tilemap[y_tiled][x_tiled] do
+				if tiles[game.tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height) then
 					if (self.hmom > 0) and (((x_tiled - 1) * tilesize) > (self.x + self.width - 1)) then --checks that ogmo is heading right and the left surface of the tile is to the right of the right surface of ogmo
 						if (math.abs(((x_tiled - 1) * tilesize) - (self.x + self.width - 1)) - 1 <= (math.abs(self.hmom))) then --checks that absolute distance between left surface of tile and right surface of ogmo is less than ogmo's absolute momentum.
 							if not checkonly then
@@ -308,8 +308,8 @@ function ogmo:horiCollision(checkonly)
 			end
 		end
 	end
-	for i=1, #loadedobjects do
-		obj = loadedobjects[i]
+	for i=1, #game.loadedobjects do
+		obj = game.loadedobjects[i]
 		--gost's block shouldn't collide with ogmos
 		if not (self.gost and obj.type == "ogmo") then
 			if obj.solid and (math.abs(((obj.y) - self.y)) < self.height) then
@@ -341,10 +341,10 @@ end
 
 function ogmo:vertCollision(checkonly)
 	checkonly = checkonly or false
-	for y_tiled=1, #tilemap do
-		for x_tiled=1, #tilemap[y_tiled] do
-			for i=1, #tilemap[y_tiled][x_tiled] do
-				if tiles[tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((x_tiled - 1) * tilesize) - self.x)) < self.width) then
+	for y_tiled=1, #game.tilemap do
+		for x_tiled=1, #game.tilemap[y_tiled] do
+			for i=1, #game.tilemap[y_tiled][x_tiled] do
+				if tiles[game.tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((x_tiled - 1) * tilesize) - self.x)) < self.width) then
 					if (self.vmom > 0) and (((y_tiled - 1) * tilesize) > (self.y + self.height - 1)) then
 						if (math.abs(((y_tiled - 1) * tilesize) - (self.y + self.height - 1)) - 1 <= (math.abs(self.vmom))) then
 							if not checkonly then
@@ -369,8 +369,8 @@ function ogmo:vertCollision(checkonly)
 			end
 		end
 	end
-	for i=1, #loadedobjects do
-		obj = loadedobjects[i]
+	for i=1, #game.loadedobjects do
+		obj = game.loadedobjects[i]
 		--gost's block shouldn't collide with non-gost ogmos
 		if not (self.gost and (obj.type == "ogmo" and not obj.gost)) then
 			if obj.solid and (math.abs(((obj.x) - self.x)) < self.width) then
@@ -402,10 +402,10 @@ end
 
 function ogmo:postmoveCollision(checkonly)
 	checkonly = checkonly or false
-	for y_tiled=1, #tilemap do
-		for x_tiled=1, #tilemap[y_tiled] do
-			for i=1, #tilemap[y_tiled][x_tiled] do
-				if tiles[tilemap[y_tiled][x_tiled][i]].deathly then
+	for y_tiled=1, #game.tilemap do
+		for x_tiled=1, #game.tilemap[y_tiled] do
+			for i=1, #game.tilemap[y_tiled][x_tiled] do
+				if tiles[game.tilemap[y_tiled][x_tiled][i]].deathly then
 				--	if(self.y > ((y - 1) * tilesize)) and (self.y < (((y - 1) * tilesize) + tilesize - 1)) then
 				--		if(self.x > ((x - 1) * tilesize)) and (self.x < (((x - 1) * tilesize) + tilesize - 1)) then
 					if math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height then
@@ -419,8 +419,8 @@ function ogmo:postmoveCollision(checkonly)
 			end
 		end
 	end
-	for i=1, #loadedobjects do
-		obj = loadedobjects[i]
+	for i=1, #game.loadedobjects do
+		obj = game.loadedobjects[i]
 		if obj.deathly or (self.gost and obj.type == "ogmo" and not obj.gost) then
 			--if(self.y > (obj.y)) and (self.y < (obj.y + obj.height - 1)) then
 			--	if(self.x > (obj.x)) and (self.x < (obj.x + obj.width - 1)) then

@@ -16,7 +16,7 @@ function ashley:init(x, y, red, fast)
 end
 
 function ashley:setup(x, y, options)
-	playeramt = playeramt + 1
+	game.playeramt = game.playeramt + 1
 	red = false
 	fast = false
 	for i=1, #options do
@@ -32,8 +32,8 @@ end
 function ashley:die()
 	self.alive = false
 	self.solid = false
-	liveplayeramt = liveplayeramt - 1
-	if liveplayeramt > 0 then print("ashley is dead! players remaining: " .. liveplayeramt) end
+	game.liveplayeramt = game.liveplayeramt - 1
+	if game.liveplayeramt > 0 then print("ashley is dead! players remaining: " .. game.liveplayeramt) end
 end
 
 function ashley:update()

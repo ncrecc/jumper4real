@@ -2,21 +2,24 @@
 tilesize = 16
 scale = 2
 
+require "hex2color"
 require "class"
 require "split"
-require "music"
+require "audio"
 require "levelsymbols"
 require "tiles"
 require "graphics"
 
 require "game"
+require "textfield"
+require "button"
 require "menu_substates"
 require "menu"
 require "editor_pages"
 require "editor"
 require "statemachine"
 
-math.randomseed(os.time())
+--math.randomseed(os.time())
 
 objects = {}
 objectfiles = love.filesystem.getDirectoryItems("objection")
@@ -69,7 +72,8 @@ if universalsettingsfile ~= nil then
 	end
 else
 	--Randomize the Choice variable the very first time the player starts the game, which should lead to some interesting results and reinforce that there is no canonical Choice value!
-	local choicerand = math.random()
+--	local choicerand = math.random()
+	local choicerand = love.math.random(0, 1)
 	if choicerand == 0 then choicerand = false
 	else choicerand = true end
 	universalsettings.choice = choicerand
@@ -79,17 +83,35 @@ end
 function love.load()
 	statemachine.setstate("menu")
 	if not universalsettings.playaudio then love.audio.setVolume(0) end
-	if not universalsettings.playsfx then music:changesfxvolume(0) end
-	if not universalsettings.playmusic then music:changemusicvolume(0) end
+	if not universalsettings.playsfx then audio.changesfxvolume(0) end
+	if not universalsettings.playmusic then audio.changemusicvolume(0) end
 end
 
 function love.update(dt)
-	music:update()
+	audio.update()
 	statemachine.currentstate.update(dt)
 end
 
 function love.keypressed(key)
 	statemachine.currentstate.keypressed(key)
+end
+
+function love.mousepressed(x, y, button)
+	if statemachine.currentstate.mousepressed ~= nil then
+		statemachine.currentstate.mousepressed(x, y, button)
+	end
+end
+
+function love.mousereleased(x, y, button)
+	if statemachine.currentstate.mousereleased ~= nil then
+		statemachine.currentstate.mousereleased(x, y, button)
+	end
+end
+
+function love.textinput(t)
+	if statemachine.currentstate.textinput ~= nil then
+		statemachine.currentstate.textinput(t)
+	end
 end
 
 function love.draw()

@@ -1,47 +1,47 @@
-playeramt = 0
-liveplayeramt = 0
-loadedobjects = {}
-leveloptions = {}
-mapname = ""
-exits = {}
-currentlevelset = ""
-currentsong = ""
-map = {}
-tilemap = {} --multiple tiles actually can go on each coordinate so each square here is represented by a table
-
 game = {
+	playeramt = 0,
+	liveplayeramt = 0,
+	loadedobjects = {},
+	leveloptions = {},
+	mapname = "",
+	exits = {},
+	currentlevelset = "",
+	currentsong = "",
+	map = {},
+	tilemap = {}, --multiple tiles actually can go on each coordinate so each square here is represented by a table
+	cliquemode = false
 }
 
 function game.begin()
-	map, tilemap, exits, currentsong, leveloptions = game.loadLevel(currentlevelset .. "/" .. mapname)
-	music:play(currentsong, false)
+	game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
+	audio.play(game.currentsong, false)
 end
 
 function game.update(dt)
 	--[=[
 	for i=1, #objectnamelist do
-		if loadedobjects[objectnamelist[i]] ~= nil then
-			for ii=1, #loadedobjects[objectnamelist[i]] do
-				loadedobjects[objectnamelist[i]][ii]:update()
+		if game.loadedobjects[objectnamelist[i]] ~= nil then
+			for ii=1, #game.loadedobjects[objectnamelist[i]] do
+				game.loadedobjects[objectnamelist[i]][ii]:update()
 			end
 		end
 	end
 	]=]
-	for i=1, #loadedobjects do
-		if loadedobjects[i] then --briefly after loading a level, all contents of loadedobjects are set to nil - loadedobjects = {} seems first to set contents to nil and then clear it very slightly later. calling garbage collection early doesn't help with this
-			loadedobjects[i]:update()
+	for i=1, #game.loadedobjects do
+		if game.loadedobjects[i] then --briefly after loading a level, all contents of game.loadedobjects are set to nil - game.loadedobjects = {} seems first to set contents to nil and then clear it very slightly later. calling garbage collection early doesn't help with this
+			game.loadedobjects[i]:update()
 		end
 	end
-	if liveplayeramt == 0 then
+	if game.liveplayeramt == 0 then
 		print("all players are dead! :( reinitializing map")
-		map, tilemap, exits = game.loadLevel(currentlevelset .. "/" .. mapname)
+		game.map, game.tilemap, game.exits = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
 	end
 end
 
 function game.keypressed(key)
-	for i=1, #loadedobjects do
-		if loadedobjects[i].keyreactions and loadedobjects[i].keyreactions[key] then
-			loadedobjects[i]:keypressed(key)
+	for i=1, #game.loadedobjects do
+		if game.loadedobjects[i].keyreactions and game.loadedobjects[i].keyreactions[key] then
+			game.loadedobjects[i]:keypressed(key)
 		end
 	end
 	if key == "escape" then
@@ -56,15 +56,15 @@ end
 
 function game.draw()
 	--ok i'll try to break this down step-by-step for future me's convenience
-	--tilemap is like map but instead of containing just symbols it just contains the tile names the symbols would point to
-	--for each row in the tilemap:
-	for y_tiled=1, #tilemap do
+	--game.tilemap is like map but instead of containing just symbols it just contains the tile names the symbols would point to
+	--for each row in the game.tilemap:
+	for y_tiled=1, #game.tilemap do
 		--for each entry of the row
-		for x_tiled=1, #tilemap[y_tiled] do
+		for x_tiled=1, #game.tilemap[y_tiled] do
 			--for each tile in the entry (each entry can have multiple tiles)
-			for i=1, #tilemap[y_tiled][x_tiled] do
+			for i=1, #game.tilemap[y_tiled][x_tiled] do
 				--make this less typing to reference later
-				local tilename = tilemap[y_tiled][x_tiled][i]
+				local tilename = game.tilemap[y_tiled][x_tiled][i]
 				--now we're actually using the tile as a key for the "tiles" array from tiles.lua, there was actually a redundant for loop here that couldn't have iterated through anything that i caught by commentating this
 				local tile = tiles[tilename]
 				--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
@@ -82,19 +82,19 @@ function game.draw()
 			end
 		end
 	end
-	for i=1, #loadedobjects do
-		loadedobjects[i]:draw()
+	for i=1, #game.loadedobjects do
+		game.loadedobjects[i]:draw()
 	end
 end
 
 function game.loadLevel(levelfilename)
-	--[[for i=1, #loadedobjects do
-		for ii=1, #loadedobjects[i] do
-			loadedobjects[i][ii]:obliterate()
+	--[[for i=1, #game.loadedobjects do
+		for ii=1, #game.loadedobjects[i] do
+			game.loadedobjects[i][ii]:obliterate()
 		end
 	end]]
-	playeramt = 0
-	loadedobjects = {}
+	game.playeramt = 0
+	game.loadedobjects = {}
 	--collectgarbage()
 	levelfile = love.filesystem.read("levelling/"..levelfilename..".txt")
 	if levelfile == nil then print "hey your level file ain't jack shit" end
@@ -164,8 +164,8 @@ function game.loadLevel(levelfilename)
 				--print("hi! some debug info: " .. obj .. ", " .. x_tiled .. ", " .. y_tiled .. ", " .. options[1] .. ", " .. options[2] .. ". there you go :)") ----crashes if there are no options but shhhh
 				--print(obj)
 				--print(#options)
-				--print(loadedobjects)
-				table.insert(loadedobjects, objects[obj]:setup((x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize, options))
+				--print(game.loadedobjects)
+				table.insert(game.loadedobjects, objects[obj]:setup((x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize, options))
 			end
 			local temptilesarray = {}
 			for i=1, #levelsymbols[newmap[y_tiled][x_tiled]].tiles do
@@ -174,7 +174,7 @@ function game.loadLevel(levelfilename)
 			table.insert(newtilemap[y_tiled], temptilesarray)
 		end
 	end
-	liveplayeramt = playeramt
+	game.liveplayeramt = game.playeramt
 	
 	
 	--exitscontent parsing
@@ -193,34 +193,36 @@ function game.loadLevel(levelfilename)
 end
 
 function game.win(number)
-	print ("won! time to load " .. currentlevelset .. "/" .. exits[number])
-	mapname = exits[number]
-	if mapname == "WINLEVELSET" then
+	if number == nil then number = 1 end
+	print ("won! time to load " .. game.currentlevelset .. "/" .. game.exits[number])
+	game.mapname = game.exits[number]
+	if game.mapname == "WINLEVELSET" then
 		print("YOU WON THE LEVELSET!!!!!")
 		statemachine.setstate("menu")
-		mapname = "actuallevel"
+		game.mapname = "actuallevel"
 	else
-		map, tilemap, exits, currentsong, leveloptions = game.loadLevel(currentlevelset .. "/" .. exits[number])
+		game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions = game.loadLevel(game.currentlevelset .. "/" .. game.exits[number])
 		local pauseold = false
 		local playevenifsame = false
 		--note that playold and playevenifsame are probably naturally mutually exclusive
-		for i=1, #leveloptions do
-			if leveloptions[i] == "pauseold" then
+		for i=1, #game.leveloptions do
+			if game.leveloptions[i] == "pauseold" then
 				pauseold = true
-			elseif leveloptions[i] == "playevenifsame" then
+			elseif game.leveloptions[i] == "playevenifsame" then
 				playevenifsame = true
 			end
 		end
-		if currentsong ~= music.activesong or playevenifsame then
-			music:play(currentsong, false, pauseold)
+		if game.currentsong ~= audio.activesong or playevenifsame then
+			audio.play(game.currentsong, false, pauseold)
 		end
 	end
 end
 
 function game.stop()
-	loadedobjects = {}
-	map = {}
-	tilemap = {}
-	mapname = "actuallevel"
-	currentlevelset = "levelset1"
+	game.loadedobjects = {}
+	game.map = {}
+	game.tilemap = {}
+	game.mapname = "actuallevel"
+	game.currentlevelset = "levelset1"
+	game.cliquemode = false
 end

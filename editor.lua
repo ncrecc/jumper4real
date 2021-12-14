@@ -6,8 +6,64 @@ editor = {
 	addedheight = tilesize * 4,
 	addedwidth = tilesize * 4,
 	tilebaroffset_x = tilesize,
-	tilebaroffset_y = tilesize
+	tilebaroffset_y = tilesize,
+	currentpath = "awesomelevelset/level1",
+	currenttool = "pencil",
+	originalmousepress = nil,
+	eyedropperused = false,
+	--tools is a *numeric* and thus specifically ordered table used to generate tool buttons in order.
+	--toolbindings is a table that just matches keys to tool names, for keybindings. its order does not matter.
+	--this kind of is writing everything twice but i'm not sure what would be a better solution if i want to be able to just do toolbindings[key] in keypressed instead of iterating something
+	tools = {
+		"pencil",
+		"eyedropper",
+		"rectangle",
+		"fillrectangle",
+		"fill"
+	},
+	toolbindings = {
+		["c"] = "pencil",
+		["e"] = "eyedropper",
+		["r"] = "rectangle",
+		["t"] = "fillrectangle",
+		["f"] = "fill"
+	},
+	tooltipScale = 0.75,
+	tooltip = nil,
+	hoveredelement = nil
 }
+editor.textfields = {
+	textfield:setup(256, 528, 160, 16, "saveload", "currentpath", "The level that should be saved to with Ctrl+S, or loaded with Ctrl+L.")
+}
+editor.focusedfield = nil
+
+editor.buttons = {
+	
+}
+
+local tooltips = { --thank you again to titku for writing these. i swear she's just always sitting in cocon waiting for me to almost write some stupid placeholders so she can make them less stupid lol -bert
+	["pencil"] = "Pencil: Place a single tile at the spot you click on. Hotkey: C",
+	["fill"] = "Fill: Fill a contiguous space with one type of tile. Hotkey: F",
+	["eyedropper"] = "Eyedropper: Retrieve the tile at the spot you click on. Hotkey: E",
+	["rectangle"] = "Rectangle: Efficiently draw a rectangular outline. Hotkey: R",
+	["fillrectangle"] = "Filled rectangle: Efficiently draw a filled rectangle. Hotkey: T"
+}
+
+for i, v in ipairs(editor.tools) do
+	table.insert(editor.buttons, button:setup(
+		528 + (16 * ((i - 1) % 2)),
+		16 + (16 * (math.floor((i - 1) / 2))),
+		v,
+		v,
+		function(self) editor.currenttool = v end,
+		function(self)
+			if editor.currenttool == v then
+				self.depressed = true
+			else self.depressed = false end
+		end,
+		tooltips[v]
+	))
+end
 
 function editor.loadLevel(levelfilename) --this one's a bit different than game's loadlevel because it directly receives the level symbols
 	levelfile = love.filesystem.read(levelfilename..".txt")
@@ -63,36 +119,132 @@ function editor.loadLevel(levelfilename) --this one's a bit different than game'
 	return newsymbolmap, newexits, newmusic, newoptions
 end
 
+function editor.packLevel()
+	levelfile = "===MAP===\r\n"
+	for i=1, #editor.symbolmap do
+		for ii=1, #editor.symbolmap[i] do
+			levelfile = levelfile .. editor.symbolmap[i][ii]
+		end
+		levelfile = levelfile .. "\r\n"
+	end
+	levelfile = levelfile .. "===EXITS===\r\n"
+	for i=1, #editor.exits do
+		if editor.exits[i] ~= "" then levelfile = levelfile .. editor.exits[i] .. "\r\n" end
+	end
+	levelfile = levelfile .. "===MUSIC===\r\n" .. editor.music .. "\r\n"
+	levelfile = levelfile .. "===OPTIONS===\r\n"
+	--print("there's options")
+	--print(#editor.options)
+	for i=1, #editor.options do
+		if editor.options[i] ~= "" then levelfile = levelfile .. editor.options[i] .. "\r\n" end
+	end
+	return levelfile
+end
+
 editor.symbolmap, editor.exits, editor.music, editor.options = editor.loadLevel("defaultlevel")
 
 function editor.begin()
 	love.window.updateMode(512 + editor.addedwidth, 512 + editor.addedheight)
-	music:play("groove")
+	audio.play("groove")
 end
 
 function editor.update(dt)
-	if love.mouse.isDown(1, 2, 3) then
-		local x, y = love.mouse.getPosition()
-		if y < 512 and x < 512 then
-			local x_tiled = 1 + math.floor(x / tilesize)
-			local y_tiled = 1 + math.floor(y / tilesize)
+	editor.hoveredelement = nil
+	editor.tooltip = nil
+	local xpos, ypos = love.mouse.getPosition()
+	if ypos < 512 and xpos < 512 then
+		local xpos_tiled = 1 + math.floor(xpos / tilesize)
+		local ypos_tiled = 1 + math.floor(ypos / tilesize)
+		local mousedtile = editor.symbolmap[ypos_tiled][xpos_tiled]
+		if love.mouse.isDown(1, 2, 3) then
+			
 			local tile = nil
 			if love.mouse.isDown(1) then tile = editor.lmbtile
 			elseif love.mouse.isDown(2) then tile = editor.rmbtile
-			elseif love.mouse.isDown(3) then tile = editor.mmbtile end
-			editor.symbolmap[y_tiled][x_tiled] = tile
-		elseif x < 512 then
-			local x_tiled_fortilebar = 1 + math.floor((x - editor.tilebaroffset_x) / tilesize)
-			local y_tiled_fortilebar = 1 + math.floor((y - 512 - editor.tilebaroffset_y) / tilesize)
+			elseif love.mouse.isDown(3) then tile = editor.mmbtile
+			else tile = editor.lmbtile end
 			
-			if editor_pages[editor.page][y_tiled_fortilebar] ~= nil then
-				if editor_pages[editor.page][y_tiled_fortilebar][x_tiled_fortilebar] ~= nil then
-					local symbol = editor_pages[editor.page][y_tiled_fortilebar][x_tiled_fortilebar]
-					if love.mouse.isDown(1) then editor.lmbtile = symbol
-					elseif love.mouse.isDown(2) then editor.rmbtile = symbol
-					elseif love.mouse.isDown(3) then editor.mmbtile = symbol end
+			
+			
+			if editor.currenttool == "pencil" then
+				editor.symbolmap[ypos_tiled][xpos_tiled] = tile
+			
+			
+			elseif editor.currenttool == "fill" then
+				local step = 0
+				local replacetile = mousedtile
+				if tile ~= replacetile then
+					editor.symbolmap[ypos_tiled][xpos_tiled] = "fill"
+					while step < 1000 do
+						local nofillsdone = true
+						for y_tiled=1, #editor.symbolmap do
+							for x_tiled=1, #editor.symbolmap[y_tiled] do
+								if editor.symbolmap[y_tiled][x_tiled] == replacetile then
+									if
+										(y_tiled > 1 and editor.symbolmap[y_tiled - 1][x_tiled] == "fill") or
+										(y_tiled < #editor.symbolmap[y_tiled] and editor.symbolmap[y_tiled + 1][x_tiled] == "fill") or
+										(x_tiled > 1 and editor.symbolmap[y_tiled][x_tiled - 1] == "fill") or
+										(x_tiled < #editor.symbolmap[x_tiled] and editor.symbolmap[y_tiled][x_tiled + 1] == "fill")
+									then
+										editor.symbolmap[y_tiled][x_tiled] = "fill"
+										nofillsdone = false
+									end
+								end
+							end
+						end
+						if nofillsdone then break end
+						step = step + 1
+					end
+					if step == 1000 then print("fill went on too long") end
+					for y_tiled=1, #editor.symbolmap do
+						for x_tiled=1, #editor.symbolmap[y_tiled] do
+							if editor.symbolmap[y_tiled][x_tiled] == "fill" then
+								editor.symbolmap[y_tiled][x_tiled] = tile
+							end
+						end
+					end
 				end
+			
+			
 			end
+		end
+		if editor.currenttool == "eyedropper" then
+			editor.tooltip = levelsymbols[mousedtile].tooltip
+			if love.mouse.isDown(1, 2, 3) then editor.eyedropperused = true end
+			if love.mouse.isDown(1) then editor.lmbtile = mousedtile
+			elseif love.mouse.isDown(2) then editor.rmbtile = mousedtile
+			elseif love.mouse.isDown(3) then editor.mmbtile = mousedtile end
+		end
+	else
+		local xpos_tiled_fortilebar = 1 + math.floor((xpos - editor.tilebaroffset_x) / tilesize)
+		local ypos_tiled_fortilebar = 1 + math.floor((ypos - 512 - editor.tilebaroffset_y) / tilesize)
+		
+		if editor_pages[editor.page][ypos_tiled_fortilebar] ~= nil then
+			if editor_pages[editor.page][ypos_tiled_fortilebar][xpos_tiled_fortilebar] ~= nil then
+				local symbol = editor_pages[editor.page][ypos_tiled_fortilebar][xpos_tiled_fortilebar]
+				editor.tooltip = levelsymbols[symbol].tooltip
+				if love.mouse.isDown(1) then editor.lmbtile = symbol end
+				if love.mouse.isDown(2) then editor.rmbtile = symbol end
+				if love.mouse.isDown(3) then editor.mmbtile = symbol end
+			end
+		end
+	end
+	for i=1, #editor.buttons do
+		local button = editor.buttons[i]
+		if button.onUpdate then
+			button:onUpdate()
+		end
+		if xpos >= (button.x) and xpos <= (button.x + button.width) and
+		   ypos >= (button.y) and ypos <= (button.y + button.height) then
+			editor.hoveredelement = button
+			editor.tooltip = button.tooltip
+		end
+	end
+	for i=1, #editor.textfields do
+		local field = editor.textfields[i]
+		if xpos >= (field.x) and xpos <= (field.x + field.width) and
+		   ypos >= (field.y) and ypos <= (field.y + field.height) then
+			editor.tooltip = field.tooltip
 		end
 	end
 end
@@ -101,6 +253,117 @@ function editor.keypressed(key)
 	if key == "escape" then
 		statemachine.setstate("menu")
 		menu.picker = 3
+	end
+	if editor.focusedfield == nil then
+		if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and key == "s" then
+			local levelfile = editor.packLevel()
+			--love.filesystem.write("boink.txt",levelfile)
+			local pathuptolevel = ""
+			local pathuptoleveltemp = split(editor.currentpath, "/")
+			for i=1, #pathuptoleveltemp - 1 do
+				pathuptolevel = pathuptolevel .. pathuptoleveltemp[i]
+				if i ~= #pathuptoleveltemp - 1 then pathuptolevel = pathuptolevel .. "/" end
+			end
+			if pathuptolevel == "" then
+				print("saving, but since you didn't specify a folder this won't be playable...")
+			else
+				love.filesystem.createDirectory("ext_levelling/" .. pathuptolevel)
+			end
+			local success, message = love.filesystem.write("ext_levelling/" .. editor.currentpath .. ".txt",levelfile)
+			if success then
+				print("saved to " .. editor.currentpath .. ".txt!")
+			else
+				print("save failed. " .. message)
+			end
+		elseif editor.toolbindings[key] ~= nil then
+			editor.currenttool = editor.toolbindings[key]
+		end
+	else
+		if key == "backspace" then
+			local field = editor.focusedfield
+			editor[field.textsource] = string.sub(editor[field.textsource], 1, -2)
+		end
+	end
+end
+
+function editor.mousepressed(x, y, button)
+	if editor.originalmousepress == nil then editor.originalmousepress = {["x"] = x, ["y"] = y} end
+	if editor.focusedfield ~= nil then editor.focusedfield.focus = false end
+	editor.focusedfield = nil
+	love.keyboard.setKeyRepeat(false)
+	if x > 512 or y > 512 then
+		if button == 1 then
+			for i=1, #editor.textfields do
+				local field = editor.textfields[i]
+				if x >= (field.x) and x <= (field.x + field.width) and
+				   y >= (field.y) and y <= (field.y + field.height) then
+					editor.focusedfield = field
+					field.focus = true
+					love.keyboard.setKeyRepeat(true)
+					break
+				end
+			end
+			for i=1, #editor.buttons do
+				local button = editor.buttons[i]
+				if x >= (button.x) and x <= (button.x + button.width) and
+				   y >= (button.y) and y <= (button.y + button.height) then
+					button:action()
+					break
+				end
+			end
+		end
+	end
+end
+
+function editor.mousereleased(x, y, button)
+	if x < 512 and y < 512 then
+		if editor.eyedropperused and editor.currenttool == "eyedropper" and not love.mouse.isDown(1, 2, 3) then
+			editor.currenttool = "pencil"
+		end
+	end
+	if not love.mouse.isDown(1, 2, 3) then
+		if(editor.currenttool == "rectangle" or editor.currenttool == "fillrectangle") then
+			for y_tiled=1, #editor.symbolmap do
+				for x_tiled=1, #editor.symbolmap[y_tiled] do
+					local mousex, mousey = love.mouse.getPosition()
+					local mousex_tiled = 1 + math.floor(mousex / tilesize)
+					local origmousex_tiled = 1 + math.floor(editor.originalmousepress.x / tilesize)
+					local mousey_tiled = 1 + math.floor(mousey / tilesize)
+					local origmousey_tiled = 1 + math.floor(editor.originalmousepress.y / tilesize)
+					local rectcondition = true
+					if editor.currenttool == "rectangle" then rectcondition = (
+						x_tiled == mousex_tiled or
+						x_tiled == origmousex_tiled or
+						y_tiled == mousey_tiled or
+						y_tiled == origmousey_tiled
+					); end
+					
+					if (rectcondition)
+						and not
+					((x_tiled < mousex_tiled and x_tiled < origmousex_tiled) or
+						(x_tiled > mousex_tiled and x_tiled > origmousex_tiled) or
+						(y_tiled < mousey_tiled and y_tiled < origmousey_tiled) or
+						(y_tiled > mousey_tiled and y_tiled > origmousey_tiled))
+					then
+						local tile = nil
+						if button == 1 then tile = editor.lmbtile
+						elseif button == 2 then tile = editor.rmbtile
+						elseif button == 3 then tile = editor.mmbtile
+						else tile = editor.lmbtile end
+						editor.symbolmap[y_tiled][x_tiled] = tile
+					end
+				end
+			end
+		end
+		editor.eyedropperused = false
+		editor.originalmousepress = nil
+	end
+end
+
+function editor.textinput(t)
+	if editor.focusedfield ~= nil then
+		local field = editor.focusedfield
+		editor[field.textsource] = editor[field.textsource] .. t
 	end
 end
 
@@ -152,6 +415,37 @@ function editor.draw()
 		--for each entry of the row
 		for x_tiled=1, #editor.symbolmap[y_tiled] do
 			editor.drawSymbol(editor.symbolmap[y_tiled][x_tiled], (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+			if love.mouse.isDown(1, 2, 3) and editor.originalmousepress ~= nil and (editor.currenttool == "rectangle" or editor.currenttool == "fillrectangle") then
+				local mousex, mousey = love.mouse.getPosition()
+				local mousex_tiled = 1 + math.floor(mousex / tilesize)
+				local origmousex_tiled = 1 + math.floor(editor.originalmousepress.x / tilesize)
+				local mousey_tiled = 1 + math.floor(mousey / tilesize)
+				local origmousey_tiled = 1 + math.floor(editor.originalmousepress.y / tilesize)
+				local rectcondition = true
+				if editor.currenttool == "rectangle" then rectcondition = (
+					x_tiled == mousex_tiled or
+					x_tiled == origmousex_tiled or
+					y_tiled == mousey_tiled or
+					y_tiled == origmousey_tiled
+				); end
+				
+				if (rectcondition)
+					and not
+				   ((x_tiled < mousex_tiled and x_tiled < origmousex_tiled) or
+					(x_tiled > mousex_tiled and x_tiled > origmousex_tiled) or
+					(y_tiled < mousey_tiled and y_tiled < origmousey_tiled) or
+					(y_tiled > mousey_tiled and y_tiled > origmousey_tiled))
+				then
+					love.graphics.setColor(1, 1, 0, 0.5)
+					local tile = nil
+					if love.mouse.isDown(1) then tile = editor.lmbtile
+					elseif love.mouse.isDown(2) then tile = editor.rmbtile
+					elseif love.mouse.isDown(3) then tile = editor.mmbtile
+					else tile = editor.lmbtile end
+					editor.drawSymbol(tile, (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+					love.graphics.setColor(r, g, b, a)
+				end
+			end
 		end
 	end
 	for i=1, #editor_pages[editor.page] do
@@ -165,8 +459,18 @@ function editor.draw()
 			for iii=1, #selectgraphics do love.graphics.draw(graphics:load(selectgraphics[iii]), ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512) end
 		end
 	end
+	for i=1, #editor.textfields do
+		editor.textfields[i]:draw()
+	end
+	for i=1, #editor.buttons do
+		editor.buttons[i]:draw()
+	end
+	if editor.tooltip ~= nil then
+		love.graphics.printf(editor.tooltip, 0, love.graphics.getHeight() - 16, (love.graphics.getWidth() / editor.tooltipScale), "center", 0, editor.tooltipScale)
+	end
 end
 
 function editor.stop()
 	love.window.updateMode(512, 512)
+	love.keyboard.setKeyRepeat(false)
 end

@@ -37,7 +37,8 @@ menu_substates = {
 		onUpdate = function() end,
 		linedistance = 40,
 		offsetfromleft = 192,
-		offsetfromtop = 96
+		offsetfromtop = 96,
+		showlogo = true
 	},
 	["settings"] = {
 		options = {
@@ -61,21 +62,21 @@ menu_substates = {
 				tooltip = "Play sound effects?",
 				action = function()
 					if universalsettings["playsfx"] then
-						music:changesfxvolume(1)
+						audio.changesfxvolume(1)
 					else
-						music:changesfxvolume(0)
+						audio.changesfxvolume(0)
 					end
 				end
 			},
 			[2] = {
-				name = "music: ",
+				name = "audio. ",
 				vartoggle = "playmusic",
 				tooltip = "Play the sweet music?",
 				action = function()
 					if universalsettings["playmusic"] then
-						music:changemusicvolume(1)
+						audio.changemusicvolume(1)
 					else
-						music:changemusicvolume(0)
+						audio.changemusicvolume(0)
 					end
 				end
 			},
@@ -126,8 +127,8 @@ menu_substates = {
 					name = levelsetinfo[1],
 					tooltip = levelsetinfo[2],
 					action = function()
-						currentlevelset = thislevelset --not clear that mapname and currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
-						mapname = firstmap
+						game.currentlevelset = thislevelset --not clear that game.mapname and game.currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
+						game.mapname = firstmap
 						statemachine.setstate("game")
 					end
 				}
@@ -136,19 +137,29 @@ menu_substates = {
 			local ii = 1
 			while ii <= #ext_levelsets do
 				local thislevelset = ext_levelsets[ii]
-				local levelsetinfo = split(love.filesystem.read("levelling/" .. thislevelset .. "/LEVELINFO.txt"), "\r\n")
-				local firstmap = levelsetinfo[3]
-				menu.options[i] = {
-					name = levelsetinfo[1],
-					tooltip = levelsetinfo[2],
-					action = function()
-						currentlevelset = thislevelset --not clear that mapname and currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
-						mapname = firstmap
-						statemachine.setstate("game")
-					end
-				}
-				ii = ii + 1
+				if love.filesystem.getInfo("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt") ~= nil then
+					local levelsetinfo = split(love.filesystem.read("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt"), "\r\n")
+					local firstmap = levelsetinfo[3]
+					menu.options[i] = {
+						name = levelsetinfo[1],
+						tooltip = levelsetinfo[2],
+						action = function()
+							game.currentlevelset = thislevelset --not clear that game.mapname and game.currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
+							game.mapname = firstmap
+							statemachine.setstate("game")
+						end
+					}
+				else
+					menu.options[i] = {
+						name = thislevelset,
+						tooltip = "Hm. Either this it a standalone level (not yet supported), or a levelset with bad levelset info.",
+						alpha = 0.5,
+						action = function()
+						end
+					}
+				end
 				i = i + 1
+				ii = ii + 1
 			end
 			table.sort(menu.options, function(a,b) return a.name < b.name end)
 			menu.options[i] = {
@@ -193,7 +204,7 @@ menu_substates = {
 				name = "play",
 				tooltip = "Select a levelset to play.", --thx to titku for making me not write something stupid here
 				action = function()
-					statemachine.setstate("game")
+					menu.changeSubstate("levelsets")
 				end
 			},
 			[2] = {
