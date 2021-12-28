@@ -78,6 +78,10 @@ function menu.keypressed(key)
 		end
 		option.action()
 	end
+	if key == "backspace" then
+		menu.cheatcode = ""
+		menu.cheatcodetimer = 0
+	end
 end
 
 function menu.textinput(t)
@@ -93,6 +97,12 @@ function menu.textinput(t)
 	elseif menu.cheatcode == "ransom" then
 		if audio.activesong ~= "ransom in the sand" then
 			audio.play("ransom in the sand", true)
+		end
+		menu.cheatcodetimer = 0
+		menu.cheatcode = ""
+	elseif menu.cheatcode == "boing" then
+		if audio.activesong ~= "boing" then
+			audio.play("boing", true)
 		end
 		menu.cheatcodetimer = 0
 		menu.cheatcode = ""

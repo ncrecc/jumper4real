@@ -377,12 +377,13 @@ function editor.drawSymbol(realsymbol, x, y)
 		--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
 		if tile.gfxoverride then
 			for ii=1, #tile.gfxoverride do
-				love.graphics.draw(graphics:load(tile.gfxoverride[ii]), x, y)
+				love.graphics.draw(graphics:load(tile.gfxoverride[ii]), x + tile.gfxoverrideoffsets[ii][1], y + tile.gfxoverrideoffsets[ii][2])
 			end
 		else
-			love.graphics.draw(graphics:load(tilename), x, y)
+			love.graphics.draw(graphics:load(tilename), x + tile.gfxoffsets[1], y + tile.gfxoffsets[2])
 		end
 	end
+	
 	for i=1, #symbol.objects do
 		local objectname = symbol.objects[i]
 		local options = {}

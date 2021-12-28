@@ -23,7 +23,7 @@ function win:update(checkonly)
 	checkonly = checkonly or false
 	for i=1, #game.loadedobjects do
 		obj = game.loadedobjects[i]
-		if obj ~= nil and obj.type == "ogmo" and not obj.gost then
+		if obj ~= nil and obj.player and not obj.gost then
 			if math.abs(((obj.y) - self.y)) < self.height then
 				if math.abs(((obj.x) - self.x)) < self.width then
 					if not checkonly then

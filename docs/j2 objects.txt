@@ -1,0 +1,69 @@
+basics:
+✓ ogmo
+✓ wall
+✓ bg
+✓ spikeballs
+✓ stage end/stage goto/end sector (still needs "if on edge of map, requires you to pass edge")
+x spikes (precise hitbox)
+x short spikes (precise hitbox, ducking)
+
+j2e basics:
+x jump arrow
+x blue diamond
+x red diamond
+x moving platform
+x crate
+x iron crate
+x jump block
+x fragile jump block
+x crate jump block
+x conveyors
+x falling block
+x explosive block
+x ghost surfaces
+x gold star
+x black star
+x purple star
+x platform reverser
+x shooter
+x fast shooter
+x fragile shooter
+x gray door
+x button
+x green door
+x star door
+x teleporters/targets (green, red, blue)
+x switchblocks/switchspikes/switch
+x crumble blocks
+x electricity/electric switch
+
+j2e hazards:
+x cannons
+x fire cannons
+x sentries
+
+j2e help blocks:
+x help blocks
+
+j2e decorations:
+x ice
+x particle emitter which sounds like a pain in the ass (love handles particle stuff apparently)
+x fake above/below (only fake below is in currently and it's a manual thing)
+x make invisible
+
+j2 base game only:
+x wall ice (makes walljumping impossible)
+x walkyspikes (move around spikes like bugs in chip's challenge do)
+x tnt (destroys adjacent tiles when hit from above with crate)
+x follower block
+x spiky follower block
+
+j1 & jumper redux:
+✓ ghost block
+x falling spikes
+x gravity up item
+x gravity down item
+x oneway follower block (does this refer to the platforms that move when you step on them?)
+x moving fireballs stopped by stoppers
+x orange doors (joining with ghost block opens them)
+x yellow doors (opens when all arrows in the stage are activated at once)

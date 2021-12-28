@@ -18,6 +18,8 @@ function audio.stop()
 			song.loop:stop()
 		end
 	end
+	audio.activesong = nil
+	audio.activesongoneshot = false
 end
 
 function audio.pause()
@@ -94,12 +96,14 @@ end
 
 function audio.changemusicvolume(vol)
 	audio.musicvolume = vol
-	song = audio.loadedsongs[audio.activesong]
-	if audio.activesongoneshot then
-		song:setVolume(vol)
-	else
-		if song.intro ~= nil then song.intro:setVolume(vol) end
-		song.loop:setVolume(vol)
+	if audio.activesong ~= nil and audio.loadedsongs[audio.activesong] ~= nil then
+		song = audio.loadedsongs[audio.activesong]
+		if audio.activesongoneshot then
+			song:setVolume(vol)
+		else
+			if song.intro ~= nil then song.intro:setVolume(vol) end
+			song.loop:setVolume(vol)
+		end
 	end
 end
 
@@ -116,4 +120,9 @@ function audio.update()
 			song.loop_playing = true
 		end
 	end
+	if audio.activesongoneshot and not audio.loadedsongs[audio.activesong]:isPlaying() then
+		print("stopping " .. audio.activesong)
+		audio.stop()
+	end
+	
 end

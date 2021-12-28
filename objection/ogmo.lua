@@ -27,8 +27,44 @@ ogmo = class:new()
 -]]
 
 ogmo.quads = {}
+ogmo.quaddefs = {
+	"idle",
+	"idleblink",
+	"duck",
+	"duckblink",
+	"walkright1",
+	"walkright2",
+	"walkright3",
+	"walkright4",
+	"walkleft1",
+	"walkleft2",
+	"walkleft3",
+	"walkleft4",
+	"jump1",
+	"jump2",
+	"jump3",
+	"jump4",
+	"jumpright1",
+	"jumpright2",
+	"jumpright3",
+	"jumpright4",
+	"jumpleft1",
+	"jumpleft2",
+	"jumpleft3",
+	"jumpleft4",
+	"fall",
+	"fallright",
+	"fallleft",
+	"lookup",
+	"ded",
+	"dedright",
+	"dedleft",
+	"lookupblink",
+	"gost"
+}
 for i=0, 32 do --32 instead of 31. yes, we're starting at 0 and for loop syntax is inclusive in lua, so starting at 0 and iterating to 32 means we get 33 elements, but there is a 33rd element! gost's block, an object that acts like an additional ogmo and causes another ogmo to die when it dies
-	table.insert(ogmo.quads, love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160))
+	--table.insert(ogmo.quads, love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160))
+	ogmo.quads[ogmo.quaddefs[i + 1]] = love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160)
 end
 
 function ogmo.editorimg(options)
@@ -44,6 +80,7 @@ end
 
 function ogmo:init(x, y, width, height, gost)
 	self.type = "ogmo"
+	self.player = true
 	self.keyreactions = {
 		["up"] = true
 	}
@@ -82,12 +119,22 @@ function ogmo:init(x, y, width, height, gost)
 	self.tempfrictiontimer = 0
 	self.walljumptempfrictiontimer = 24
 	self.walljumptempfrictionphaseouttimer = 12 --todo: make separate tempfrictionphaseouttimer an actual thing
-	self.grounded = false
+	self.grounded = "none"
 	self.walled = "none"
+	self.extraverticalbits = {}
+	self.extrahorizontalbits = {}
 	self.justjumped = false
 	
+	self.gfxoffsets = {0, 0}
+	
 	--QUAD TIME
-	self.currentquad = 1
+	self.currentquad = "idle"
+	
+	self.animtimer = 128
+	self.animtimertoblink = 128
+	self.animtimertounblink = 4
+	self.animtimertostep = 4
+	self.animtimertotumble = 3
 end
 
 function ogmo:setup(x, y, options)
@@ -102,11 +149,103 @@ function ogmo:setup(x, y, options)
 end
 
 function ogmo:update(dt)
-	if self.alive then self:movement(dt) end
+	if self.alive then
+		self:movement(dt)
+		--major, game-breaking glitch in the following code: if you time your ducks or unducks frame perfectly, you can avoid blinking ever while idling/ducking, thus making you a monster depriving ogmo of sleep
+		self.animtimer = self.animtimer - 1
+		
+		if self.vmom < 0 then
+			if string.sub(self.currentquad, 1, 4) ~= "jump" then
+				self.currentquad = "jump1"
+				self.animtimer = self.animtimertotumble
+			end
+			jumpnum = tonumber(string.sub(self.currentquad, -1, -1))
+			if not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
+				if love.keyboard.isDown("right") then self.currentquad = "jumpright" .. jumpnum
+				elseif love.keyboard.isDown("left") then self.currentquad = "jumpleft" .. jumpnum end
+			end
+			if self.animtimer <= 0 and not(jumpnum == 1 and self.vmom > -0.5) then
+				local jump = string.sub(self.currentquad, 1, -2)
+				jumpnum = jumpnum + 1
+				if jumpnum > 4 then jumpnum = 1 end
+				self.currentquad = jump .. tostring(jumpnum)
+				self.animtimer = self.animtimertotumble
+			end
+		elseif self.vmom > 0 then
+			self.currentquad = "fall"
+			if not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
+				if love.keyboard.isDown("right") then self.currentquad = "fallright"
+				elseif love.keyboard.isDown("left") then self.currentquad = "fallleft" end
+			end
+		else
+			if self.ducking and string.sub(self.currentquad, 1, 4) ~= "duck" then
+				if string.sub(self.currentquad, 1, 4) ~= "idle" then self.animtimer = self.animtimertoblink end
+				self.currentquad = "duck"
+			end
+			
+			if not self.ducking and not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
+				if love.keyboard.isDown("right") and string.sub(self.currentquad, 1, -2) ~= "walkright" then
+					self.currentquad = "walkright1"
+					self.animtimer = self.animtimertostep
+				elseif love.keyboard.isDown("left") and string.sub(self.currentquad, 1, -2) ~= "walkleft" then
+					self.currentquad = "walkleft1"
+					self.animtimer = self.animtimertostep
+				end
+			end
+			
+			if string.sub(self.currentquad, 1, 4) ~= "idle" and not self.ducking and ((love.keyboard.isDown("right") and love.keyboard.isDown("left")) or not (love.keyboard.isDown("right") or love.keyboard.isDown("left"))) then
+				if string.sub(self.currentquad, 1, 4) ~= "duck" then self.animtimer = self.animtimertoblink end
+				self.currentquad = "idle"
+			end
+			
+			if self.animtimer <= 0 then
+				if self.currentquad == "idle" then
+					self.currentquad = "idleblink"
+					self.animtimer = self.animtimertounblink
+				elseif self.currentquad == "idleblink" then
+					self.currentquad = "idle"
+					self.animtimer = self.animtimertoblink
+				elseif self.currentquad == "duck" then
+					self.currentquad = "duckblink"
+					self.animtimer = self.animtimertounblink
+				elseif self.currentquad == "duckblink" then
+					self.currentquad = "duck"
+					self.animtimer = self.animtimertoblink
+				elseif string.sub(self.currentquad, 1, -2) == "walkright" or string.sub(self.currentquad, 1, -2) == "walkleft" then
+					local walk = string.sub(self.currentquad, 1, -2)
+					local walknum = tonumber(string.sub(self.currentquad, -1, -1))
+					walknum = walknum + 1
+					if walknum > 4 then walknum = 1 end
+					self.currentquad = walk .. tostring(walknum)
+					self.animtimer = self.animtimertostep
+				end
+			end
+		end
+	end
+end
+
+function ogmo:notWalkingRight()
+	if ((self.ducking) or
+		(not love.keyboard.isDown("right")) or
+		(love.keyboard.isDown("left") and love.keyboard.isDown("right")))
+	then
+		return true
+	end
+	return false
+end
+
+function ogmo:notWalkingLeft()
+	if ((self.ducking) or
+		(not love.keyboard.isDown("left")) or
+		(love.keyboard.isDown("left") and love.keyboard.isDown("right")))
+	then
+		return true
+	end
+	return false
 end
 
 function ogmo:movement(dt)
-	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of being counteracting the player moving against their current momentum but forgetting to apply the same hasrhness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste
+	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of counteracting the player moving against their current momentum but forgetting to apply the same hasrhness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste
 	if self.tempfrictiontimer ~= 0 and self.tempfriction == nil then
 		self.tempfrictiontimer = 0
 	end
@@ -123,7 +262,7 @@ function ogmo:movement(dt)
 		self.oldtempfriction = nil
 		self.tempfriction = nil
 	end
-	if not(love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
+	if not self.ducking and not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
 		if love.keyboard.isDown("right") and self.hmom < self.maxspeed then
 			
 			oldhmom = self.hmom
@@ -140,7 +279,7 @@ function ogmo:movement(dt)
 		end
 	end
 	
-	if not love.keyboard.isDown("right") and self.hmom > 0 then
+	if self:notWalkingRight() and self.hmom > 0 then
 		if self.tempfriction ~= nil then
 			self.hmom = self.hmom - self.tempfriction
 		else
@@ -150,7 +289,7 @@ function ogmo:movement(dt)
 			self.tempfriction = nil
 			self.hmom = 0
 		end
-	elseif not love.keyboard.isDown("left") and self.hmom < 0 then
+	elseif self:notWalkingLeft() and self.hmom < 0 then
 		if self.tempfriction ~= nil then
 			self.hmom = self.hmom + self.tempfriction
 		else
@@ -176,27 +315,85 @@ function ogmo:movement(dt)
 		self.vmom = self.vmom_min
 	end
 	
-	applyhfirst = true
+	local applyhfirst = true
 	if math.abs(self.vmom) > math.abs(self.hmom) then
 		applyhfirst = false
 	end
 	
-	oldgroundedtemp = self.grounded
+	local oldgroundedtemp = self.grounded
+	
+	local collisionfunctions = {
+		horizontal = function()
+			local newposition
+			local colliders
+			
+			self.walled, newposition, colliders = mobtools.doCollisionScan("horizontal", self)
+			local gostignorecollide = false
+			if self.gost then
+				gostignorecollide = true
+				for k,collider in ipairs(colliders) do
+					if collider.type ~= "ogmo" then
+						gostignorecollide = false
+						break
+					end
+				end
+			end
+			
+			if newposition == nil or gostignorecollide then
+				self.x = self.x + self.hmom
+			else
+				self.hmom = 0
+				self.tempfriction = nil
+				self.x = newposition
+			end
+		end,
+		
+		vertical = function()
+			local newposition
+			local colliders
+			
+			self.grounded, newposition, colliders = mobtools.doCollisionScan("vertical", self)
+			local gostignorecollide = false
+			if self.gost then
+				gostignorecollide = true
+				for k,collider in ipairs(colliders) do
+					if collider.type ~= "ogmo" then
+						gostignorecollide = false
+						break
+					end
+				end
+			end
+			if newposition == nil or gostignorecollide then
+				self.y = self.y + self.vmom
+			else
+				self.vmom = 0
+				self.y = newposition
+				if self.grounded == "down" then
+					self.jumps = self.defaultjumps
+					self.tempfriction = nil
+				end
+			end
+		end
+	}
 	
 	if applyhfirst then
-		self.walled = self:horiCollision()
-		self.x = self.x + self.hmom
-		self.grounded = self:vertCollision()
-		self.y = self.y + self.vmom
+		collisionfunctions.horizontal()
+		collisionfunctions.vertical()
 	else
-		self.grounded = self:vertCollision()
-		self.y = self.y + self.vmom
-		self.walled = self:horiCollision()
-		self.x = self.x + self.hmom
+		collisionfunctions.vertical()
+		collisionfunctions.horizontal()
 	end
-	self:postmoveCollision()
 	
-	if self.justjumped == false and oldgroundedtemp == true and self.grounded == false then
+	local overlaps = mobtools.doOverlapScan(self)
+	for k,v in ipairs(overlaps) do
+		if(v.deathly) then
+			self:die()
+		elseif(v.type == "ogmo" and not v.gost and self.gost) then
+			self:die(true)
+		end
+	end
+	
+	if self.justjumped == false and oldgroundedtemp == "down" and self.grounded == "none" then
 		self.jumps = self.jumps - 1
 	end
 	
@@ -204,6 +401,19 @@ function ogmo:movement(dt)
 	
 	--self.x = self.x + self.hmom
 	--self.y = self.y + self.vmom
+	
+	if not self.gost then --gost's block can't duck. you can use this to your advantage
+		if love.keyboard.isDown("down") and self.grounded == "down" and not self.ducking then
+			self.ducking = true
+			self.height = 13
+			self.y = self.y + 3
+		end
+		if ((self.grounded == "none") or (not love.keyboard.isDown("down"))) and self.ducking then
+			self.ducking = false
+			self.height = 16
+			self.y = self.y - 3
+		end
+	end
 	
 	self.x_clamped = math.floor(self.x + .5)
 	self.y_clamped = math.floor(self.y + .5)
@@ -216,15 +426,15 @@ function ogmo:movement(dt)
 		self.y = self.y_clamped
 	end
 	
-	if self.y > 512 then self:die() end
+	if self.y > game.levelheight then self:die() end
 end
 
 function ogmo:keypressed(key)
-	if key == "up" then self:jump() end
+	if key == "up" and self.alive then self:jump() end
 end
 
 function ogmo:jump()
-	if self.grounded == false and self.walled ~= "none" then
+	if self.grounded ~= "down" and self.walled ~= "none" then
 		self.vmom = (self.vmom * self.jumpzaniness) - self.walljumpheight
 		if self.walled == "left" then
 			self.hmom = self.walljumpspeed
@@ -271,170 +481,12 @@ end
 
 function ogmo:draw()
 	if self.alive then
-		if not self.gost then love.graphics.draw(graphics:load("ogmo"), self.x_clamped, self.y_clamped)
-		else love.graphics.draw(graphics:load("gostsblock"), self.x_clamped, self.y_clamped) end
+		local duckoffset = 0
+		if self.currentquad == "duck" or self.currentquad == "duckblink" then duckoffset = -3 end
+		if not self.gost then love.graphics.draw(graphics:load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, self.y_clamped + duckoffset)
+		else love.graphics.draw(graphics:load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, self.y_clamped) end
 	end
 	--if game.playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
-end
-
-function ogmo:horiCollision(checkonly)
---90% of this and vertcollision are hot garbage and make no sense but work correctly if all objects/tiles are the same height and width as ogmo
-	checkonly = checkonly or false
-	for y_tiled=1, #game.tilemap do
-		for x_tiled=1, #game.tilemap[y_tiled] do
-			for i=1, #game.tilemap[y_tiled][x_tiled] do
-				if tiles[game.tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height) then
-					if (self.hmom > 0) and (((x_tiled - 1) * tilesize) > (self.x + self.width - 1)) then --checks that ogmo is heading right and the left surface of the tile is to the right of the right surface of ogmo
-						if (math.abs(((x_tiled - 1) * tilesize) - (self.x + self.width - 1)) - 1 <= (math.abs(self.hmom))) then --checks that absolute distance between left surface of tile and right surface of ogmo is less than ogmo's absolute momentum.
-							if not checkonly then
-								self.x = ((x_tiled - 1) * tilesize) - self.width
-								self.hmom = 0
-								self.tempfriction = nil
-							end
-							return "right"
-						end
-					end
-					if (self.hmom < 0) and ((((x_tiled - 1) * tilesize) + self.width - 1) < self.x) then
-						if (math.abs((((x_tiled - 1) * tilesize) + self.width - 1) - self.x) - 1 <= (math.abs(self.hmom))) then
-							if not checkonly then
-								self.x = ((x_tiled - 1) * tilesize) + self.width
-								self.hmom = 0
-								self.tempfriction = nil
-							end
-							return "left"
-						end
-					end
-				end
-			end
-		end
-	end
-	for i=1, #game.loadedobjects do
-		obj = game.loadedobjects[i]
-		--gost's block shouldn't collide with ogmos
-		if not (self.gost and obj.type == "ogmo") then
-			if obj.solid and (math.abs(((obj.y) - self.y)) < self.height) then
-				if (self.hmom > 0) and ((obj.x) > (self.x + self.width - 1)) then --checks that ogmo is heading right and the left surface of the object is to the right of the right surface of ogmo
-					if (math.abs((obj.x) - (self.x + self.width - 1)) - 1 <= (math.abs(self.hmom))) then --checks that absolute distance between left surface of object and right surface of ogmo is less than ogmo's absolute momentum.
-						if not checkonly then
-							self.x = obj.x - self.width
-							self.hmom = 0
-							self.tempfriction = nil
-						end
-						return "right"
-					end
-				end
-				if (self.hmom < 0) and ((obj.x) + obj.width - 1) < self.x then
-					if (math.abs(((obj.x) + obj.width - 1) - self.x) - 1 <= (math.abs(self.hmom))) then
-						if not checkonly then
-							self.x = obj.x + obj.width
-							self.hmom = 0
-							self.tempfriction = nil
-						end
-						return "left"
-					end
-				end
-			end
-		end
-	end
-	return "none"
-end
-
-function ogmo:vertCollision(checkonly)
-	checkonly = checkonly or false
-	for y_tiled=1, #game.tilemap do
-		for x_tiled=1, #game.tilemap[y_tiled] do
-			for i=1, #game.tilemap[y_tiled][x_tiled] do
-				if tiles[game.tilemap[y_tiled][x_tiled][i]].solid and (math.abs((((x_tiled - 1) * tilesize) - self.x)) < self.width) then
-					if (self.vmom > 0) and (((y_tiled - 1) * tilesize) > (self.y + self.height - 1)) then
-						if (math.abs(((y_tiled - 1) * tilesize) - (self.y + self.height - 1)) - 1 <= (math.abs(self.vmom))) then
-							if not checkonly then
-								self.y = ((y_tiled - 1) * tilesize) - self.height
-								self.vmom = 0
-								self.jumps = self.defaultjumps
-								self.tempfriction = nil
-							end
-							return true
-						end
-					end
-					if (self.vmom < 0) and ((((y_tiled - 1) * tilesize) + self.height - 1) < self.y) then
-						if (math.abs((((y_tiled - 1) * tilesize) + self.height - 1) - self.y) - 1 <= (math.abs(self.vmom))) then
-							if not checkonly then
-								self.y = ((y_tiled - 1) * tilesize) + self.height
-								self.vmom = 0
-							end
-							return false
-						end
-					end
-				end
-			end
-		end
-	end
-	for i=1, #game.loadedobjects do
-		obj = game.loadedobjects[i]
-		--gost's block shouldn't collide with non-gost ogmos
-		if not (self.gost and (obj.type == "ogmo" and not obj.gost)) then
-			if obj.solid and (math.abs(((obj.x) - self.x)) < self.width) then
-				if (self.vmom > 0) and ((obj.y) > (self.y + self.height - 1)) then
-					if (math.abs((obj.y) - (self.y + self.height - 1)) - 1 <= (math.abs(self.vmom))) then
-						if not checkonly then
-							self.y = obj.y - self.height
-							self.vmom = 0
-							self.jumps = self.defaultjumps
-							self.tempfriction = nil
-						end
-						return true
-					end
-				end
-				if (self.vmom < 0) and ((obj.y) + self.height - 1) < self.y then
-					if (math.abs(((obj.y) + obj.height - 1) - self.y) - 1 <= (math.abs(self.vmom))) then
-						if not checkonly then
-							self.y = obj.y + self.height
-							self.vmom = 0
-						end
-						return false
-					end
-				end
-			end
-		end
-	end
-	return false
-end
-
-function ogmo:postmoveCollision(checkonly)
-	checkonly = checkonly or false
-	for y_tiled=1, #game.tilemap do
-		for x_tiled=1, #game.tilemap[y_tiled] do
-			for i=1, #game.tilemap[y_tiled][x_tiled] do
-				if tiles[game.tilemap[y_tiled][x_tiled][i]].deathly then
-				--	if(self.y > ((y - 1) * tilesize)) and (self.y < (((y - 1) * tilesize) + tilesize - 1)) then
-				--		if(self.x > ((x - 1) * tilesize)) and (self.x < (((x - 1) * tilesize) + tilesize - 1)) then
-					if math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height then
-						if math.abs((((x_tiled - 1) * tilesize) - self.x)) < self.width then
-							if not checkonly then
-								self:die()
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-	for i=1, #game.loadedobjects do
-		obj = game.loadedobjects[i]
-		if obj.deathly or (self.gost and obj.type == "ogmo" and not obj.gost) then
-			--if(self.y > (obj.y)) and (self.y < (obj.y + obj.height - 1)) then
-			--	if(self.x > (obj.x)) and (self.x < (obj.x + obj.width - 1)) then
-			if math.abs(((obj.y + self.vmom) - (self.y + self.vmom))) < self.height then --adding vmom/hmom is a quick lazy way to check where the object will be next update. could potentially cause some collision jankiness with objects that are moving into walls but are yet to have their momentum canceled - and could cause unexpected deaths with objects that are going so fast their projected position goes past a wall, or with deadly objects behind a very thin wall. well, whatever. probably won't have to deal with those situations any time soon.
-				if math.abs(((obj.x + self.hmom) - (self.x + self.hmom))) < self.width then
-					if not checkonly then
-						vanish = false
-						if (self.gost) and (obj.type == "ogmo") then vanish = true end
-						self:die(vanish)
-					end
-				end
-			end
-		end
-	end
 end
 
 return ogmo

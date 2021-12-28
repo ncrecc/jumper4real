@@ -1,0 +1,3 @@
+enemy concept our friend matt came up with
+
+moving enemy like a walkyspike. has gravity, like ogmo, but when it moves off of a floor/ceiling it reverses gravity. it only changes direction when it hits a wall

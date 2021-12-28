@@ -9,7 +9,10 @@ game = {
 	currentsong = "",
 	map = {},
 	tilemap = {}, --multiple tiles actually can go on each coordinate so each square here is represented by a table
-	cliquemode = false
+	cliquemode = false,
+	levelwidth = 512,
+	levelheight = 512,
+	ogmoskin = "ogmo"
 }
 
 function game.begin()
@@ -40,7 +43,8 @@ end
 
 function game.keypressed(key)
 	for i=1, #game.loadedobjects do
-		if game.loadedobjects[i].keyreactions and game.loadedobjects[i].keyreactions[key] then
+		--if game.loadedobjects[i].keyreactions and game.loadedobjects[i].keyreactions[key] then
+		if game.loadedobjects[i].keypressed then
 			game.loadedobjects[i]:keypressed(key)
 		end
 	end
@@ -70,14 +74,16 @@ function game.draw()
 				--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
 				if tile.gfxoverride then
 					for ii=1, #tile.gfxoverride do
-						love.graphics.draw(graphics:load(tile.gfxoverride[ii]), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+						love.graphics.draw(graphics:load(tile.gfxoverride[ii]), ((x_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][1], ((y_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][2])
 					end
 				elseif tile.invisible then
 					if universalsettings.seetheunseeable then
-						love.graphics.draw(graphics:load(tilename), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+						love.graphics.draw(graphics:load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
 					end
 				else
-					love.graphics.draw(graphics:load(tilename), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+					love.graphics.draw(graphics:load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
+					--main.lua: "if tile.gfxoffests == nil then tile.gfxoffsets = {0, 0} end"
+					--love.graphics.print(tile.gfxoffsets[2], (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 				end
 			end
 		end
@@ -145,7 +151,7 @@ function game.loadLevel(levelfilename)
 			table.remove(newmap[i], #newmap[i])
 		end]]
 	end
-	if #newmap == 0 then error(); return nil; end --why would you feed it an empty map
+	if #newmap == 0 then print("mate you fed me a length 0 map"); return nil; end --why would you feed it an empty map
 	for y_tiled=1, #newmap do
 		table.insert(newtilemap, {})
 		for x_tiled=1, #newmap[y_tiled] do

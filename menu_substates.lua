@@ -69,7 +69,7 @@ menu_substates = {
 				end
 			},
 			[2] = {
-				name = "audio. ",
+				name = "music: ",
 				vartoggle = "playmusic",
 				tooltip = "Play the sweet music?",
 				action = function()

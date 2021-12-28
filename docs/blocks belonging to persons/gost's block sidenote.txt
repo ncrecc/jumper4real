@@ -1,0 +1,3 @@
+gost didn't actually come up with "gost's block", it's a straight port of the "ghost block" from the original jumper games that i named after her because i thought it would be funny
+
+-bert
