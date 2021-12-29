@@ -128,7 +128,7 @@ end
 function writetouniversalsettings()
 	towrite = ""
 	for i=1, #universalsettingsargs do
-		towrite = towrite .. booltostr(universalsettings[universalsettingsargs[i]]) .. "\r\n"
+		towrite = towrite .. booltostr(universalsettings[universalsettingsargs[i]]) .. "\n"
 	end
 	love.filesystem.write("universalsettings.txt",towrite)
 end
@@ -151,7 +151,7 @@ universalsettings = {
 
 universalsettingsfile = love.filesystem.read("universalsettings.txt")
 if universalsettingsfile ~= nil then
-	local ustemp = split(universalsettingsfile, "\r\n")
+	local ustemp = split(universalsettingsfile, "\n")
 	for i=1, #universalsettingsargs do
 		universalsettings[universalsettingsargs[i]] = strtobool(ustemp[i])
 	end

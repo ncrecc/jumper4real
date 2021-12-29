@@ -110,13 +110,13 @@ function game.loadLevel(levelfilename)
 	
 	--initial parsing (e.g. sections)
 	--wn kept saying i was "applying for the fucking iso" for not just using plain seperators instead of using the header/content thing
-	mapheader = "\r\n===MAP===\r\n"
+	mapheader = "\n===MAP===\n"
 	mapcontent = ""
-	exitsheader = "\r\n===EXITS===\r\n"
+	exitsheader = "\n===EXITS===\n"
 	exitscontent = ""
-	musicheader = "\r\n===MUSIC===\r\n"
+	musicheader = "\n===MUSIC===\n"
 	musiccontent = ""
-	optionsheader = "\r\n===OPTIONS===\r\n"
+	optionsheader = "\n===OPTIONS===\n"
 	optionscontent = ""
 	
 	headers = {mapheader, exitsheader, musicheader, optionsheader} --this is never used again. hm
@@ -141,12 +141,12 @@ function game.loadLevel(levelfilename)
 	--mapcontent parsing
 	--print "heers da map:"
 	--print(mapcontent)
-	local newmap = split(mapcontent, "\r\n")
+	local newmap = split(mapcontent, "\n")
 	local newtilemap = {}
 	templength = #newmap
 	for i=1, #newmap do
 		newmap[i] = split(newmap[i], "")
-		--i thought this part was a bug with split returning a blank item at the end of every row, or something, but it turned out to be an issue from splitting by \n instead of \r\n. comp sci get your shit together you have 5 different characters that all mean newline and sometimes you sequence them together to mean still one newline. smfh
+		--i thought this part was a bug with split returning a blank item at the end of every row, or something, but it turned out to be an issue from splitting by \n instead of \n. comp sci get your shit together you have 5 different characters that all mean newline and sometimes you sequence them together to mean still one newline. smfh
 		--[[if i ~= #newmap then
 			table.remove(newmap[i], #newmap[i])
 		end]]
@@ -184,7 +184,7 @@ function game.loadLevel(levelfilename)
 	
 	
 	--exitscontent parsing
-	newexits = split(exitscontent, "\r\n")
+	newexits = split(exitscontent, "\n")
 	
 	
 	--musiccontent parsing. this is just a single string
@@ -192,7 +192,7 @@ function game.loadLevel(levelfilename)
 	
 	
 	--optionscontent parsing
-	newoptions = split(optionscontent, "\r\n")
+	newoptions = split(optionscontent, "\n")
 	
 	
 	return newmap, newtilemap, newexits, newmusic, newoptions

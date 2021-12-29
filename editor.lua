@@ -66,15 +66,16 @@ for i, v in ipairs(editor.tools) do
 end
 
 function editor.loadLevel(levelfilename) --this one's a bit different than game's loadlevel because it directly receives the level symbols
+	if levelfilename ~= nil then print("editor: loading level " .. levelfilename) else print ("editor: loading level from a nil filename!") end
 	levelfile = love.filesystem.read(levelfilename..".txt")
-	if levelfile == nil then print "hey your level file ain't jack shit" end
-	mapheader = "\r\n===MAP===\r\n"
+	if levelfile == nil then print "editor: hey your level file ain't jack shit" end
+	mapheader = "\n===MAP===\n"
 	mapcontent = ""
-	exitsheader = "\r\n===EXITS===\r\n"
+	exitsheader = "\n===EXITS===\n"
 	exitscontent = ""
-	musicheader = "\r\n===MUSIC===\r\n"
+	musicheader = "\n===MUSIC===\n"
 	musiccontent = ""
-	optionsheader = "\r\n===OPTIONS===\r\n"
+	optionsheader = "\n===OPTIONS===\n"
 	optionscontent = ""
 	
 	headers = {mapheader, exitsheader, musicheader, optionsheader} --this is never used again. hm
@@ -97,7 +98,7 @@ function editor.loadLevel(levelfilename) --this one's a bit different than game'
 	
 	
 	--mapcontent parsing
-	local newsymbolmap = split(mapcontent, "\r\n")
+	local newsymbolmap = split(mapcontent, "\n")
 	templength = #newsymbolmap
 	if #newsymbolmap == 0 then error(); return nil; end --why would you feed it an empty map
 	for i=1, templength do
@@ -105,7 +106,7 @@ function editor.loadLevel(levelfilename) --this one's a bit different than game'
 	end
 	
 	--exitscontent parsing
-	newexits = split(exitscontent, "\r\n")
+	newexits = split(exitscontent, "\n")
 	
 	
 	--musiccontent parsing. this is just a single string
@@ -113,30 +114,30 @@ function editor.loadLevel(levelfilename) --this one's a bit different than game'
 	
 	
 	--optionscontent parsing
-	newoptions = split(optionscontent, "\r\n")
+	newoptions = split(optionscontent, "\n")
 	
 	
 	return newsymbolmap, newexits, newmusic, newoptions
 end
 
 function editor.packLevel()
-	levelfile = "===MAP===\r\n"
+	levelfile = "===MAP===\n"
 	for i=1, #editor.symbolmap do
 		for ii=1, #editor.symbolmap[i] do
 			levelfile = levelfile .. editor.symbolmap[i][ii]
 		end
-		levelfile = levelfile .. "\r\n"
+		levelfile = levelfile .. "\n"
 	end
-	levelfile = levelfile .. "===EXITS===\r\n"
+	levelfile = levelfile .. "===EXITS===\n"
 	for i=1, #editor.exits do
-		if editor.exits[i] ~= "" then levelfile = levelfile .. editor.exits[i] .. "\r\n" end
+		if editor.exits[i] ~= "" then levelfile = levelfile .. editor.exits[i] .. "\n" end
 	end
-	levelfile = levelfile .. "===MUSIC===\r\n" .. editor.music .. "\r\n"
-	levelfile = levelfile .. "===OPTIONS===\r\n"
+	levelfile = levelfile .. "===MUSIC===\n" .. editor.music .. "\n"
+	levelfile = levelfile .. "===OPTIONS===\n"
 	--print("there's options")
 	--print(#editor.options)
 	for i=1, #editor.options do
-		if editor.options[i] ~= "" then levelfile = levelfile .. editor.options[i] .. "\r\n" end
+		if editor.options[i] ~= "" then levelfile = levelfile .. editor.options[i] .. "\n" end
 	end
 	return levelfile
 end

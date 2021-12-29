@@ -134,7 +134,7 @@ levelsymbols = {
 		objects = {},
 		tooltip = "This blue wall mysteriously inverts light's effect on it, as it helps Bert figure out what to do with drawing order!" --ku
 		--lol thanks ku. she's referring to an issue i realized would happen (which i made this masterpiece graphic for) where tiles with graphics larger than 16x16 and little enough negaitve offset can be cut off by other tiles being drawn near them, including background tiles. ultimately i'll probably just rely on tile layers (editor & map support coming Eventually [tm]) and solve some of the more trivial issues by making it so tiles with offsets get drawn *after* everything else
-		--...this doesn't have an offest but never you mind that
+		--...this doesn't have an offset (it just has  but never you mind that
 	},
 	["s"] = {
 		tiles = {"floor", "slab"},
