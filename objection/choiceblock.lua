@@ -10,7 +10,7 @@ function choiceblock.editorimg(options)
 	--ignore choice for editor rendering
 	me = "choiceblock_solid"
 	if not inverse then me = "choiceblock_pass" end
-	return graphics:load(me)
+	return graphics.load(me)
 end
 
 function choiceblock:init(x, y, inverse)
@@ -45,7 +45,7 @@ function choiceblock:draw()
 	--if (self.inverse and choice) or ((not self.inverse) and (not choice)) then me = "choiceblock_pass" end
 	me = "choiceblock_solid"
 	if not self.solid then me = "choiceblock_pass" end
-	love.graphics.draw(graphics:load(me), self.x, self.y)
+	love.graphics.draw(graphics.load(me), self.x, self.y)
 end
 
 return choiceblock

@@ -1,0 +1,2 @@
+phase 1: 1 char per symbol, all level files are solely symbolmaps, layers don't exist
+phase 2: 1 char per symbol, level files include a comment, symbolmap(s), music, exits, and options. background added late into this phase, layers added very late. retooling the levelsymbols to follow a two-character scheme coincided with making levelsymbols not use a bg tile by default 

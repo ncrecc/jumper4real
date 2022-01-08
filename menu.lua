@@ -128,7 +128,7 @@ function menu.draw()
 	end
 	love.graphics.print(">", menu.offsetfromleft - 10, menu.offsetfromtop + (menu.linedistance * (menu.picker - 1)))
 	love.graphics.printf(menu.options[menu.picker].tooltip, 0, love.graphics.getHeight() - 16, (love.graphics.getWidth() / menu.tooltipScale), "center", 0, menu.tooltipScale)
-	if menu.showlogo then love.graphics.draw(graphics:load("J4R Logo 2x"), 172, 10) end
+	if menu.showlogo then love.graphics.draw(graphics.load("J4R Logo 2x"), 172, 10) end
 end
 
 function menu.stop()

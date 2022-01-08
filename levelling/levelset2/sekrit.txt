@@ -2,6 +2,7 @@ By Titku.
 SEKRIT!!!
 This level is so sekrit you will never ever find it ever. Especially not by turning on "see the unseeable" and noticing the win object that leads here on level3. (That does remind me, "see the unseeable" should probably force tiles like fakeblack to show as something unique and recognizably fake. Well... Coming Soon! tm) [this is now a thing -bert]
 Also, fun fact: This level is the reason the MUSIC and OPTIONS sections were originally added to leveldata, and why the "pauseold" option was added. Seriously!
+(ALSO also fun fact. This level's music was originally just a plain loop of Art of Noise - Roller 1, but Bert later made an extended version of it that incorporates an outtake version of the track. Cool!)
 ===MAP===
                     ~           
      ~                          
@@ -38,6 +39,6 @@ BBBBBBBBBBBBBBBBBBBBBBBBB####.#B
 ===EXITS===
 level3alt
 ===MUSIC===
-roller 1
+roller 1 extended alt
 ===OPTIONS===
 pauseold

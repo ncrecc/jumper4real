@@ -121,7 +121,9 @@ menu_substates = {
 			local i = 1
 			while i <= #levelsets do
 				local thislevelset = levelsets[i]
-				local levelsetinfo = split(love.filesystem.read("levelling/" .. thislevelset .. "/LEVELINFO.txt"), "\n")
+				local levelsetinfo = love.filesystem.read("levelling/" .. thislevelset .. "/LEVELINFO.txt")
+				correctnewlines(levelsetinfo)
+				levelsetinfo = split(levelsetinfo, "\n")
 				local firstmap = levelsetinfo[3]
 				menu.options[i] = {
 					name = levelsetinfo[1],
@@ -138,7 +140,9 @@ menu_substates = {
 			while ii <= #ext_levelsets do
 				local thislevelset = ext_levelsets[ii]
 				if love.filesystem.getInfo("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt") ~= nil then
-					local levelsetinfo = split(love.filesystem.read("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt"), "\n")
+					local levelsetinfo = love.filesystem.read("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt")
+					correctnewlines(levelsetinfo)
+					levelsetinfo = split(levelsetinfo, "\n")
 					local firstmap = levelsetinfo[3]
 					menu.options[i] = {
 						name = levelsetinfo[1],

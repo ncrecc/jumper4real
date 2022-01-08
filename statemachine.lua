@@ -9,7 +9,7 @@ statemachine = {
 
 function statemachine.setstate(state)
 	print ("statemachine: changing to state \"" .. state .. "\"!")
-	statemachine.currentstate:stop() --why is this a colon. gamestates don't need "self"
+	statemachine.currentstate.stop() --why is this a colon. gamestates don't need "self"
 	statemachine.currentstate = statemachine.states[state]
-	statemachine.currentstate:begin()
+	statemachine.currentstate.begin()
 end

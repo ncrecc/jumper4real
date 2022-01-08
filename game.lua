@@ -10,14 +10,18 @@ game = {
 	map = {},
 	tilemap = {}, --multiple tiles actually can go on each coordinate so each square here is represented by a table
 	cliquemode = false,
+	editormode = false,
 	levelwidth = 512,
 	levelheight = 512,
-	ogmoskin = "ogmo"
+	ogmoskin = "ogmo",
+	background = "#341160"
 }
 
 function game.begin()
-	game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
-	audio.play(game.currentsong, false)
+	if not game.editormode then
+		game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
+		audio.play(game.currentsong, false)
+	end
 end
 
 function game.update(dt)
@@ -37,7 +41,11 @@ function game.update(dt)
 	end
 	if game.liveplayeramt == 0 then
 		print("all players are dead! :( reinitializing map")
-		game.map, game.tilemap, game.exits = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
+		if not game.editormode then
+			game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
+		else
+			game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(editor.levelpackedfortesting, true)
+		end
 	end
 end
 
@@ -48,8 +56,12 @@ function game.keypressed(key)
 			game.loadedobjects[i]:keypressed(key)
 		end
 	end
-	if key == "escape" then
-		statemachine.setstate("menu")
+	if key == "escape" or (game.editormode and key == "tab") then
+		if not game.editormode then
+			statemachine.setstate("menu")
+		else
+			statemachine.setstate("editor")
+		end
 	end
 	--[[
    if key == "rctrl" then
@@ -59,6 +71,10 @@ function game.keypressed(key)
 end
 
 function game.draw()
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(hextocolor(game.background))
+	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+	love.graphics.setColor(r, g, b, a)
 	--ok i'll try to break this down step-by-step for future me's convenience
 	--game.tilemap is like map but instead of containing just symbols it just contains the tile names the symbols would point to
 	--for each row in the game.tilemap:
@@ -74,14 +90,14 @@ function game.draw()
 				--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
 				if tile.gfxoverride then
 					for ii=1, #tile.gfxoverride do
-						love.graphics.draw(graphics:load(tile.gfxoverride[ii]), ((x_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][1], ((y_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][2])
+						love.graphics.draw(graphics.load(tile.gfxoverride[ii]), ((x_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][1], ((y_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][2])
 					end
 				elseif tile.invisible then
 					if universalsettings.seetheunseeable then
-						love.graphics.draw(graphics:load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
+						love.graphics.draw(graphics.load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
 					end
 				else
-					love.graphics.draw(graphics:load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
+					love.graphics.draw(graphics.load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
 					--main.lua: "if tile.gfxoffests == nil then tile.gfxoffsets = {0, 0} end"
 					--love.graphics.print(tile.gfxoffsets[2], (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 				end
@@ -91,9 +107,12 @@ function game.draw()
 	for i=1, #game.loadedobjects do
 		game.loadedobjects[i]:draw()
 	end
+	if game.editormode then
+		love.graphics.print("in editormode! press esc or tab to return to editor")
+	end
 end
 
-function game.loadLevel(levelfilename)
+function game.loadLevel(levelfilename, firstargisactuallevel) --pretty messy. eventually levels will have a class and do a lot more stuff on their own
 	--[[for i=1, #game.loadedobjects do
 		for ii=1, #game.loadedobjects[i] do
 			game.loadedobjects[i][ii]:obliterate()
@@ -101,101 +120,105 @@ function game.loadLevel(levelfilename)
 	end]]
 	game.playeramt = 0
 	game.loadedobjects = {}
+	local levelfile
 	--collectgarbage()
-	levelfile = love.filesystem.read("levelling/"..levelfilename..".txt")
-	if levelfile == nil then print "hey your level file ain't jack shit" end
+	if not firstargisactuallevel then
+		levelfile = love.filesystem.read("levelling/"..levelfilename..".txt")
+		if levelfile == nil then print "hey your level file ain't jack shit" end
+	else levelfile = levelfilename end
 	--print("levelling/" .. levelfilename .. ".txt")
 	
 	--print(levelfile)
 	
 	--initial parsing (e.g. sections)
-	--wn kept saying i was "applying for the fucking iso" for not just using plain seperators instead of using the header/content thing
-	mapheader = "\n===MAP===\n"
-	mapcontent = ""
-	exitsheader = "\n===EXITS===\n"
-	exitscontent = ""
-	musicheader = "\n===MUSIC===\n"
-	musiccontent = ""
-	optionsheader = "\n===OPTIONS===\n"
-	optionscontent = ""
+	--witness kept saying i was "applying for the fucking iso" for not just using plain seperators instead of using the header/content thing
+	local phase = nil
+	local subphase = nil
 	
-	headers = {mapheader, exitsheader, musicheader, optionsheader} --this is never used again. hm
-	
-	mapheaderstart, mapheaderend = string.find(levelfile, mapheader)
-	--print(mapheaderstart, mapheaderend)
-	exitsheaderstart, exitsheaderend = string.find(levelfile, exitsheader)
-	--print(exitsheaderstart, exitsheaderend)
-	musicheaderstart, musicheaderend = string.find(levelfile, musicheader)
-	--print(musicheaderstart, musicheaderend)
-	optionsheaderstart, optionsheaderend = string.find(levelfile, optionsheader)
-	--print(optionsheaderstart, optionsheaderend)
-	--print(mapheaderstart, mapheaderend)
-	--print(exitsheaderstart, exitsheaderend)
-	mapcontent = string.sub(levelfile, mapheaderend + 1, exitsheaderstart - 1)
-	exitscontent = string.sub(levelfile, exitsheaderend + 1, musicheaderstart - 1)
-	musiccontent = string.sub(levelfile, musicheaderend + 1, optionsheaderstart - 1)
-	optionscontent = string.sub(levelfile, optionsheaderend + 1)
-	
-	
-	
-	--mapcontent parsing
-	--print "heers da map:"
-	--print(mapcontent)
-	local newmap = split(mapcontent, "\n")
+	correctnewlines(levelfile)
+	levelfile = split(levelfile, "\n")
+		
+	local newmap = {}
 	local newtilemap = {}
-	templength = #newmap
-	for i=1, #newmap do
-		newmap[i] = split(newmap[i], "")
-		--i thought this part was a bug with split returning a blank item at the end of every row, or something, but it turned out to be an issue from splitting by \n instead of \n. comp sci get your shit together you have 5 different characters that all mean newline and sometimes you sequence them together to mean still one newline. smfh
-		--[[if i ~= #newmap then
-			table.remove(newmap[i], #newmap[i])
-		end]]
-	end
-	if #newmap == 0 then print("mate you fed me a length 0 map"); return nil; end --why would you feed it an empty map
-	for y_tiled=1, #newmap do
-		table.insert(newtilemap, {})
-		for x_tiled=1, #newmap[y_tiled] do
-			if levelsymbols[newmap[y_tiled][x_tiled]] == nil then print ("not a valid symbol: " .. newmap[y_tiled][x_tiled]) end
-			for i=1, #levelsymbols[newmap[y_tiled][x_tiled]].objects do
-				obj = levelsymbols[newmap[y_tiled][x_tiled]].objects[i]
-				local options = {}
-				local temp = split(obj, ";")
-				if #temp >  1 then
-					obj = temp[1]
-					temp = split(temp[2], "|")
-					for i=1, #temp do
-						table.insert(options, temp[i])
+	local newexits = {}
+	local newmusic = ""
+	local newoptions = {}
+	local newbackground = ""
+	local y_tiled = 0
+	local maplength = nil
+	
+	for i, row in ipairs(levelfile) do
+		local justsetphase = false
+		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
+			local phasedata = split(string.sub(row, 4, -4), ":")
+			phase, subphase = phasedata[1], phasedata[2]
+			y_tiled = 0
+			justsetphase = true
+		end
+		--writes padding the beginning of each non-header row with | fixes the problem of === in user input potentially screwing things up. here adding | is optional to ensure... trivial backward-compatibility
+		if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
+		if not justsetphase then
+			if phase == "MAP" then
+				if subphase == nil then subphase = 1 end
+				
+				if maplength == nil then maplength = #row
+				elseif maplength ~= #row then print("mate this row length is inconsistent... subphase: " .. subphase .. ", map length: " .. maplength .. " row length: " .. #row .. ", row (following line):\n" .. row .. "|end") end
+				
+				--map parsing
+				y_tiled = y_tiled + 1
+				
+				local splitrow = split(row, "")
+				if newtilemap[y_tiled] == nil then newtilemap[y_tiled] = {} end
+				for x_tiled=1, #splitrow do
+					if levelsymbols[splitrow[x_tiled]] == nil then print ("not a valid symbol: " .. splitrow[x_tiled]) end
+					for i=1, #levelsymbols[splitrow[x_tiled]].objects do
+						local obj = levelsymbols[splitrow[x_tiled]].objects[i]
+						local options = {}
+						local temp = split(obj, ";")
+						if #temp >  1 then
+							obj = temp[1]
+							temp = split(temp[2], "|")
+							for i=1, #temp do
+								table.insert(options, temp[i])
+							end
+						end
+						--print("hi! some debug info: " .. obj .. ", " .. x_tiled .. ", " .. y_tiled .. ", " .. options[1] .. ", " .. options[2] .. ". there you go :)") ----crashes if there are no options but shhhh
+						--print(obj)
+						--print(#options)
+						--print(game.loadedobjects)
+						if objects[obj] == nil then print("THIS AIN'T AN OBJECT CHAMP: " .. obj) end
+						table.insert(game.loadedobjects, objects[obj]:setup((x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize, options))
+					end
+					local temptilesarray = {}
+					for i=1, #levelsymbols[splitrow[x_tiled]].tiles do
+						table.insert(temptilesarray, levelsymbols[splitrow[x_tiled]].tiles[i])
+					end
+					if newtilemap[y_tiled][x_tiled] == nil then
+						newtilemap[y_tiled][x_tiled] = temptilesarray
+					else
+						for k,v in ipairs(temptilesarray) do
+							table.insert(newtilemap[y_tiled][x_tiled], v)
+						end
 					end
 				end
-				--print("hi! some debug info: " .. obj .. ", " .. x_tiled .. ", " .. y_tiled .. ", " .. options[1] .. ", " .. options[2] .. ". there you go :)") ----crashes if there are no options but shhhh
-				--print(obj)
-				--print(#options)
-				--print(game.loadedobjects)
-				table.insert(game.loadedobjects, objects[obj]:setup((x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize, options))
+			elseif phase == "EXITS" then
+				table.insert(newexits, row)
+			elseif phase == "MUSIC" then
+				--music is only supposed to be one row because you can't have more than one track playing
+				if newmusic ~= "" then print("loadlevel: changing music when it's already defined??? old val: " .. newmusic) end
+				newmusic = row
+			elseif phase == "OPTIONS" then
+				table.insert(newoptions, row)
+			elseif phase == "BACKGROUND" then
+				if newbackground ~= "" then print("loadlevel: changing background when it's already defined??? old val: " .. newbackground) end
+				newbackground = row
 			end
-			local temptilesarray = {}
-			for i=1, #levelsymbols[newmap[y_tiled][x_tiled]].tiles do
-				table.insert(temptilesarray, levelsymbols[newmap[y_tiled][x_tiled]].tiles[i])
-			end
-			table.insert(newtilemap[y_tiled], temptilesarray)
 		end
 	end
+	
 	game.liveplayeramt = game.playeramt
-	
-	
-	--exitscontent parsing
-	newexits = split(exitscontent, "\n")
-	
-	
-	--musiccontent parsing. this is just a single string
-	newmusic = musiccontent
-	
-	
-	--optionscontent parsing
-	newoptions = split(optionscontent, "\n")
-	
-	
-	return newmap, newtilemap, newexits, newmusic, newoptions
+	if newbackground == "" then newbackground = game.background end
+	return newmap, newtilemap, newexits, newmusic, newoptions, newbackground
 end
 
 function game.win(number)
@@ -207,7 +230,7 @@ function game.win(number)
 		statemachine.setstate("menu")
 		game.mapname = "actuallevel"
 	else
-		game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions = game.loadLevel(game.currentlevelset .. "/" .. game.exits[number])
+		game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.exits[number])
 		local pauseold = false
 		local playevenifsame = false
 		--note that playold and playevenifsame are probably naturally mutually exclusive
@@ -231,4 +254,5 @@ function game.stop()
 	game.mapname = "actuallevel"
 	game.currentlevelset = "levelset1"
 	game.cliquemode = false
+	game.editormode = false
 end

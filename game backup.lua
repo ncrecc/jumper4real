@@ -77,10 +77,10 @@ function game.draw()
 				--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table . if it doesn't exist, then the game just looks for the name of the tile as the graphic name
 				if tile.gfxoverride then
 					for ii=1, #tile.gfxoverride do
-						love.graphics.draw(graphics:load(tile.gfxoverride[ii]), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+						love.graphics.draw(graphics.load(tile.gfxoverride[ii]), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 					end
 				else
-					love.graphics.draw(graphics:load(tilename), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
+					love.graphics.draw(graphics.load(tilename), (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 				end
 			end
 		end

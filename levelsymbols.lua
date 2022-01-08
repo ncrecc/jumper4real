@@ -54,10 +54,18 @@ levelsymbols = {
 		objects = {"win;2"},
 		tooltip = "Win tile! Takes you to the 2nd exit specified for this level." --ku
 	},
+	--[[
+		[" "] = {
+			tiles = {"sky"},
+			objects = {},
+			tooltip = "This is the sky. You've seen it before, hopefully." --ku
+				you know that actually makes me think of the implications of living in a world in which people play jumper 4 real but have never seen the sky -buster
+		},
+	]]
 	[" "] = {
-		tiles = {"sky"},
+		tiles = {},
 		objects = {},
-		tooltip = "This is the sky. You've seen it before, hopefully." --ku
+		tooltip = "Pure, undiluted nothingness. Use with caution. (Or as an eraser.)" --Ku
 	},
 	["~"] = {
 		tiles = {"sky", "cloud"},

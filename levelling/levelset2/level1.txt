@@ -36,4 +36,5 @@ By Titku! I wish we had a non-Notepad++ editor already :(
 level2
 ===MUSIC===
 hors
-===OPTIONS===
+===BACKGROUND===
+#87CDFF

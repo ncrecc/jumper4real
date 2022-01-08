@@ -1,7 +1,7 @@
 win = class:new()
 
 function win:editorimg()
-	return graphics:load("win")
+	return graphics.load("win")
 end
 
 function win:init(x, y, number)
@@ -36,7 +36,7 @@ function win:update(checkonly)
 end
 
 function win:draw()
-	if universalsettings.seetheunseeable then love.graphics.draw(graphics:load("win"), self.x, self.y) end
+	if universalsettings.seetheunseeable then love.graphics.draw(graphics.load("win"), self.x, self.y) end
 end
 
 return win

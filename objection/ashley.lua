@@ -97,7 +97,7 @@ function ashley:draw()
 	if self.alive then
 		mygraphic = "ashley"
 		if self.red then mygraphic = "red_ashley" end
-		love.graphics.draw(graphics:load(mygraphic), self.x_clamped, self.y_clamped)
+		love.graphics.draw(graphics.load(mygraphic), self.x_clamped, self.y_clamped)
 	end
 end
 

@@ -1,0 +1,40 @@
+By Titku! One last one... well, maybe that and an "intro" and "outro" level where Ogmo exits and re-enters the gray building. Or just a secret.
+===MAP===
+%%%%%%%%%%%%%%%%%%%#BBBBBBKBBBBB
+%%%%%%%%%%//#BBBBBB#BBBBBBbBBBBB
+%%%%%%%%%// ########BBBBBBbBBBBB
+%%%%%%%%%//  //....|bbbbbbbBBBBB
+%%%%%%%%///   /....#############
+%%/%%%%%//     ........//////..2
+%////%%%/      ........//////..2
+%////%%//   ~         ///////..2
+%W//W%%//              //////..2
+%%//%%%///             ////#####
+%%//%%%///   ..............#BBBB
+%%/W%%%///   .           //#BBBB
+%//%%%///    .            /#BBBB
+%//%%%.........    ~      /#BBBB
+%//%%%.........            #BBBB
+%W/%%%//    ...         ...#BBBB
+%%/%%%/     ...         ...#BBBB
+%%%%%%/     ...         ...#BBBB
+%%%%%%/  #########      ...#BBBB
+%%%%%//  #BBBBBBB#      ...#BBBB
+%%%%%//  #BBBBBBB#   ~  ...#BBBB
+%%%%%/   #BBBBBBB#      ...#BBBB
+%%%%%/   #BBBBBBB#      ...#BBBB
+%%%%%    #BBBBBBB#    ##########
+%%%%%    #########   /#BBBBBBBBB
+%%%%      .......  ///#BBBBBBBBB
+%%%% ~    .......////W#BBBBBBBBB
+%%%       .......///W%#BBBBBBBBB
+I        /.......//W%%#BBBBBBBBB
+I      ///.......WW%%%WWWWWWBBBB
+I0   /////...%%%%%#########%WWWW
+WWWWWWWWWW%%%%%%%%#BBBBBBB#%%%%%
+===EXITS===
+sekrit
+WINLEVELSET
+===MUSIC===
+hors
+===OPTIONS===

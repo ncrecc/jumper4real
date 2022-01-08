@@ -1,7 +1,7 @@
 fakeindicator = class:new() --this one was initially just added for the editor's sake
 
 function fakeindicator:editorimg()
-	return graphics:load("fakeindicator")
+	return graphics.load("fakeindicator")
 end
 
 function fakeindicator:init(x, y)
@@ -22,7 +22,7 @@ function fakeindicator:update(checkonly)
 end
 
 function fakeindicator:draw()
-	if universalsettings.seetheunseeable then love.graphics.draw(graphics:load("fakeindicator"), self.x, self.y) end
+	if universalsettings.seetheunseeable then love.graphics.draw(graphics.load("fakeindicator"), self.x, self.y) end
 end
 
 return fakeindicator

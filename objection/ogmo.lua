@@ -74,8 +74,8 @@ function ogmo.editorimg(options)
 			gost = true
 		end
 	end
-	if not gost then return graphics:load("ogmo")
-	else return graphics:load("gostsblock") end
+	if not gost then return graphics.load("ogmo")
+	else return graphics.load("gostsblock") end
 end
 
 function ogmo:init(x, y, width, height, gost)
@@ -132,8 +132,8 @@ function ogmo:init(x, y, width, height, gost)
 	
 	self.animtimer = 128
 	self.animtimertoblink = 128
-	self.animtimertounblink = 4
-	self.animtimertostep = 4
+	self.animtimertounblink = 8
+	self.animtimertostep = 6
 	self.animtimertotumble = 3
 end
 
@@ -171,7 +171,7 @@ function ogmo:update(dt)
 				self.currentquad = jump .. tostring(jumpnum)
 				self.animtimer = self.animtimertotumble
 			end
-		elseif self.vmom > 0 then
+		elseif self.vmom > 0 then --note: if you want to make it so ogmo only does the falling sprite if it's actually *falling*, change this to self.vmom >= 1
 			self.currentquad = "fall"
 			if not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
 				if love.keyboard.isDown("right") then self.currentquad = "fallright"
@@ -483,8 +483,8 @@ function ogmo:draw()
 	if self.alive then
 		local duckoffset = 0
 		if self.currentquad == "duck" or self.currentquad == "duckblink" then duckoffset = -3 end
-		if not self.gost then love.graphics.draw(graphics:load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, self.y_clamped + duckoffset)
-		else love.graphics.draw(graphics:load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, self.y_clamped) end
+		if not self.gost then love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, self.y_clamped + duckoffset)
+		else love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, self.y_clamped) end
 	end
 	--if game.playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
 end

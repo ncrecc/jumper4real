@@ -1,6 +1,12 @@
 --print(love)
+--^it's tables all the way down man -bert
 tilesize = 16
 scale = 2
+
+print("boop bop mother fuckers")
+print(type(nil) == nil)
+
+require "correctnewlines"
 
 require "hex2color"
 require "class"
@@ -9,6 +15,8 @@ require "audio"
 require "levelsymbols"
 require "tiles"
 require "graphics"
+
+--if levelsymbols["="] ~= nil then error("ERROR: equals sign (=) cannot be a level symbol") end
 
 require "game"
 require "textfield"
@@ -151,6 +159,7 @@ universalsettings = {
 
 universalsettingsfile = love.filesystem.read("universalsettings.txt")
 if universalsettingsfile ~= nil then
+	correctnewlines(universalsettingsfile) --probably unnecessary
 	local ustemp = split(universalsettingsfile, "\n")
 	for i=1, #universalsettingsargs do
 		universalsettings[universalsettingsargs[i]] = strtobool(ustemp[i])
