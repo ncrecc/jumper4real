@@ -211,9 +211,11 @@ function editor.handleLoadedLevel()
 		elseif editor.symbolmaps[i] and not editor.symbolmaps[i].isempty then
 			if not firstnonemptysymbolmap then firstnonemptysymbolmap = i end
 			if editor.maptileheight < #editor.symbolmaps[i] then editor.maptileheight = #editor.symbolmaps[i] end
-			if editor.symbolmaps[i][1] and editor.maptilewidth < #editor.symbolmaps[i][1] then editor.maptileheight = #editor.symbolmaps[i][1] end
+			if editor.symbolmaps[i][1] and editor.maptilewidth < #editor.symbolmaps[i][1] then editor.maptilewidth = #editor.symbolmaps[i][1] end
 		end
 	end
+	print("detected maptilewidth: " .. editor.maptilewidth)
+	print("detected maptileheight: " .. editor.maptileheight)
 	for i=1, #emptysymbolmaps do
 		editor.symbolmaps[emptysymbolmaps[i]] = editor.makeEmptySymbolMap(editor.maptilewidth, editor.maptileheight)
 	end
@@ -228,8 +230,8 @@ editor.handleLoadedLevel()
 
 local numberquads = {}
 
-for i=0, 9 do
-	numberquads[i + 1] = love.graphics.newQuad(i * 16, 0, 16, 16, graphics.load("ui/bignumbers"))
+for i=1, 9 do
+	numberquads[i] = love.graphics.newQuad(i * 16, 0, 16, 16, graphics.load("ui/bignumbers"))
 end
 
 for i=1, editor.visiblesymbolmaps do

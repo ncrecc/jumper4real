@@ -1,10 +1,10 @@
 --print(love)
 --^it's tables all the way down man -bert
 tilesize = 16
-scale = 2
+scale = 1
 
-print("boop bop mother fuckers")
-print(type(nil) == nil)
+--print("boop bop mother fuckers")
+--print(type(nil) == nil) this one exercise in pil got me, lol
 
 require "correctnewlines"
 
@@ -15,6 +15,18 @@ require "audio"
 require "levelsymbols"
 require "tiles"
 require "graphics"
+
+--[[do
+	local teststring = "mycoolstringy"
+	local splitby2 = nwidesplit(teststring, 2)
+	for i, v in ipairs(splitby2) do
+		print(i .. ": " .. v)
+	end
+	local splitby3 = nwidesplit(teststring, 3)
+	for i, v in ipairs(splitby3) do
+		print(i .. ": " .. v)
+	end
+end]]
 
 --if levelsymbols["="] ~= nil then error("ERROR: equals sign (=) cannot be a level symbol") end
 

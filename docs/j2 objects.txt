@@ -54,7 +54,7 @@ x make invisible
 j2 base game only:
 x wall ice (makes walljumping impossible)
 x walkyspikes (move around spikes like bugs in chip's challenge do)
-x tnt (destroys adjacent tiles when hit from above with crate)
+x tnt ~~(destroys adjacent tiles when hit from above with crate)~~ doesn't do this; destroys a tile when it falls on it
 x follower block
 x spiky follower block
 
@@ -63,6 +63,7 @@ j1 & jumper redux:
 x falling spikes
 x gravity up item
 x gravity down item
+x moving arrows
 x oneway follower block (does this refer to the platforms that move when you step on them?)
 x moving fireballs stopped by stoppers
 x orange doors (joining with ghost block opens them)

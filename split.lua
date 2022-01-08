@@ -25,6 +25,9 @@
   Created by Masatoshi Teruya on 18/04/25.
 
 --]]
+
+--nwidesplit by bert of wibi
+
 --- file-scope variables
 local type = type;
 local error = error;
@@ -117,3 +120,41 @@ function split( str, sep, limit, plain )
         return arr;
     end
 end
+
+function nwidesplit( str, width )
+    if type( str ) ~= 'string' then
+        error( 'str must be string', 2 );
+    elseif width ~= nil and not isFinite( width ) then
+        error( 'width must be finite-integer', 2 );
+    elseif str == '' then
+        return { '' };
+    elseif width == nil or width >= #str then
+        return { str };
+	end
+    
+    local arr = {};
+    local i_fixed = 0;
+    
+    for i = 1, #str, width do
+        i_fixed = i_fixed + 1;
+        arr[i_fixed] = strsub( str, i, i + (width - 1) );
+    end
+	
+	return arr
+end
+--[[
+mycoolstring
+
+my
+  co
+    ol
+
+mycoolstringy
+myc
+   ool
+      str
+         ing
+            y
+
+yes i mentally calculated this
+]]
