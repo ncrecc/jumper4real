@@ -31,7 +31,7 @@ menu = {
 function menu.begin()
 	menu.changeSubstate("title")
 	audio.flushpauses()
-	audio.play("34")
+	audio.playsong("34")
 	menu.cheatcode = ""
 end
 
@@ -96,13 +96,13 @@ function menu.textinput(t)
 		menu.cheatcode = ""
 	elseif menu.cheatcode == "ransom" then
 		if audio.activesong ~= "ransom in the sand" then
-			audio.play("ransom in the sand", true)
+			audio.playsong("ransom in the sand", true)
 		end
 		menu.cheatcodetimer = 0
 		menu.cheatcode = ""
 	elseif menu.cheatcode == "boing" then
 		if audio.activesong ~= "boing" then
-			audio.play("boing", true)
+			audio.playsong("boing", true)
 		end
 		menu.cheatcodetimer = 0
 		menu.cheatcode = ""
@@ -127,7 +127,7 @@ function menu.draw()
 		if menu.options[i].alpha ~= nil then love.graphics.setColor(r, g, b, a) end
 	end
 	love.graphics.print(">", menu.offsetfromleft - 10, menu.offsetfromtop + (menu.linedistance * (menu.picker - 1)))
-	love.graphics.printf(menu.options[menu.picker].tooltip, 0, love.graphics.getHeight() - 16, (love.graphics.getWidth() / menu.tooltipScale), "center", 0, menu.tooltipScale)
+	printAsTooltip(menu.options[menu.picker].tooltip, menu.tooltipScale)
 	if menu.showlogo then love.graphics.draw(graphics.load("J4R Logo 2x"), 172, 10) end
 end
 

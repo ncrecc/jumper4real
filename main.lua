@@ -2,9 +2,35 @@
 --^it's tables all the way down man -bert
 tilesize = 16
 scale = 1
+allowframeadvance = true
+frameadvance = false
+
+--this isn't enough like petscop i need to put info about a dead body in here or something
 
 --print("boop bop mother fuckers")
 --print(type(nil) == nil) this one exercise in pil got me, lol
+
+function printWithOutline(str)
+		local r, g, b, a = love.graphics.getColor()
+		love.graphics.setColor(0, 0, 0, a)
+		love.graphics.print(str, -1, 0)
+		love.graphics.print(str, 1, 0)
+		love.graphics.print(str, 0, -1)
+		love.graphics.print(str, 0, 1)
+		love.graphics.setColor(r, g, b, a)
+		love.graphics.print(str)
+end
+function printAsTooltip(str, scale)
+	love.graphics.printf(
+		str,
+		0,
+		love.graphics.getHeight() - 16,
+		(love.graphics.getWidth() / editor.tooltipScale),
+		"center",
+		0,
+		scale or 0.75
+	)
+end
 
 require "correctnewlines"
 
@@ -43,6 +69,9 @@ require "mobtools"
 
 --math.randomseed(os.time())
 
+facts = love.filesystem.read("facts.txt")
+facts = split(correctnewlines(facts), "\n")
+
 function math.clamp(x, a, b) --help me i went down a rabbit hole of different methods of clamping. also this was originally for makecollisionmask to determine what range it should iterate in but i found it a lot easier to just don't impose restrictions on the for loops and don't do anything if getpixel returns nil
   return math.max(a, math.min(b, x))
 end
@@ -50,7 +79,7 @@ end
 objects = {}
 objectfiles = love.filesystem.getDirectoryItems("objection")
 for i=1, #objectfiles do
-	s = objectfiles[i]
+	local s = objectfiles[i]
 	if string.sub(s, #s - 3) == ".lua" then
 		object = require ("objection/" .. string.sub(s, 1, #s - 4))
 		objects[string.sub(s, 1, #s - 4)] = object
@@ -58,10 +87,10 @@ for i=1, #objectfiles do
 end
 
 
-function makecollisionmask(imgdata, offsetx, offsety)
+function makecollisionmask(imgdata, offsetx, offsety, width, height)
 	local mask = {}
-	local maskheight = tilesize
-	local maskwidth = tilesize
+	local maskheight = height or tilesize
+	local maskwidth = width or tilesize
 	for i=1, maskheight do mask[i] = {} end
 	if offsetx == nil then offsetx = 0 end
 	if offsety == nil then offsety = 0 end
@@ -137,7 +166,7 @@ for k,v in pairs(objects) do
 end
 
 function strtobool(str) --lol
-	bools = {["true"] = true, ["false"] = false}
+	local bools = {["true"] = true, ["false"] = false}
 	return bools[str]
 end
 
@@ -146,7 +175,7 @@ function booltostr(bool) --lol
 end
 
 function writetouniversalsettings()
-	towrite = ""
+	local towrite = ""
 	for i=1, #universalsettingsargs do
 		towrite = towrite .. booltostr(universalsettings[universalsettingsargs[i]]) .. "\n"
 	end
@@ -169,9 +198,9 @@ universalsettings = {
 	seetheunseeable = true
 }
 
-universalsettingsfile = love.filesystem.read("universalsettings.txt")
+local universalsettingsfile = love.filesystem.read("universalsettings.txt")
 if universalsettingsfile ~= nil then
-	correctnewlines(universalsettingsfile) --probably unnecessary
+	universalsettingsfile = correctnewlines(universalsettingsfile) --probably unnecessary
 	local ustemp = split(universalsettingsfile, "\n")
 	for i=1, #universalsettingsargs do
 		universalsettings[universalsettingsargs[i]] = strtobool(ustemp[i])
@@ -186,6 +215,38 @@ else
 	writetouniversalsettings()
 end
 
+controls = {}
+
+function writetocontrols()
+	local towrite = ""
+	local phase = nil
+	for k,v in pairs(controls) do
+		towrite = towrite "===" .. k .. "===\n|" .. v .. "\n"
+	end
+	love.filesystem.write("controls.txt",towrite)
+end
+
+do
+	local controlsfile = love.filesystem.read("controls.txt")
+	if controlsfile == nil then
+		controlsfile = love.filesystem.read("defaultcontrols.txt")
+		love.filesystem.write("controls.txt",controlsfile)
+	end
+	
+	local phase = nil
+	
+	controlsfile = correctnewlines(controlsfile)
+	controlsfile = split(controlsfile, "\n")
+	for i, row in ipairs(controlsfile) do
+		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
+			phase = string.sub(row, 4, -4)
+		else
+			if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
+			if phase ~= nil then controls[phase] = row end
+		end
+	end
+end
+
 function love.load()
 	if not universalsettings.playaudio then love.audio.setVolume(0) end
 	if not universalsettings.playsfx then audio.changesfxvolume(0) end
@@ -195,10 +256,12 @@ end
 
 function love.update(dt)
 	audio.update()
-	statemachine.currentstate.update(dt)
+	if not frameadvance then statemachine.currentstate.update(dt) end
 end
 
 function love.keypressed(key)
+	if key == "f" and allowframeadvance then frameadvance = not frameadvance end
+	if frameadvance and key == "g" then statemachine.currentstate.update(dt) end
 	statemachine.currentstate.keypressed(key)
 end
 

@@ -62,6 +62,17 @@ ogmo.quaddefs = {
 	"lookupblink",
 	"gost"
 }
+ogmo.canblinkquads = {
+	["idle"] = "idleblink",
+	["duck"] = "duckblink",
+	["lookup"] = "lookupblink"
+} 
+ogmo.blinkingquads = {
+	["idleblink"] = "idle",
+	["duckblink"] = "duck",
+	["lookupblink"] = "lookup"
+} 
+
 for i=0, 32 do --32 instead of 31. yes, we're starting at 0 and for loop syntax is inclusive in lua, so starting at 0 and iterating to 32 means we get 33 elements, but there is a 33rd element! gost's block, an object that acts like an additional ogmo and causes another ogmo to die when it dies
 	--table.insert(ogmo.quads, love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160))
 	ogmo.quads[ogmo.quaddefs[i + 1]] = love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160)
@@ -78,12 +89,18 @@ function ogmo.editorimg(options)
 	else return graphics.load("gostsblock") end
 end
 
-function ogmo:init(x, y, width, height, gost)
+
+function ogmo:keyDown(key)
+	return love.keyboard.isDown(controls["P" .. self.playerno .. key:upper()])
+end
+
+function ogmo:init(x, y, width, height, gost, playerno)
 	self.type = "ogmo"
-	self.player = true
+	self.player = true--[[
 	self.keyreactions = {
 		["up"] = true
-	}
+	}]]
+	self.playerno = playerno or 1
 	self.x = x
 	self.y = y
 	self.width = width
@@ -109,18 +126,30 @@ function ogmo:init(x, y, width, height, gost)
 	self.gravity = 0.2
 	self.defaultjumps = 2
 	self.jumps = self.defaultjumps - 1 --in case ogmo spawns in midair
-	self.jumpheight = 6
+	self.jumpforce = 6
+	self.skidjumpextraforce = 2
 	self.jumpzaniness = 0 --the extent to which jumps should inherit current velocity, meaning doublejumping twice in a row lets you jump way higher. i thought i was so clever when i came up with this
-	self.walljumpheight = 5
+	self.walljumpforce = 5
 	self.walljumpspeed = 6
-	self.tempfriction = nil --temp friction results from doing a walljump and is lower than normal friction; it also disallows you from walljumping back onto the same wall quick enough to get further up
+	self.tempfriction = nil --temp friction results from doing a walljump and is lower than normal friction; it's main purpose is to disallow you from walljumping back onto the same wall quick enough to get further up
 	self.oldtempfriction = nil
 	self.walljumptempfriction = 0.05 --what your tempfriction should be after doing a walljump
 	self.tempfrictiontimer = 0
-	self.walljumptempfrictiontimer = 24
-	self.walljumptempfrictionphaseouttimer = 12 --todo: make separate tempfrictionphaseouttimer an actual thing
-	self.grounded = "none"
+	self.walljumptempfrictionframes = 24
+	self.tempfrictionphaseouttimer = 12
+	self.verticaled = "none"
+	self.verticaledby = {}
 	self.walled = "none"
+	self.walledby = {}
+	self.skidding = "none"
+	self.skiddingframes = 12
+	self.skiddingtimer = 0
+	self.skiddingspeedleniency = 0 --formerly 0.5. alt solution to a problem that startskiddingtimer solved - adding leniency to allowing the player to start skidding after they reach max speed. unlike startskiddingtimer, this solution was implemented in a way that doesn't allow players to skid by letting go of the direction they're moving in and then pressing the other direction (only worked with an interim of holding both keys at once)
+	self.startskiddingframes = 4
+	self.startskiddingtimer = 0
+	self.ducking = false
+	self.lookingup = false
+	
 	self.extraverticalbits = {}
 	self.extrahorizontalbits = {}
 	self.justjumped = false
@@ -131,10 +160,10 @@ function ogmo:init(x, y, width, height, gost)
 	self.currentquad = "idle"
 	
 	self.animtimer = 128
-	self.animtimertoblink = 128
-	self.animtimertounblink = 8
-	self.animtimertostep = 6
-	self.animtimertotumble = 3
+	self.animframestoblink = 128
+	self.animframestounblink = 8
+	self.animframestostep = 6
+	self.animframestotumble = 3
 end
 
 function ogmo:setup(x, y, options)
@@ -151,73 +180,87 @@ end
 function ogmo:update(dt)
 	if self.alive then
 		self:movement(dt)
+		
 		--major, game-breaking glitch in the following code: if you time your ducks or unducks frame perfectly, you can avoid blinking ever while idling/ducking, thus making you a monster depriving ogmo of sleep
-		self.animtimer = self.animtimer - 1
+		if self.animtimer > 0 then self.animtimer = self.animtimer - 1 end
 		
 		if self.vmom < 0 then
 			if string.sub(self.currentquad, 1, 4) ~= "jump" then
 				self.currentquad = "jump1"
-				self.animtimer = self.animtimertotumble
+				self.animtimer = self.animframestotumble
 			end
 			jumpnum = tonumber(string.sub(self.currentquad, -1, -1))
-			if not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
-				if love.keyboard.isDown("right") then self.currentquad = "jumpright" .. jumpnum
-				elseif love.keyboard.isDown("left") then self.currentquad = "jumpleft" .. jumpnum end
+			if not (self:keyDown("right") and self:keyDown("left")) then
+				if self:keyDown("right") then self.currentquad = "jumpright" .. jumpnum
+				elseif self:keyDown("left") then self.currentquad = "jumpleft" .. jumpnum end
 			end
 			if self.animtimer <= 0 and not(jumpnum == 1 and self.vmom > -0.5) then
 				local jump = string.sub(self.currentquad, 1, -2)
 				jumpnum = jumpnum + 1
 				if jumpnum > 4 then jumpnum = 1 end
 				self.currentquad = jump .. tostring(jumpnum)
-				self.animtimer = self.animtimertotumble
+				self.animtimer = self.animframestotumble
 			end
-		elseif self.vmom > 0 then --note: if you want to make it so ogmo only does the falling sprite if it's actually *falling*, change this to self.vmom >= 1
+		elseif self.vmom > 0 then --note: does not check for whether ogmo can actually fall by a full pixel this frame
 			self.currentquad = "fall"
-			if not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
-				if love.keyboard.isDown("right") then self.currentquad = "fallright"
-				elseif love.keyboard.isDown("left") then self.currentquad = "fallleft" end
+			if not (self:keyDown("right") and self:keyDown("left")) then
+				if self:keyDown("right") then self.currentquad = "fallright"
+				elseif self:keyDown("left") then self.currentquad = "fallleft" end
 			end
 		else
 			if self.ducking and string.sub(self.currentquad, 1, 4) ~= "duck" then
-				if string.sub(self.currentquad, 1, 4) ~= "idle" then self.animtimer = self.animtimertoblink end
-				self.currentquad = "duck"
+				if not (self.canblinkquads[self.currentquad] or self.blinkingquads[self.currentquad]) then
+					self.animtimer = self.animframestoblink
+					self.currentquad = "duck"
+				else
+					if self.canblinkquads[self.currentquad] then self.currentquad = "duck"
+					else self.currentquad = "duckblink" end
+				end
+				
 			end
 			
-			if not self.ducking and not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
-				if love.keyboard.isDown("right") and string.sub(self.currentquad, 1, -2) ~= "walkright" then
+			if not self.ducking and not (self:keyDown("right") and self:keyDown("left")) then
+				if self:keyDown("right") and string.sub(self.currentquad, 1, -2) ~= "walkright" then
 					self.currentquad = "walkright1"
-					self.animtimer = self.animtimertostep
-				elseif love.keyboard.isDown("left") and string.sub(self.currentquad, 1, -2) ~= "walkleft" then
+					self.animtimer = self.animframestostep
+				elseif self:keyDown("left") and string.sub(self.currentquad, 1, -2) ~= "walkleft" then
 					self.currentquad = "walkleft1"
-					self.animtimer = self.animtimertostep
+					self.animtimer = self.animframestostep
 				end
 			end
 			
-			if string.sub(self.currentquad, 1, 4) ~= "idle" and not self.ducking and ((love.keyboard.isDown("right") and love.keyboard.isDown("left")) or not (love.keyboard.isDown("right") or love.keyboard.isDown("left"))) then
-				if string.sub(self.currentquad, 1, 4) ~= "duck" then self.animtimer = self.animtimertoblink end
-				self.currentquad = "idle"
+			if string.sub(self.currentquad, 1, 4) ~= "idle" and string.sub(self.currentquad, 1, 6) ~= "lookup" and not self.ducking and ((self:keyDown("right") and self:keyDown("left")) or not (self:keyDown("right") or self:keyDown("left"))) then
+				if not (self.canblinkquads[self.currentquad] or self.blinkingquads[self.currentquad]) then
+					self.animtimer = self.animframestoblink
+					self.currentquad = "idle"
+				else
+					if self.canblinkquads[self.currentquad] then self.currentquad = "idle"
+					else self.currentquad = "idleblink" end
+				end
+			end
+
+			if string.sub(self.currentquad, 1, 4) == "idle" and self.lookingup then 
+				if self.blinkingquads[self.currentquad] then self.currentquad = "lookupblink"
+				elseif self.canblinkquads[self.currentquad] then self.currentquad = "lookup" end
+			elseif string.sub(self.currentquad, 1, 6) == "lookup" and not self.lookingup then 
+				if self.blinkingquads[self.currentquad] then self.currentquad = "idleblink"
+				elseif self.canblinkquads[self.currentquad] then self.currentquad = "idle" end
 			end
 			
 			if self.animtimer <= 0 then
-				if self.currentquad == "idle" then
-					self.currentquad = "idleblink"
-					self.animtimer = self.animtimertounblink
-				elseif self.currentquad == "idleblink" then
-					self.currentquad = "idle"
-					self.animtimer = self.animtimertoblink
-				elseif self.currentquad == "duck" then
-					self.currentquad = "duckblink"
-					self.animtimer = self.animtimertounblink
-				elseif self.currentquad == "duckblink" then
-					self.currentquad = "duck"
-					self.animtimer = self.animtimertoblink
+				if self.canblinkquads[self.currentquad] then
+					self.currentquad = self.canblinkquads[self.currentquad] --blink
+					self.animtimer = self.animframestounblink
+				elseif self.blinkingquads[self.currentquad] then
+					self.currentquad = self.blinkingquads[self.currentquad] --unblink
+					self.animtimer = self.animframestoblink
 				elseif string.sub(self.currentquad, 1, -2) == "walkright" or string.sub(self.currentquad, 1, -2) == "walkleft" then
 					local walk = string.sub(self.currentquad, 1, -2)
 					local walknum = tonumber(string.sub(self.currentquad, -1, -1))
 					walknum = walknum + 1
 					if walknum > 4 then walknum = 1 end
 					self.currentquad = walk .. tostring(walknum)
-					self.animtimer = self.animtimertostep
+					self.animtimer = self.animframestostep
 				end
 			end
 		end
@@ -226,8 +269,8 @@ end
 
 function ogmo:notWalkingRight()
 	if ((self.ducking) or
-		(not love.keyboard.isDown("right")) or
-		(love.keyboard.isDown("left") and love.keyboard.isDown("right")))
+		(not self:keyDown("right")) or
+		(self:keyDown("left") and self:keyDown("right")))
 	then
 		return true
 	end
@@ -236,8 +279,8 @@ end
 
 function ogmo:notWalkingLeft()
 	if ((self.ducking) or
-		(not love.keyboard.isDown("left")) or
-		(love.keyboard.isDown("left") and love.keyboard.isDown("right")))
+		(not self:keyDown("left")) or
+		(self:keyDown("left") and self:keyDown("right")))
 	then
 		return true
 	end
@@ -245,7 +288,7 @@ function ogmo:notWalkingLeft()
 end
 
 function ogmo:movement(dt)
-	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of counteracting the player moving against their current momentum but forgetting to apply the same hasrhness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste
+	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of counteracting the player moving against their current momentum but forgetting to apply the same harshness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste and jumper 2
 	if self.tempfrictiontimer ~= 0 and self.tempfriction == nil then
 		self.tempfrictiontimer = 0
 	end
@@ -253,48 +296,93 @@ function ogmo:movement(dt)
 		self.tempfrictiontimer = self.tempfrictiontimer - 1
 	end
 	
+	if self.verticaled ~= "down" then
+		self.skiddingtimer = 0
+		self.startskiddingtimer = 0
+		self.skidding = "none"
+	end
+	if self.skiddingtimer > 0 then
+		self.skiddingtimer = self.skiddingtimer - 1
+	end
+	if self.skiddingtimer == 0 then
+		self.skidding = "none"
+	end
+	
+	if self.startskiddingtimer > 0 then
+		self.startskiddingtimer = self.startskiddingtimer - 1
+	end
 	if self.tempfriction ~= nil and self.tempfrictiontimer == 0 then 
 		self.oldtempfriction = self.tempfriction
-		self.tempfriction = self.tempfriction + (math.abs(self.friction - self.oldtempfriction) / self.walljumptempfrictionphaseouttimer) --gradually phase out the temp friction
+		self.tempfriction = self.tempfriction + (math.abs(self.friction - self.oldtempfriction) / self.tempfrictionphaseouttimer) --gradually phase out the temp friction
 	end
 	
 	if self.tempfriction == self.friction then
 		self.oldtempfriction = nil
 		self.tempfriction = nil
 	end
-	if not self.ducking and not (love.keyboard.isDown("right") and love.keyboard.isDown("left")) then
-		if love.keyboard.isDown("right") and self.hmom < self.maxspeed then
-			
-			oldhmom = self.hmom
-			self.hmom = self.hmom + self.acceleration
-			if oldhmom * self.hmom < 0 then
-				self.tempfriction = nil
+	
+	if math.abs(self.hmom) >= self.maxspeed - self.skiddingspeedleniency then
+		self.startskiddingtimer = self.startskiddingframes
+	end
+	
+	if not self.ducking then
+		if self.verticaled == "down" then
+			if self:keyDown("right") and self.hmom < 0 and self.startskiddingtimer > 0 then
+				self.skiddingtimer = self.skiddingframes
+				self.skidding = "right"
 			end
-		elseif love.keyboard.isDown("left") and (-1 * self.hmom) < self.maxspeed then
-			oldhmom = self.hmom
-			self.hmom = self.hmom - self.acceleration
-			if oldhmom * self.hmom < 0 then
-				self.tempfriction = nil
+			if self:keyDown("left") and self.hmom > 0 and self.startskiddingtimer > 0 then
+				self.skiddingtimer = self.skiddingframes
+				self.skidding = "left"
+			end
+		end
+		if not (self:keyDown("right") and self:keyDown("left")) then
+			if self:keyDown("right") and self.hmom < self.maxspeed then
+				local oldhmom = self.hmom
+				local accelerationcapped = self.acceleration
+				if math.abs(self.hmom) + accelerationcapped > self.maxspeed then
+					local accelerationspillover = (math.abs(self.hmom) + accelerationcapped) - self.maxspeed
+					accelerationcapped = accelerationcapped - accelerationspillover
+					if accelerationcapped < 0 then accelerationcapped = 0 end --don't reset player's speed if they try to move while going faster than maxspeed (due to external circumstances)
+				end
+				self.hmom = self.hmom + accelerationcapped
+				if oldhmom * self.hmom < 0 then
+					self.tempfriction = nil
+				end
+			elseif self:keyDown("left") and (-1 * self.hmom) < self.maxspeed then
+				local oldhmom = self.hmom
+				local accelerationcapped = self.acceleration
+				if math.abs(self.hmom) + accelerationcapped > self.maxspeed then
+					local accelerationspillover = (math.abs(self.hmom) + accelerationcapped) - self.maxspeed
+					accelerationcapped = accelerationcapped - accelerationspillover
+					if accelerationcapped < 0 then accelerationcapped = 0 end --don't reset player's speed if they try to move while going faster than maxspeed (due to external circumstances)
+				end
+				self.hmom = self.hmom - accelerationcapped
+				if oldhmom * self.hmom < 0 then
+					self.tempfriction = nil
+				end
 			end
 		end
 	end
 	
-	if self:notWalkingRight() and self.hmom > 0 then
-		if self.tempfriction ~= nil then
-			self.hmom = self.hmom - self.tempfriction
+	if (self:notWalkingRight() and self.hmom > 0) or self.hmom > self.maxspeed then --apply friction if player is not moving OR if player is going faster than their normally attainable speed
+		if self:keyDown("right") and self.hmom > self.maxspeed and self.hmom - friction <= self.maxspeed then
+			self.hmom = self.maxspeed
 		else
-			self.hmom = self.hmom - self.friction
+			self.hmom = self.hmom - (self.tempfriction or self.friction)
 		end
+		
 		if self.hmom <= 0 then
 			self.tempfriction = nil
 			self.hmom = 0
 		end
-	elseif self:notWalkingLeft() and self.hmom < 0 then
-		if self.tempfriction ~= nil then
-			self.hmom = self.hmom + self.tempfriction
+	elseif (self:notWalkingLeft() and self.hmom < 0) or (self.hmom * -1) > self.maxspeed then --ditto
+		if self:keyDown("right") and self.hmom > self.maxspeed and self.hmom - friction <= self.maxspeed then
+			self.hmom = self.maxspeed
 		else
-			self.hmom = self.hmom + self.friction
+			self.hmom = self.hmom + (self.tempfriction or self.friction)
 		end
+		
 		if self.hmom >= 0 then
 			self.tempfriction = nil
 			self.hmom = 0
@@ -320,18 +408,17 @@ function ogmo:movement(dt)
 		applyhfirst = false
 	end
 	
-	local oldgroundedtemp = self.grounded
+	local oldverticaledtemp = self.verticaled
 	
 	local collisionfunctions = {
 		horizontal = function()
 			local newposition
-			local colliders
 			
-			self.walled, newposition, colliders = mobtools.doCollisionScan("horizontal", self)
+			self.walled, newposition, self.walledby = mobtools.doCollisionScan("horizontal", self)
 			local gostignorecollide = false
 			if self.gost then
 				gostignorecollide = true
-				for k,collider in ipairs(colliders) do
+				for _,collider in ipairs(self.walledby) do
 					if collider.type ~= "ogmo" then
 						gostignorecollide = false
 						break
@@ -342,9 +429,28 @@ function ogmo:movement(dt)
 			if newposition == nil or gostignorecollide then
 				self.x = self.x + self.hmom
 			else
-				self.hmom = 0
-				self.tempfriction = nil
+				local bounce = false
+				for _,collider in ipairs(self.walledby) do
+					if collider.bounce then
+						bounce = true
+						break
+					end
+				end
+				if bounce then --why do i keep nerd sniping myself into implementing will-never-be-used shit like rubber instead of the basics of jumper
+					self.hmom = -self.hmom
+					if math.abs(self.hmom) < 1 then self.hmom = 0 end --no subpixel bouncing
+					local frictiondivisor = math.abs(self.hmom) * 2
+					if frictiondivisor < 1 then frictiondivisor = 1 end
+					self.tempfriction = self.friction / (frictiondivisor)
+					self.tempfrictiontimer = self.walljumptempfrictionframes
+				else self.hmom = 0 end
 				self.x = newposition
+				for _,collider in ipairs(self.walledby) do
+					if collider.onCollide then
+						collider:onCollide(self, self.walled)
+					end
+				end
+				if bounce and self.hmom ~= 0 then self.walled = false; self.walledby = {} end
 			end
 		end,
 		
@@ -352,11 +458,11 @@ function ogmo:movement(dt)
 			local newposition
 			local colliders
 			
-			self.grounded, newposition, colliders = mobtools.doCollisionScan("vertical", self)
+			self.verticaled, newposition, self.verticaledby = mobtools.doCollisionScan("vertical", self)
 			local gostignorecollide = false
 			if self.gost then
 				gostignorecollide = true
-				for k,collider in ipairs(colliders) do
+				for _,collider in ipairs(self.verticaledby) do
 					if collider.type ~= "ogmo" then
 						gostignorecollide = false
 						break
@@ -366,12 +472,28 @@ function ogmo:movement(dt)
 			if newposition == nil or gostignorecollide then
 				self.y = self.y + self.vmom
 			else
-				self.vmom = 0
+				local bounce = false
+				for _,collider in ipairs(self.verticaledby) do
+					if collider.bounce then
+						bounce = true
+						break
+					end
+				end
+				if bounce then
+					self.vmom = -self.vmom
+					if math.abs(self.vmom) < 1 then self.vmom = 0 end
+				else self.vmom = 0 end
 				self.y = newposition
-				if self.grounded == "down" then
+				if self.verticaled == "down" and not (bounce and self.vmom ~= 0) then
 					self.jumps = self.defaultjumps
 					self.tempfriction = nil
 				end
+				for _,collider in ipairs(self.verticaledby) do
+					if collider.onCollide then
+						collider:onCollide(self, self.verticaled)
+					end
+				end
+				if bounce and self.vmom ~= 0 then self.verticaled = false; self.verticaled = {} end
 			end
 		end
 	}
@@ -385,15 +507,15 @@ function ogmo:movement(dt)
 	end
 	
 	local overlaps = mobtools.doOverlapScan(self)
-	for k,v in ipairs(overlaps) do
-		if(v.deathly) then
+	for _,obj in ipairs(overlaps) do
+		if(obj.deathly) then
 			self:die()
-		elseif(v.type == "ogmo" and not v.gost and self.gost) then
+		elseif(obj.type == "ogmo" and not obj.gost and self.gost) then
 			self:die(true)
 		end
 	end
 	
-	if self.justjumped == false and oldgroundedtemp == "down" and self.grounded == "none" then
+	if self.justjumped == false and oldverticaledtemp == "down" and self.verticaled == "none" then
 		self.jumps = self.jumps - 1
 	end
 	
@@ -403,15 +525,29 @@ function ogmo:movement(dt)
 	--self.y = self.y + self.vmom
 	
 	if not self.gost then --gost's block can't duck. you can use this to your advantage
-		if love.keyboard.isDown("down") and self.grounded == "down" and not self.ducking then
+		if self:keyDown("down") and self.verticaled == "down" and not self.ducking then
 			self.ducking = true
 			self.height = 13
 			self.y = self.y + 3
 		end
-		if ((self.grounded == "none") or (not love.keyboard.isDown("down"))) and self.ducking then
-			self.ducking = false
-			self.height = 16
-			self.y = self.y - 3
+		if ((self.verticaled == "none") or (not self:keyDown("down"))) and self.ducking then
+			--do we have space to unduck? this is emulated by pretending to give the player a vertical momentum of 3 pixels upward, at their current height, and then seeing if they would collide with anything.
+			--subtly this means you can actually be ducking while in midair if you're being followed by something that gives you no room to unduck. @sylviefluff cute jump 4 mechanic
+			local oldvmom = self.vmom
+			self.vmom = -2.999 --if we use 3 here it will always be true if you duck in a one-tile-high corridor, since the collision scan uses >=/<= (or not </not >) somewhere instead of >/< for some reason. might have to do with when player is flush to the ground?
+			local collisionresult = mobtools.doCollisionScan("vertical", self)
+			if collisionresult == "none" then --if player did not collide with anything while simulating upward movement
+				self.ducking = false
+				self.height = 16
+				self.y = self.y - 3
+			end
+			self.vmom = oldvmom
+		end
+		if self:keyDown("up") and self.verticaled == "down" and self.hmom == 0 and not self.ducking then
+		--if self:keyDown("up") and self.verticaled == "down" and not self.ducking and self:notWalkingLeft() and self:notWalkingRight() then --the former more closely matches behavior in jumper 3
+			self.lookingup = true
+		else
+			self.lookingup = false
 		end
 	end
 	
@@ -430,29 +566,51 @@ function ogmo:movement(dt)
 end
 
 function ogmo:keypressed(key)
-	if key == "up" and self.alive then self:jump() end
+	if key == controls["P" .. self.playerno .. "JUMP"] and self.alive then self:jump()
+	elseif key == controls["P" .. self.playerno .. "DIE"] and self.alive and not self.gost then self:die() end 
 end
 
 function ogmo:jump()
-	if self.grounded ~= "down" and self.walled ~= "none" then
-		self.vmom = (self.vmom * self.jumpzaniness) - self.walljumpheight
+	local canwalljump = false
+	if self.verticaled ~= "down" and self.walled ~= "none" then
+		for _,thing in ipairs(self.walledby) do
+			if not thing.notwalljumpable then
+				canwalljump = true
+			end
+		end
+	end
+	if canwalljump then
+		self.vmom = (self.vmom * self.jumpzaniness) - self.walljumpforce
 		if self.walled == "left" then
 			self.hmom = self.walljumpspeed
 			self.tempfriction = self.walljumptempfriction
-			self.tempfrictiontimer = self.walljumptempfrictiontimer
+			self.tempfrictiontimer = self.walljumptempfrictionframes
 		elseif self.walled == "right" then
 			self.hmom = (-1 * self.walljumpspeed)
 			self.tempfriction = self.walljumptempfriction
-			self.tempfrictiontimer = self.walljumptempfrictiontimer
+			self.tempfrictiontimer = self.walljumptempfrictionframes
 		end
 		if not self.gost then audio.playsfx("ogmo jump") end
 		self.justjumped = true
 	elseif self.jumps > 0 then
-		self.vmom = (self.vmom * self.jumpzaniness) - self.jumpheight
+		self.tempfriction = nil --having temp friction stop when you jump feels more natural for some reason
+		--self.tempfrictiontimer = 0 --for alternate behavior, uncomment this line and comment the above line. this makes it so when you jump you get the standard tempfriction phase-out as when your tempfriction from a walljump ends normally, rather than your friction immediately becoming normal. this *looks* nicer, but feels far less precise
+		local jumpsound = "ogmo jump"
+		self.vmom = (self.vmom * self.jumpzaniness) - self.jumpforce
+		if self.skiddingtimer > 0 and self.verticaled == "down" then
+			self.vmom = self.vmom - self.skidjumpextraforce
+			--skidding cancels out all momentum in the direction you're skidding away from. in the original games i think skidding just killed all your horizontal momentum, period... but so did most things :p
+			if self.skidding == "left" and self.hmom > 0 then self.hmom = 0
+			elseif self.skidding == "right" and self.hmom < 0 then self.hmom = 0 end
+			if self.skidding == "none" then print "how did you skidjump with no skidding state?" end
+			jumpsound = "superjump"
+		end
 		self.jumps = self.jumps - 1
-		if not self.gost then audio.playsfx("ogmo jump") end
+		if not self.gost then audio.playsfx(jumpsound) end
 		self.justjumped = true
 	end
+	self.skiddingtimer = 0
+	self.skidding = "none"
 end
 
 function ogmo:die(vanish) --"vanish" arg is for if you are gost's block and you've been touched by an ogmo
@@ -485,7 +643,17 @@ function ogmo:draw()
 		if self.currentquad == "duck" or self.currentquad == "duckblink" then duckoffset = -3 end
 		if not self.gost then love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, self.y_clamped + duckoffset)
 		else love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, self.y_clamped) end
-	end
+	end--[[
+	love.graphics.print(booltostr(self.ducking), 400)
+	love.graphics.print(booltostr(self.lookingup), 432)
+	love.graphics.print(self.animtimer, 464)
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(0, 0, 0, a)
+	love.graphics.rectangle("fill", 400, 0, 400, 16)
+	love.graphics.setColor(r, g, b, a)
+	love.graphics.print(self.hmom, 400)
+	love.graphics.print(self.vmom, 416)
+	--]]
 	--if game.playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
 end
 

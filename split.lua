@@ -121,8 +121,10 @@ function split( str, sep, limit, plain )
     end
 end
 
-function nwidesplit( str, width )
-    if type( str ) ~= 'string' then
+function nwidesplit( str, sep, width )
+    if sep ~= '' then
+        error( 'only empty string supported for sep', 2 );
+    elseif type( str ) ~= 'string' then
         error( 'str must be string', 2 );
     elseif width ~= nil and not isFinite( width ) then
         error( 'width must be finite-integer', 2 );

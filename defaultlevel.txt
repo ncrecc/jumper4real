@@ -1,37 +1,70 @@
 empty map
 ===MAP===
-################################
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..............................#
-#..P...........................#
-################################
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+===MAP:5===
+t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t                                                             t 
+t     M                                                       t 
+t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 
 ===EXITS===
 yorwinnr
 ===MUSIC===

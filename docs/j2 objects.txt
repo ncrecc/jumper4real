@@ -8,7 +8,7 @@ x spikes (precise hitbox)
 x short spikes (precise hitbox, ducking)
 
 j2e basics:
-x jump arrow
+✓ jump arrow
 x blue diamond
 x red diamond
 x moving platform
@@ -50,6 +50,11 @@ x ice
 x particle emitter which sounds like a pain in the ass (love handles particle stuff apparently)
 x fake above/below (only fake below is in currently and it's a manual thing)
 x make invisible
+
+j2e old:
+x evilbot
+x mechanical moving platform (toggles between moving & not moving when ducked on)
+x timer switch (speeds up timer by 1 second whenever ogmo ducks on it)
 
 j2 base game only:
 x wall ice (makes walljumping impossible)

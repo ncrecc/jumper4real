@@ -1,8 +1,11 @@
 editor = {
-	lmbtile = "#",
-	rmbtile = " ",
-	mmbtile = ".",
-	page = 1,
+	lmbtile = "t ",
+	rmbtile = "  ",
+	mmbtile = "t!",
+	mbtilekeys = {"lmbtile", "rmbtile", "mmbtile"}, --purely for reference
+	lastmbtouched = 1,
+	currentpage = 1,
+	pages = {}, --gets contents of editor_pages on each editor begin (except when returning from testing)
 	currentsymbolmap = nil,
 	maptileheight = 0,
 	maptilewidth = 0,
@@ -14,11 +17,12 @@ editor = {
 	viewallsymbolmaps = true,
 	tilebaroffset_x = tilesize,
 	tilebaroffset_y = tilesize,
-	currentpath = "awesomelevelset/level1",
+	currentpath = "",
 	currenttool = "pencil",
 	originalmousepress = nil,
 	eyedropperused = false,
 	levelpackedfortesting = nil,
+	returningfromgame = false,
 	--tools is a *numeric* and thus specifically ordered table used to generate tool buttons in order.
 	--toolbindings is a table that just matches keys to tool names, for keybindings. its order does not matter.
 	--this kind of is writing everything twice but i'm not sure what would be a better solution if i want to be able to just do toolbindings[key] in keypressed instead of iterating something
@@ -92,7 +96,7 @@ function editor.loadLevel(levelfilename)
 	local phase = nil
 	local subphase = nil
 	
-	correctnewlines(levelfile)
+	levelfile = correctnewlines(levelfile)
 	levelfile = split(levelfile, "\n")
 		
 	local newsymbolmaps = {}
@@ -131,10 +135,10 @@ function editor.loadLevel(levelfilename)
 				--map parsing
 				y_tiled = y_tiled + 1
 				
-				local splitrow = split(row, "")
+				local splitrow = nwidesplit(row, "", 2)
 				if symbolmapisempty then
 					for ii=1, #splitrow do
-						if splitrow[ii] ~= " " then
+						if splitrow[ii] ~= "  " then
 							symbolmapisempty = false
 							break
 						end
@@ -194,7 +198,7 @@ function editor.makeEmptySymbolMap(w, h)
 	for i=1, h do
 		local newrow = {}
 		for ii=1, w do
-			newrow[ii] = " "
+			newrow[ii] = "  "
 		end
 		newmap[i] = newrow
 	end
@@ -275,8 +279,10 @@ table.insert(editor.buttons, button:setup(
 ))
 
 function editor.begin()
+	if not editor.returningfromgame then for k,v in pairs(editor_pages) do editor.pages[k] = v end end
 	love.window.updateMode(512 + editor.addedwidth, 512 + editor.addedheight)
-	audio.play("groove")
+	if not editor.returningfromgame then audio.playsong("groove") end
+	editor.returningfromgame = false
 	editor.levelpackedfortesting = nil
 end
 
@@ -284,7 +290,7 @@ function editor.checkemptymap()
 	local thismapempty = true
 	for y_tiled=1, #editor.symbolmap do
 		for x_tiled=1, #editor.symbolmap[y_tiled] do
-			if editor.symbolmap[y_tiled][x_tiled] ~= " " then
+			if editor.symbolmap[y_tiled][x_tiled] ~= "  " then
 				thismapempty = false
 				break
 			end
@@ -315,7 +321,7 @@ function editor.update(dt)
 			
 			if editor.currenttool == "pencil" then
 				editor.symbolmap[ypos_tiled][xpos_tiled] = tile
-				if tile ~= " " then editor.symbolmap.isempty = false
+				if tile ~= "  " then editor.symbolmap.isempty = false
 				else editor.checkemptymap() end
 			
 			
@@ -349,7 +355,7 @@ function editor.update(dt)
 						for x_tiled=1, #editor.symbolmap[y_tiled] do
 							if editor.symbolmap[y_tiled][x_tiled] == "fill" then
 								editor.symbolmap[y_tiled][x_tiled] = tile
-								if tile ~= " " then editor.symbolmap.isempty = false
+								if tile ~= "  " then editor.symbolmap.isempty = false
 								else editor.checkemptymap() end
 							end
 						end
@@ -368,9 +374,9 @@ function editor.update(dt)
 		local xpos_tiled_fortilebar = 1 + math.floor((xpos - editor.tilebaroffset_x) / tilesize)
 		local ypos_tiled_fortilebar = 1 + math.floor((ypos - 512 - editor.tilebaroffset_y) / tilesize)
 		
-		if editor_pages[editor.page][ypos_tiled_fortilebar] ~= nil then
-			if editor_pages[editor.page][ypos_tiled_fortilebar][xpos_tiled_fortilebar] ~= nil then
-				local symbol = editor_pages[editor.page][ypos_tiled_fortilebar][xpos_tiled_fortilebar]
+		if editor.pages[editor.currentpage][ypos_tiled_fortilebar] ~= nil then
+			if editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar] ~= nil then
+				local symbol = editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar]
 				editor.tooltip = levelsymbols[symbol].tooltip
 				if love.mouse.isDown(1) then editor.lmbtile = symbol end
 				if love.mouse.isDown(2) then editor.rmbtile = symbol end
@@ -436,6 +442,50 @@ function editor.keypressed(key)
 			game.editormode = true
 			game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(editor.levelpackedfortesting, true)
 			statemachine.setstate("game")
+		elseif key == "," or key == "." then
+			--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotations), so which do we rotate?
+			--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
+			local rotatetile = nil
+			local hasrotations = {false, false, false}
+			for k,v in ipairs(editor.mbtilekeys) do
+				hasrotations[k] = not not levelsymbols[editor[v]].rotations
+			end
+			
+			local mbtotry = lastmbtouched
+			if not hasrotations[mbtotry] then
+				mbtotry = 1
+				local mbstried = 0
+				while not hasrotations[mbtotry] do
+					mbstried = mbstried + 1
+					mbtotry = ((mbtotry + 1) % 3) + 1 --see if another mouse button has a rotateable tile
+					if mbstried >= 3 then break end
+				end
+			end
+			
+			rotatetile = editor.mbtilekeys[mbtotry] or "lmbtile"
+			
+			local rotations = levelsymbols[editor[rotatetile]].rotations
+			if rotations then
+				if key == "," and rotations[1] then
+					for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+						for k,symbol in ipairs(row) do
+							if symbol == editor[rotatetile] then
+								editor.pages[editor.currentpage][rownum][k] = rotations[1]
+							end
+						end
+					end
+					editor[rotatetile] = rotations[1]
+				elseif key == "." and rotations[2] then
+					for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+						for k,symbol in ipairs(row) do
+							if symbol == editor[rotatetile] then
+								editor.pages[editor.currentpage][rownum][k] = rotations[2]
+							end
+						end
+					end
+					editor[rotatetile] = rotations[2]
+				end
+			end
 		elseif editor.toolbindings[key] ~= nil then
 			editor.currenttool = editor.toolbindings[key]
 		elseif tonumber(key) ~= nil then
@@ -479,6 +529,9 @@ function editor.mousepressed(x, y, button)
 			end
 		end
 	end
+	if editor.focusedfield == nil then
+		editor.lastmbtouched = button
+	end
 end
 
 function editor.mousereleased(x, y, button)
@@ -517,7 +570,7 @@ function editor.mousereleased(x, y, button)
 						elseif button == 3 then tile = editor.mmbtile
 						else tile = editor.lmbtile end
 						editor.symbolmap[y_tiled][x_tiled] = tile
-						if tile ~= " " then editor.symbolmap.isempty = false
+						if tile ~= "  " then editor.symbolmap.isempty = false
 						else editor.checkemptymap() end
 					end
 				end
@@ -537,6 +590,7 @@ end
 
 function editor.drawSymbol(realsymbol, x, y)
 	symbol = levelsymbols[realsymbol]
+	if symbol == nil then error("\"" .. tostring(realsymbol) .. "\" isn't a symbol") end
 	for i=1, #symbol.tiles do
 		--make this less typing to reference later
 		local tilename = symbol.tiles[i]
@@ -567,10 +621,13 @@ function editor.drawSymbol(realsymbol, x, y)
 		local graphictodraw = nil
 		if object.editorimg ~= nil then
 			graphictodraw = object.editorimg(options)
+			love.graphics.draw(graphictodraw, x, y)
+		elseif object.editordraw ~= nil then
+			object.editordraw(x, y, options)
 		else
 			graphictodraw = graphics.load(objectname)
+			love.graphics.draw(graphictodraw, x, y)
 		end
-		love.graphics.draw(graphictodraw, x, y)
 	end
 end
 
@@ -617,8 +674,8 @@ function editor.draw()
 						elseif love.mouse.isDown(2) then tile = editor.rmbtile
 						elseif love.mouse.isDown(3) then tile = editor.mmbtile
 						else tile = editor.lmbtile end
-						if tile == " " then
-							love.graphics.setColor(1, 1, 0, 0.25)
+						if tile == "  " then
+							love.graphics.setColor(1, 1, 0, 0.1)
 							love.graphics.rectangle("fill", (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize, tilesize, tilesize)
 						else
 							editor.drawSymbol(tile, (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
@@ -629,10 +686,10 @@ function editor.draw()
 			end
 		end
 	end
-	for i=1, #editor_pages[editor.page] do
-		for ii=1, #editor_pages[editor.page][i] do
-			local symbol = editor_pages[editor.page][i][ii]
-			if symbol == " " then
+	for i=1, #editor.pages[editor.currentpage] do
+		for ii=1, #editor.pages[editor.currentpage][i] do
+			local symbol = editor.pages[editor.currentpage][i][ii]
+			if symbol == "  " then
 				love.graphics.draw(graphics.load("ui/eraser"), ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512)
 			else
 				editor.drawSymbol(symbol, ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512)
@@ -651,7 +708,7 @@ function editor.draw()
 		editor.buttons[i]:draw()
 	end
 	if editor.tooltip ~= nil then
-		love.graphics.printf(editor.tooltip, 0, love.graphics.getHeight() - 16, (love.graphics.getWidth() / editor.tooltipScale), "center", 0, editor.tooltipScale)
+		printAsTooltip(editor.tooltip, editor.tooltipScale)
 	end
 end
 

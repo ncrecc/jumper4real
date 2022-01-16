@@ -1,0 +1,12 @@
+===P1LEFT===
+|left
+===P1RIGHT===
+|right
+===P1UP===
+|up
+===P1DOWN===
+|down
+===P1JUMP===
+|s
+===P1DIE===
+|r

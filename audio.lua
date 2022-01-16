@@ -2,12 +2,20 @@
 audio = {
 	loadedsongs = {},
 	activesong = nil,
+	loopingsfx = {},
 	activesongoneshot = false,
 	musicvolume = 1,
-	sfxvolume = 1
+	oldmusicvolume = 1, --potentially for music going quiet when you pause. in practice though, the music itself will probably pause, or have a highpass filter applied
+	sfxvolume = 1,
+	oldsfxvolume = 1,
+	lowpass = {
+		type = 'lowpass',
+		volume = 0.5,
+		highgain = 0.025
+	}
 }
 
-function audio.stop()
+function audio.stopsong()
 	if audio.activesong ~= nil then
 		song = audio.loadedsongs[audio.activesong]
 		if audio.activesongoneshot then
@@ -22,7 +30,7 @@ function audio.stop()
 	audio.activesongoneshot = false
 end
 
-function audio.pause()
+function audio.pausesong()
 	if audio.activesong ~= nil then
 		song = audio.loadedsongs[audio.activesong]
 		if audio.activesongoneshot then
@@ -36,21 +44,21 @@ function audio.pause()
 end
 
 function audio.flushpauses()
-	for k,v in pairs(audio.loadedsongs) do --this is literally the first time i've used pairs and the first time i realized you could just iterate through any table you want even if the keys aren't numerical. this project is probably doomed lol
-		if v.intro or v.loop then
-			if v.intro then v.intro:seek(0) end
-			v.loop:seek(0)
-			v.loop_playing = false
+	for _,song in pairs(audio.loadedsongs) do
+		if song.intro or song.loop then
+			if song.intro then song.intro:seek(0) end
+			song.loop:seek(0)
+			song.loop_playing = false
 		else v:seek(0) end
 	end
 end
 
-function audio.play(songname, oneshot, pauseold)
-	oneshot = oneshot or false --is this even necessary --originally this referred to "oneshot or false" but is specifying it's a oneshot necessary at all? should this just be able to determine whether it's a oneshot on its own
+function audio.playsong(songname, oneshot, pauseold)
+	--is specifying it's a oneshot necessary? should this just be able to determine whether it's a oneshot on its own
 	if pauseold then
-		audio.pause()
+		audio.pausesong()
 	else
-		audio.stop()
+		audio.stopsong()
 	end
 	if audio.loadedsongs[songname] == nil then
 		if not oneshot then
@@ -88,10 +96,26 @@ function audio.play(songname, oneshot, pauseold)
 	print("now playing: " .. audio.activesong)
 end
 
-function audio.playsfx(soundname)
+function audio.playsfx(soundname, looping)
 	local sfx = love.audio.newSource("audial/sfx/" .. soundname .. ".ogg", "static")
 	sfx:setVolume(audio.sfxvolume)
+	if looping then
+		sfx:setLooping(true)
+		table.insert(audio.loopingsfx, sfx)
+	end
 	love.audio.play(sfx)
+end
+
+function audio.stoploopingsfx(soundname)
+	if audio.loopingsfx[soundname] then audio.loopingsfx[soundname]:stop() end
+	audio.loopingsfx[soundname] = nil
+end
+
+function audio.stoploopingsfxall()
+	for _,sound in pairs(audio.loopingsfx) do
+		sound:stop()
+	end
+	audio.loopingsfx = {}
 end
 
 function audio.changemusicvolume(vol)
@@ -122,7 +146,7 @@ function audio.update()
 	end
 	if audio.activesongoneshot and not audio.loadedsongs[audio.activesong]:isPlaying() then
 		print("stopping " .. audio.activesong)
-		audio.stop()
+		audio.stopsong()
 	end
 	
 end

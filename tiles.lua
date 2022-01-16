@@ -75,25 +75,47 @@ tiles = {
 		["solid"] = true,
 		["deathly"] = false
 	},
-	["slab"] = {
+	["slabS"] = {
 		["solid"] = true,
 		["deathly"] = false,
-		["automask"] = true
+		["hitboxheight"] = tilesize / 2,
+		["hitboxYoffset"] = tilesize / 2,
+		["gfxoverride"] = {"slab"},
+		["gfxoverrideoffsets"] = {{0, 0}}
 	},
-	["sideslab"] = {
+	["slabE"] = {
 		["solid"] = true,
 		["deathly"] = false,
-		["automask"] = true
+		["hitboxwidth"] = tilesize / 2,
+		["hitboxXoffset"] = tilesize / 2,
+		["gfxoverride"] = {"sideslab"},
+		["gfxoverrideoffsets"] = {{0, 0}}
+	},
+	["slabN"] = {
+		["solid"] = true,
+		["deathly"] = false,
+		["hitboxheight"] = tilesize / 2,
+		["hitboxYoffset"] = 0,
+		["gfxoverride"] = {"slab"},
+		["gfxoverrideoffsets"] = {{0, -8}}
+	},
+	["slabW"] = {
+		["solid"] = true,
+		["deathly"] = false,
+		["hitboxwidth"] = tilesize / 2,
+		["hitboxXoffset"] = 0,
+		["gfxoverride"] = {"sideslab"},
+		["gfxoverrideoffsets"] = {{-8, 0}}
 	},
 	["rubber"] = {
 		["solid"] = true,
 		["deathly"] = false,
-		["ontoucheffects"] = {"bounce"}
+		["bounce"] = true
 	},
 	["levelborder"] = { --this tile was created as a kludge for collision. you can place it, in which case it acts like a tile you can't walljump off of, but i can't see why you'd want to place it. whatever
 		["solid"] = true,
 		["deathly"] = false,
-		["walljumpable"] = false,
+		["notwalljumpable"] = true,
 		["gfxoverride"] = {
 			"black"
 		}

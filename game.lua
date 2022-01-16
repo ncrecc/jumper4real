@@ -14,37 +14,42 @@ game = {
 	levelwidth = 512,
 	levelheight = 512,
 	ogmoskin = "ogmo",
-	background = "#341160"
+	background = "#341160",
+	paused = false,
+	pausedformenu = false,
+	fact = nil
 }
 
 function game.begin()
 	if not game.editormode then
 		game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
-		audio.play(game.currentsong, false)
+		audio.playsong(game.currentsong, false)
 	end
 end
 
 function game.update(dt)
-	--[=[
-	for i=1, #objectnamelist do
-		if game.loadedobjects[objectnamelist[i]] ~= nil then
-			for ii=1, #game.loadedobjects[objectnamelist[i]] do
-				game.loadedobjects[objectnamelist[i]][ii]:update()
+	if not game.paused then
+		--[=[
+		for i=1, #objectnamelist do
+			if game.loadedobjects[objectnamelist[i]] ~= nil then
+				for ii=1, #game.loadedobjects[objectnamelist[i]] do
+					game.loadedobjects[objectnamelist[i]][ii]:update()
+				end
 			end
 		end
-	end
-	]=]
-	for i=1, #game.loadedobjects do
-		if game.loadedobjects[i] then --briefly after loading a level, all contents of game.loadedobjects are set to nil - game.loadedobjects = {} seems first to set contents to nil and then clear it very slightly later. calling garbage collection early doesn't help with this
-			game.loadedobjects[i]:update()
+		]=]
+		for i=1, #game.loadedobjects do
+			if game.loadedobjects[i] then --briefly after loading a level, all contents of game.loadedobjects are set to nil - game.loadedobjects = {} seems first to set contents to nil and then clear it very slightly later. calling garbage collection early doesn't help with this
+				game.loadedobjects[i]:update()
+			end
 		end
-	end
-	if game.liveplayeramt == 0 then
-		print("all players are dead! :( reinitializing map")
-		if not game.editormode then
-			game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
-		else
-			game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(editor.levelpackedfortesting, true)
+		if game.liveplayeramt == 0 then
+			print("all players are dead! :( reinitializing map")
+			if not game.editormode then
+				game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(game.currentlevelset .. "/" .. game.mapname)
+			else
+				game.map, game.tilemap, game.exits, _, _, game.background = game.loadLevel(editor.levelpackedfortesting, true)
+			end
 		end
 	end
 end
@@ -61,6 +66,33 @@ function game.keypressed(key)
 			statemachine.setstate("menu")
 		else
 			statemachine.setstate("editor")
+		end
+	end
+	if key == "p" then
+		game.paused = not game.paused
+		game.pausedformenu = game.paused
+		audio.playsfx("pause")
+		if game.pausedformenu then
+			game.fact = facts[love.math.random(1, #facts)]
+			if audio.activesong ~= nil then
+				song = audio.loadedsongs[audio.activesong]
+			end
+			if audio.activesongoneshot then
+				song:setFilter(audio.lowpass)
+			else
+				if song.intro ~= nil then song.intro:setFilter(audio.lowpass) end
+				song.loop:setFilter(audio.lowpass)
+			end
+		else
+			if audio.activesong ~= nil then
+				song = audio.loadedsongs[audio.activesong]
+				if audio.activesongoneshot then
+					song:setFilter()
+				else
+					if song.intro ~= nil then song.intro:setFilter() end
+					song.loop:setFilter()
+				end
+			end
 		end
 	end
 	--[[
@@ -98,7 +130,7 @@ function game.draw()
 					end
 				else
 					love.graphics.draw(graphics.load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
-					--main.lua: "if tile.gfxoffests == nil then tile.gfxoffsets = {0, 0} end"
+					--main.lua: "if tile.gfxoffsets == nil then tile.gfxoffsets = {0, 0} end"
 					--love.graphics.print(tile.gfxoffsets[2], (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 				end
 			end
@@ -107,8 +139,15 @@ function game.draw()
 	for i=1, #game.loadedobjects do
 		game.loadedobjects[i]:draw()
 	end
+	if game.pausedformenu then
+		local r, g, b, a = love.graphics.getColor()
+		love.graphics.setColor(0, 0, 0, 0.5)
+		love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+		love.graphics.setColor(r, g, b, a)
+		printAsTooltip("fact: " .. game.fact)
+	end
 	if game.editormode then
-		love.graphics.print("in editormode! press esc or tab to return to editor")
+		printWithOutline("testing level! press esc or tab to return to editor")
 	end
 end
 
@@ -135,7 +174,7 @@ function game.loadLevel(levelfilename, firstargisactuallevel) --pretty messy. ev
 	local phase = nil
 	local subphase = nil
 	
-	correctnewlines(levelfile)
+	levelfile = correctnewlines(levelfile)
 	levelfile = split(levelfile, "\n")
 		
 	local newmap = {}
@@ -148,16 +187,13 @@ function game.loadLevel(levelfilename, firstargisactuallevel) --pretty messy. ev
 	local maplength = nil
 	
 	for i, row in ipairs(levelfile) do
-		local justsetphase = false
 		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
 			local phasedata = split(string.sub(row, 4, -4), ":")
 			phase, subphase = phasedata[1], phasedata[2]
 			y_tiled = 0
-			justsetphase = true
-		end
-		--writes padding the beginning of each non-header row with | fixes the problem of === in user input potentially screwing things up. here adding | is optional to ensure... trivial backward-compatibility
-		if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
-		if not justsetphase then
+		else
+			--writes padding the beginning of each non-header row with | fixes the problem of === in user input potentially screwing things up. here adding | is optional to ensure... backward-compatibility that's no longer relevant
+			if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
 			if phase == "MAP" then
 				if subphase == nil then subphase = 1 end
 				
@@ -167,7 +203,7 @@ function game.loadLevel(levelfilename, firstargisactuallevel) --pretty messy. ev
 				--map parsing
 				y_tiled = y_tiled + 1
 				
-				local splitrow = split(row, "")
+				local splitrow = nwidesplit(row, "", 2)
 				if newtilemap[y_tiled] == nil then newtilemap[y_tiled] = {} end
 				for x_tiled=1, #splitrow do
 					if levelsymbols[splitrow[x_tiled]] == nil then print ("not a valid symbol: " .. splitrow[x_tiled]) end
@@ -242,7 +278,7 @@ function game.win(number)
 			end
 		end
 		if game.currentsong ~= audio.activesong or playevenifsame then
-			audio.play(game.currentsong, false, pauseold)
+			audio.playsong(game.currentsong, false, pauseold)
 		end
 	end
 end
@@ -251,8 +287,23 @@ function game.stop()
 	game.loadedobjects = {}
 	game.map = {}
 	game.tilemap = {}
-	game.mapname = "actuallevel"
-	game.currentlevelset = "levelset1"
+	game.mapname = ""
+	game.currentlevelset = ""
 	game.cliquemode = false
+	if game.editormode then editor.returningfromgame = true end
 	game.editormode = false
+	game.paused = false
+	game.pausemenu = false
+	audio.stoploopingsfxall()
+	game.paused = false
+	game.pausedformenu = false
+	if audio.activesong ~= nil then
+		song = audio.loadedsongs[audio.activesong]
+		if audio.activesongoneshot then
+			song:setFilter()
+		else
+			if song.intro ~= nil then song.intro:setFilter() end
+			song.loop:setFilter()
+		end
+	end
 end
