@@ -1,16 +1,20 @@
 choiceblock = class:new()
 
-function choiceblock.editorimg(options)
+choiceblock.quads = {
+	["solid"] = love.graphics.newQuad(0, 0, 16, 16, 32, 16),
+	["pass"] = love.graphics.newQuad(16, 0, 16, 16, 32, 16)
+}
+
+function choiceblock.editordraw(x, y, options)
 	inverse = false
 	for i=1, #options do
 		if options[i] == "inverse" then
 			inverse = true
 		end
 	end
-	--ignore choice for editor rendering
-	me = "choiceblock_solid"
-	if not inverse then me = "choiceblock_pass" end
-	return graphics.load(me)
+	local mystate = "pass"
+	if (inverse and not universalsettings.choice) or (not inverse and universalsettings.choice) then mystate = "solid" end
+	love.graphics.draw(graphics.load("choiceblock"), choiceblock.quads[mystate], x, y)
 end
 
 function choiceblock:init(x, y, inverse)
@@ -43,9 +47,9 @@ end
 function choiceblock:draw()
 	--me = "choiceblock_solid"
 	--if (self.inverse and choice) or ((not self.inverse) and (not choice)) then me = "choiceblock_pass" end
-	me = "choiceblock_solid"
-	if not self.solid then me = "choiceblock_pass" end
-	love.graphics.draw(graphics.load(me), self.x, self.y)
+	local mystate = "solid"
+	if not self.solid then mystate = "pass" end
+	love.graphics.draw(graphics.load("choiceblock"), choiceblock.quads[mystate], self.x, self.y)
 end
 
 return choiceblock

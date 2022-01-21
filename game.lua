@@ -119,19 +119,11 @@ function game.draw()
 				local tilename = game.tilemap[y_tiled][x_tiled][i]
 				--now we're actually using the tile as a key for the "tiles" array from tiles.lua, there was actually a redundant for loop here that couldn't have iterated through anything that i caught by commentating this
 				local tile = tiles[tilename]
-				--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
-				if tile.gfxoverride then
-					for ii=1, #tile.gfxoverride do
-						love.graphics.draw(graphics.load(tile.gfxoverride[ii]), ((x_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][1], ((y_tiled - 1) * tilesize) + tile.gfxoverrideoffsets[ii][2])
+				--graphics is fairly self-explanatory
+				if universalsettings.seetheunseeable or not tile.invisible then
+					for ii,graphic in ipairs(tile.graphics) do
+						love.graphics.draw(graphic.reference, graphic.quad, ((x_tiled - 1) * tilesize) + graphic.ingameoffset[1], ((y_tiled - 1) * tilesize) + graphic.ingameoffset[2])
 					end
-				elseif tile.invisible then
-					if universalsettings.seetheunseeable then
-						love.graphics.draw(graphics.load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
-					end
-				else
-					love.graphics.draw(graphics.load(tilename), ((x_tiled - 1) * tilesize) + tile.gfxoffsets[1], ((y_tiled - 1) * tilesize) + tile.gfxoffsets[2])
-					--main.lua: "if tile.gfxoffsets == nil then tile.gfxoffsets = {0, 0} end"
-					--love.graphics.print(tile.gfxoffsets[2], (x_tiled - 1) * tilesize, (y_tiled - 1) * tilesize)
 				end
 			end
 		end

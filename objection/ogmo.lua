@@ -78,17 +78,17 @@ for i=0, 32 do --32 instead of 31. yes, we're starting at 0 and for loop syntax 
 	ogmo.quads[ogmo.quaddefs[i + 1]] = love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160)
 end
 
-function ogmo.editorimg(options)
-	gost = false
+function ogmo.editordraw(x, y, options)
+	local gost = false
 	for i=1, #options do
 		if options[i] == "gost" then
 			gost = true
 		end
 	end
-	if not gost then return graphics.load("ogmo")
-	else return graphics.load("gostsblock") end
+	local quadtodraw = "idle"
+	if gost then quadtodraw = "gost" end
+	love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[quadtodraw], x, y)
 end
-
 
 function ogmo:keyDown(key)
 	return love.keyboard.isDown(controls["P" .. self.playerno .. key:upper()])

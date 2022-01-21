@@ -2,6 +2,7 @@
 --^it's tables all the way down man -bert
 tilesize = 16
 scale = 1
+--the above two settings don't actually do anything useful if changed
 allowframeadvance = true
 frameadvance = false
 
@@ -9,6 +10,10 @@ frameadvance = false
 
 --print("boop bop mother fuckers")
 --print(type(nil) == nil) this one exercise in pil got me, lol
+
+function quad(...)
+	return love.graphics.newQuad(...)
+end
 
 function printWithOutline(str)
 		local r, g, b, a = love.graphics.getColor()
@@ -56,6 +61,7 @@ end]]
 
 --if levelsymbols["="] ~= nil then error("ERROR: equals sign (=) cannot be a level symbol") end
 
+require "ogmos"
 require "game"
 require "textfield"
 require "button"
@@ -87,45 +93,83 @@ for i=1, #objectfiles do
 end
 
 
-function makecollisionmask(imgdata, offsetx, offsety, width, height)
+function makecollisionmask(imgdata, offsetx, offsety, width, height, ingameoffsetx, ingameoffsety)
 	local mask = {}
 	local maskheight = height or tilesize
 	local maskwidth = width or tilesize
+	local masktootall = maskheight > tilesize
+	local masktoowide = maskwidth > tilesize
+	if masktootall then
+		print("woah bud, you have a mask that's too tall: " .. maskheight)
+	end
+	if masktoowide then
+		print("woah bud, you have a mask that's too wide: " .. maskwidth)
+	end
 	for i=1, maskheight do mask[i] = {} end
-	if offsetx == nil then offsetx = 0 end
-	if offsety == nil then offsety = 0 end
-	for i = offsety, maskheight + offsety - 1 do
-		for ii = offsetx, maskwidth + offsetx - 1 do
+	if not offsetx then offsetx = 0 end
+	if not offsety then offsety = 0 end
+	if not ingameoffsetx then ingameoffsetx = 0 end
+	if not ingameoffsety then ingameoffsety = 0 end
+	local trueleftbound = offsetx
+	local truerightbound = offsetx + maskwidth - 1
+	local truetopbound = offsety
+	local truebottombound = offsety + maskheight - 1
+	for y = offsety - ingameoffsety, (maskheight - 1) + offsety - ingameoffsety do
+		for x = offsetx - ingameoffsetx, (maskwidth - 1) + offsetx - ingameoffsetx do
 			local value = false
-			local r, g, b, a = imgdata:getPixel(ii, i)
-			if a ~= nil and a > 0.75 then value = true end
-			mask[i - offsety + 1][ii - offsety + 1] = value
+			if y >= truetopbound and y <= truebottombound and x >= trueleftbound and x <= truerightbound then
+				local r, g, b, a = imgdata:getPixel(x, y)
+				if a ~= nil and a > 0.75 then value = true end
+			end
+			mask[(y - offsety) + ingameoffsety + 1][(x - offsetx) + ingameoffsetx + 1] = value
 		end
 	end
 	
 	return mask
 end
 
-function ormasks(masks) --all masks must be the same size for this to work as intended
+function ormasks(masks) --all masks should be the same size for this to work as intended. usually they'll be 16x16 so this is fine
 	local mask = masks[1]
 	for y=1, #mask do
 		for x=1, #mask[y] do
-			result = false
-			for masknum=2, #masks do
-				if masks[masknum][y][x] then
-					result = true
-					break
+			if not mask[y][x] then
+				result = false
+				for masknum=2, #masks do
+					if masks[masknum] and masks[masknum][y][x] then
+						result = true
+						break
+					end
 				end
+				mask[y][x] = result
 			end
-			mask[y][x] = result
 		end
 	end
 	return mask
 end
 
-for k,v in pairs(tiles) do
-	local tile = v
-	local tilename = k
+function makemaskwithmultistring(maskstring, falsesymbol, truesymbol)
+	local mask = {}
+	local maskstring2 = correctnewlines(maskstring)
+	local maskstringsplit = split(maskstring, "\n")
+	for y=1, #maskstringsplit do
+		local maskrowsplit = split(maskstringsplit[y], "")
+		local newrow = {}
+		for x=1, #maskrowsplit do
+			if maskrowsplit[x] == truesymbol then
+				newrow[x] = true
+			elseif maskrowsplit[x] == falsesymbol then
+				newrow[x] = false
+			else
+				print("unrecognized symbol in mask for makemaskwithmultistring: " .. maskrowsplit[x] .. " that was it")
+			end
+		end
+		mask[y] = newrow
+	end
+	return mask
+end
+
+--[[
+for tilename,tile in pairs(tiles) do
 	if tile.gfxoffsets == nil then
 		tile.gfxoffsets = {0, 0}
 	end
@@ -137,7 +181,7 @@ for k,v in pairs(tiles) do
 	end
 	if tile.automask then
 		if tile.gfxoverride then
-			masks = {}
+			local masks = {}
 			for i=1, #tile.gfxoverride do
 				masks[i] = makecollisionmask(love.image.newImageData("imagery/" .. tile.gfxoverride[i] .. ".png"), -1 * tile.gfxoverrideoffsets[i][1], -1 * tile.gfxoverrideoffsets[i][2])
 			end
@@ -147,21 +191,78 @@ for k,v in pairs(tiles) do
 		end
 	end
 end
-
-for k,v in pairs(objects) do
-	local object = v
-	local objectname = k
-	if object.gfxoffsets == nil then
-		object.gfxoffsets = {0, 0}
+]]
+for tilename,tile in pairs(tiles) do
+	if not tile.graphics then
+		tile.graphics = {
+			{}
+		}
 	end
-	if object.gfxoverride ~= nil and object.gfxoverrideoffsets == nil then
-		object.gfxoverrideoffsets = {}
-		for i=1, #object.gfxoverride do
-			object.gfxoverrideoffsets[i] = {0, 0}
+	local masks = {}
+	local i = 0
+	for _,graphic in ipairs(tile.graphics) do
+		print(tilename)
+		i = i + 1
+		if not graphic.referencename then graphic.referencename = tilename end
+		if not graphic.ingameoffset then graphic.ingameoffset = {0, 0} end
+		if not graphic.quad then graphic.quad = {0, 0} end
+		if tile.automask then
+			if graphic.excludefromautomask then
+				i = i - 1 --safe because i is only used for the masks array
+				--alt approach would be just setting this index of masks to false, then tinkering with makecollisionmask a bit to ignore false masks completely (including when using the first mask supplied as the standard width and height for all masks). this would take a bit more code and would only be useful if a situation pops up where you want to know what graphic goes to what mask, specifically before the masks are orred
+			else
+				local referencedata = graphics.loadimagedata(graphic.referencename)
+				graphic.reference = graphics.supply(graphic.referencename, referencedata)
+				masks[i] = makecollisionmask(
+					referencedata,
+					graphic.quad[1] or 0,
+					graphic.quad[2] or 0,
+					graphic.quad[3] or tilesize,
+					graphic.quad[4] or tilesize,
+					graphic.ingameoffset[1] or 0,
+					graphic.ingameoffset[2] or 0
+				)
+				if tilename == "shortspikesS" then
+					for ii=1, #masks[i] do
+						local toprint = ""
+						for iii=1, #masks[i][ii] do
+							local toconcat = 0
+							if masks[i][ii][iii] then toconcat = 1 end
+							toprint = toprint .. toconcat
+						end
+						print(toprint)
+					end
+					print("====")
+				end
+				graphic.quad = love.graphics.newQuad(
+					graphic.quad[1] or 0,
+					graphic.quad[2] or 0,
+					graphic.quad[3] or tilesize,
+					graphic.quad[4] or tilesize,
+					graphic.reference
+				)
+			end
+		else
+			graphic.reference = graphics.load(graphic.referencename)
+			graphic.quad = love.graphics.newQuad(
+				graphic.quad[1] or 0,
+				graphic.quad[2] or 0,
+				graphic.quad[3] or tilesize,
+				graphic.quad[4] or tilesize,
+				graphic.reference
+			)
 		end
 	end
+	if tile.makemask then --This is to supply your own mask if we're not doing it right. You can also supply a mask by literally just including a "mask" key pointing to a mask, and then not setting automask to true or including a makemask function. -Lirio
+		tile.mask = tile:makemask()
+	end
+	if #masks > 0 then tile.mask = ormasks(masks) end
+end
+graphics.disposeimagedata() --comment this out and make referencedata a variable of each graphic if you ever need to access imagedata after generating masks
+
+for objectname,object in pairs(objects) do
 	if object.automask then
-		object.mask = makecollisionmask(love.image.newImageData("imagery/" .. objectname .. ".png"), -1 * object.gfxoffsets[1], -1 * object.gfxoffsets[2])
+		object.mask = makecollisionmask(love.image.newImageData("imagery/" .. objectname .. ".png"))
 	end
 end
 
@@ -255,12 +356,13 @@ function love.load()
 end
 
 function love.update(dt)
+	if statemachine.currentstate ~= "game" then frameadvance = false end
 	audio.update()
 	if not frameadvance then statemachine.currentstate.update(dt) end
 end
 
 function love.keypressed(key)
-	if key == "f" and allowframeadvance then frameadvance = not frameadvance end
+	if statemachine.currentstate == "game" and key == "f" and allowframeadvance then frameadvance = not frameadvance end
 	if frameadvance and key == "g" then statemachine.currentstate.update(dt) end
 	statemachine.currentstate.keypressed(key)
 end

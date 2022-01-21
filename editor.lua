@@ -1,3 +1,5 @@
+local selectionimg = graphics.load("ui/selections")
+local toolimg = graphics.load("ui/icons_tool")
 editor = {
 	lmbtile = "t ",
 	rmbtile = "  ",
@@ -23,15 +25,31 @@ editor = {
 	eyedropperused = false,
 	levelpackedfortesting = nil,
 	returningfromgame = false,
-	--tools is a *numeric* and thus specifically ordered table used to generate tool buttons in order.
-	--toolbindings is a table that just matches keys to tool names, for keybindings. its order does not matter.
-	--this kind of is writing everything twice but i'm not sure what would be a better solution if i want to be able to just do toolbindings[key] in keypressed instead of iterating something
+	
+	selectionquads = {
+		["lmb"] = quad(0, 0, 16, 16, selectionimg),
+		["mmb"] = quad(16, 0, 16, 16, selectionimg),
+		["rmb"] = quad(32, 0, 16, 16, selectionimg),
+		["lmb_orig"] = quad(0, 16, 16, 16, selectionimg),
+		["mmb_orig"] = quad(16, 16, 16, 16, selectionimg),
+		["rmb_orig"] = quad(32, 16, 16, 16, selectionimg),
+		["any"] = quad(0, 32, 16, 16, selectionimg)
+	},
+	inactiveselectionalpha = 0.75,
+	
 	tools = {
 		"pencil",
 		"eyedropper",
 		"rectangle",
 		"fillrectangle",
 		"fill"
+	},
+	toolquads = {
+		["pencil"] = quad(0, 0, 16, 16, toolimg),
+		["eyedropper"] = quad(16, 0, 16, 16, toolimg),
+		["rectangle"] = quad(32, 0, 16, 16, toolimg),
+		["fillrectangle"] = quad(48, 0, 16, 16, toolimg),
+		["fill"] = quad(0, 16, 16, 16, toolimg)
 	},
 	toolbindings = {
 		["c"] = "pencil",
@@ -66,8 +84,8 @@ for i, v in ipairs(editor.tools) do
 		528 + (16 * ((i - 1) % 2)),
 		16 + (16 * (math.floor((i - 1) / 2))),
 		v,
-		v,
-		nil,
+		"icons_tool",
+		editor.toolquads[v],
 		function(self) editor.currenttool = v end,
 		function(self)
 			if editor.currenttool == v then
@@ -234,7 +252,7 @@ editor.handleLoadedLevel()
 
 local numberquads = {}
 
-for i=1, 9 do
+for i=1, 99 do
 	numberquads[i] = love.graphics.newQuad(i * 16, 0, 16, 16, graphics.load("ui/bignumbers"))
 end
 
@@ -267,8 +285,8 @@ table.insert(editor.buttons, button:setup(
 	512,
 	512,
 	"eyes",
-	"eyes",
-	nil,
+	"icons_misc",
+	quad(0, 0, 16, 16, graphics.load("ui/icons_misc")),
 	function(self) editor.viewallsymbolmaps = not editor.viewallsymbolmaps end,
 	function(self)
 		if editor.viewallsymbolmaps then
@@ -300,12 +318,19 @@ function editor.checkemptymap()
 	else editor.symbolmap.isempty = false end
 end
 
+function getSymbolTooltip(symbol)
+	local tooltip = ""
+	if symbol.name ~= "Ogmo" then tooltip = symbol.name .. ": " .. symbol.tooltip
+	else tooltip = ogmos[game.ogmoskin].name .. ": " .. ogmos[game.ogmoskin].description end
+	return tooltip
+end
+
 function editor.update(dt)
 	editor.symbolmap = editor.symbolmaps[editor.currentsymbolmap]
 	editor.hoveredelement = nil
 	editor.tooltip = nil
 	local xpos, ypos = love.mouse.getPosition()
-	if ypos < 512 and xpos < 512 then
+	if ypos < 512 and xpos < 512 and ((not editor.originalmousepress) or (editor.originalmousepress.x < 512 and editor.originalmousepress.y < 512)) then --last bit means if your original mouse press was outside the level zone, don't draw a tile by just having your mouse held and moving in. this is mirrored below to prevent drawing inside the level from turning into selecting tiles
 		local xpos_tiled = 1 + math.floor(xpos / tilesize)
 		local ypos_tiled = 1 + math.floor(ypos / tilesize)
 		local mousedtile = editor.symbolmap[ypos_tiled][xpos_tiled]
@@ -364,20 +389,20 @@ function editor.update(dt)
 			end
 		end
 		if editor.currenttool == "eyedropper" then
-			editor.tooltip = levelsymbols[mousedtile].tooltip
+			editor.tooltip = getSymbolTooltip(levelsymbols[mousedtile])
 			if love.mouse.isDown(1, 2, 3) then editor.eyedropperused = true end
 			if love.mouse.isDown(1) then editor.lmbtile = mousedtile
 			elseif love.mouse.isDown(2) then editor.rmbtile = mousedtile
 			elseif love.mouse.isDown(3) then editor.mmbtile = mousedtile end
 		end
-	else
+	elseif (not editor.originalmousepress) or not (editor.originalmousepress.x < 512 and editor.originalmousepress.y < 512) then --if your original mouse press was inside the level zone, don't grab a tile by just having your mouse held
 		local xpos_tiled_fortilebar = 1 + math.floor((xpos - editor.tilebaroffset_x) / tilesize)
 		local ypos_tiled_fortilebar = 1 + math.floor((ypos - 512 - editor.tilebaroffset_y) / tilesize)
 		
 		if editor.pages[editor.currentpage][ypos_tiled_fortilebar] ~= nil then
 			if editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar] ~= nil then
 				local symbol = editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar]
-				editor.tooltip = levelsymbols[symbol].tooltip
+				editor.tooltip = getSymbolTooltip(levelsymbols[symbol])
 				if love.mouse.isDown(1) then editor.lmbtile = symbol end
 				if love.mouse.isDown(2) then editor.rmbtile = symbol end
 				if love.mouse.isDown(3) then editor.mmbtile = symbol end
@@ -443,7 +468,7 @@ function editor.keypressed(key)
 			game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(editor.levelpackedfortesting, true)
 			statemachine.setstate("game")
 		elseif key == "," or key == "." then
-			--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotations), so which do we rotate?
+			--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotating), so which do we rotate?
 			--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
 			local rotatetile = nil
 			local hasrotations = {false, false, false}
@@ -597,12 +622,8 @@ function editor.drawSymbol(realsymbol, x, y)
 		--now we're actually using the tile as a key for the "tiles" array from tiles.lua, there was actually a redundant for loop here that couldn't have iterated through anything that i caught by commentating this
 		local tile = tiles[tilename]
 		--the way gfxoverride works is that if it exists, it's a table, and the game draws each graphic name in order (there can of course be just one entry in the table). if it doesn't exist, then the game just looks for the name of the tile as the graphic name
-		if tile.gfxoverride then
-			for ii=1, #tile.gfxoverride do
-				love.graphics.draw(graphics.load(tile.gfxoverride[ii]), x + tile.gfxoverrideoffsets[ii][1], y + tile.gfxoverrideoffsets[ii][2])
-			end
-		else
-			love.graphics.draw(graphics.load(tilename), x + tile.gfxoffsets[1], y + tile.gfxoffsets[2])
+		for ii,graphic in ipairs(tile.graphics) do
+			love.graphics.draw(graphic.reference, graphic.quad, x + graphic.ingameoffset[1], y + graphic.ingameoffset[2])
 		end
 	end
 	
@@ -686,6 +707,29 @@ function editor.draw()
 			end
 		end
 	end
+	if (editor.currenttool == "rectangle" or editor.currenttool == "fillrectangle") and editor.originalmousepress and editor.originalmousepress.x < 512 and editor.originalmousepress.y < 512 then
+		--the below two variables will be identical to origmousex_tiled and origmousey_tiled in the above scope, just done through a different method that came to mind first for some reason
+		local origxpos_modulo = math.floor(editor.originalmousepress.x) - (math.floor(editor.originalmousepress.x) % tilesize)
+		local origypos_modulo = math.floor(editor.originalmousepress.y) - (math.floor(editor.originalmousepress.y) % tilesize)
+		if love.mouse.isDown(1) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["lmb_orig"], origxpos_modulo, origypos_modulo) end
+		if love.mouse.isDown(2) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["rmb_orig"], origxpos_modulo, origypos_modulo) end
+		if love.mouse.isDown(3) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["mmb_orig"], origxpos_modulo, origypos_modulo) end
+	end
+	local xpos, ypos = love.mouse.getPosition()
+	if ypos < 512 and xpos < 512 then
+		local xpos_modulo = math.floor(xpos) - (math.floor(xpos) % tilesize)
+		local ypos_modulo = math.floor(ypos) - (math.floor(ypos) % tilesize)
+		if not love.mouse.isDown(1, 2, 3) then
+			love.graphics.setColor(r, g, b, editor.inactiveselectionalpha)
+			love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["any"], xpos_modulo, ypos_modulo)
+		else
+			--this whole block is actually equivalent to the selectgraphics stuff below (which i'm not sure why i bothered with) that occur with drawing selection graphics on items in the tilebar, but with different conditions/positioning
+			if love.mouse.isDown(1) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["lmb"], xpos_modulo, ypos_modulo) end
+			if love.mouse.isDown(2) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["rmb"], xpos_modulo, ypos_modulo) end
+			if love.mouse.isDown(3) then love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads["mmb"], xpos_modulo, ypos_modulo) end
+		end
+	end
+	love.graphics.setColor(r, g, b, a)
 	for i=1, #editor.pages[editor.currentpage] do
 		for ii=1, #editor.pages[editor.currentpage][i] do
 			local symbol = editor.pages[editor.currentpage][i][ii]
@@ -695,10 +739,10 @@ function editor.draw()
 				editor.drawSymbol(symbol, ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512)
 			end
 			local selectgraphics = {}
-			if symbol == editor.lmbtile then table.insert(selectgraphics, "select_lmb") end
-			if symbol == editor.rmbtile then table.insert(selectgraphics, "select_rmb") end
-			if symbol == editor.mmbtile then table.insert(selectgraphics, "select_mmb") end
-			for iii=1, #selectgraphics do love.graphics.draw(graphics.load(selectgraphics[iii]), ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512) end
+			if symbol == editor.lmbtile then selectgraphics[#selectgraphics + 1] = "lmb" end
+			if symbol == editor.rmbtile then selectgraphics[#selectgraphics + 1] = "rmb" end
+			if symbol == editor.mmbtile then selectgraphics[#selectgraphics + 1] = "mmb" end
+			for iii=1, #selectgraphics do love.graphics.draw(graphics.load("ui/selections"), editor.selectionquads[selectgraphics[iii]], ((ii - 1) * tilesize) + editor.tilebaroffset_x, ((i - 1) * tilesize) + editor.tilebaroffset_y + 512) end
 		end
 	end
 	for i=1, #editor.textfields do

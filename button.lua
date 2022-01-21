@@ -1,9 +1,14 @@
 button = class:new()
 
-function button:init(x, y, id, image, quad, action, onUpdate, tooltip, onDraw)
+button.quads = {
+	["normal"] = love.graphics.newQuad(0, 0, 16, 16, 32, 16),
+	["depressed"] = love.graphics.newQuad(16, 0, 16, 16, 32, 16)
+}
+
+function button:init(x, y, id, image, imagequad, action, onUpdate, tooltip, onDraw)
 	self.id = id
 	self.image = image
-	self.quad = quad
+	self.imagequad = imagequad
 	self.x = x
 	self.y = y
 	self.width = tilesize
@@ -16,8 +21,8 @@ function button:init(x, y, id, image, quad, action, onUpdate, tooltip, onDraw)
 	self.onDraw = onDraw
 end
 
-function button:setup(x, y, id, image, quad, action, onUpdate, tooltip)
-	return button:new(x, y, id, image, quad, action, onUpdate, tooltip)
+function button:setup(x, y, id, image, imagequad, action, onUpdate, tooltip)
+	return button:new(x, y, id, image, imagequad, action, onUpdate, tooltip)
 end
 
 function button:update()
@@ -26,17 +31,15 @@ end
 
 function button:draw()
 	if self.onDraw then
-		self.onDraw(self)
+		self.onDraw(self) --i don't think this is going to be used at all?
 	else
-		if not self.depressed then
-			love.graphics.draw(graphics.load("ui/button"), self.x, self.y)
-		else
-			love.graphics.draw(graphics.load("ui/button_depressed"), self.x, self.y)
-		end
+		local mystate = "normal"
+		if self.depressed then mystate = "depressed" end
+		love.graphics.draw(graphics.load("ui/editorbutton"), button.quads[mystate], self.x, self.y)
 		local r, g, b, a = love.graphics.getColor()
 		love.graphics.setColor(self.iconrgba[1], self.iconrgba[2], self.iconrgba[3], self.iconrgba[4])
-		if self.quad then
-			love.graphics.draw(graphics.load("ui/" .. self.image), self.quad, self.x, self.y)
+		if self.imagequad then
+			love.graphics.draw(graphics.load("ui/" .. self.image), self.imagequad, self.x, self.y)
 		else
 			love.graphics.draw(graphics.load("ui/" .. self.image), self.x, self.y)
 		end

@@ -1,6 +1,6 @@
 levelsymbols = {
 	["  "] = {
-		name = "Eraser",
+		name = "Nothing",
 		categories = {"invisible"},
 		order = 1,
 		tiles = {},
@@ -19,7 +19,7 @@ levelsymbols = {
 		name = "Backwall",
 		categories = {"tiles"},
 		order = 3,
-		tiles = {"floor"},
+		tiles = {"backwall"},
 		objects = {},
 		tooltip = "Painting walls light-gray makes them further away on average, studies show." --ku
 	},
@@ -63,20 +63,20 @@ levelsymbols = {
 	},
 	]]
 	["O "] = {
-		name = "Choice Block (ON)",
+		name = "Choice Block A",
 		categories = {"objects"},
 		order = 8,
 		tiles = {},
 		objects = {"choiceblock"},
-		tooltip = "The solidity of this block is the player's choice! It's solid if Choice is ON." --ku
+		tooltip = "The solidity of this block is the player's choice! It's solid only if Choice is ON." --ku
 	},
 	["O!"] = {
-		name = "Choice Block (OFF)",
+		name = "Choice Block B",
 		categories = {"objects"},
 		order = 9,
 		tiles = {},
 		objects = {"choiceblock;inverse"},
-		tooltip = "The solidity of this block is the player's choice! It's solid if Choice is OFF." --ku
+		tooltip = "The solidity of this block is the player's choice! It's solid only if Choice is OFF." --ku
 	},
 	[" !"] = {
 		name = "Win (1)",
@@ -151,20 +151,16 @@ levelsymbols = {
 		tooltip = "Blackness lies beyond the walls of the facility." --ku
 	},
 	["t'"] = {
-		name = "Tall",
-		categories = {"tiles"},
-		order = 18,
-		tiles = {"tallwall"},
-		objects = {},
-		tooltip = "A red wall with mysterious bumps on it!" --ku
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t("] = {
-		name = "Drippy",
-		categories = {"tiles"},
-		order = 19,
-		tiles = {"drippywall"},
-		objects = {},
-		tooltip = "This blue wall mysteriously inverts light's effect on it." --ku
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t)"] = {
 		name = "Slab (Down)",
@@ -213,40 +209,28 @@ levelsymbols = {
 		tooltip = "It's a block made of rubber. You bounce off of it, rather than being erased. That's good." --bert
 	},
 	["t."] = {
-		name = "Short Spikes (Down)",
-		categories = {"tiles"},
-		rotations = {"t1", "t/"},
-		order = 25,
-		tiles = {"shortspikes"},
-		objects = {},
-		tooltip = "woahhhh how did the spikes get so short i'm tripping balls" --bert
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t/"] = {
-		name = "reserved - short spikes right",
-		categories = {"tiles"},
-		rotations = {"t.", "t0"},
-		order = 26,
-		tiles = {"shortspikes"},
-		objects = {},
-		tooltip = "woahhhh how did the spikes get so short i'm tripping balls"
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t0"] = {
-		name = "reserved - short spikes up",
-		categories = {"tiles"},
-		rotations = {"t/", "t1"},
-		order = 27,
-		tiles = {"shortspikes"},
-		objects = {},
-		tooltip = "woahhhh how did the spikes get so short i'm tripping balls"
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t1"] = {
-		name = "reserved - short spikes left",
-		categories = {"tiles"},
-		rotations = {"t0", "t."},
-		order = 28,
-		tiles = {"shortspikes"},
-		objects = {},
-		tooltip = "woahhhh how did the spikes get so short i'm tripping balls"
+		name = "reserved",
+		order = 9026,
+		tooltip = "shouldn't be seeable",
+		nevershow = true
 	},
 	["t2"] = {
 		name = "Slope (Down-Right)",
@@ -255,7 +239,7 @@ levelsymbols = {
 		order = 29,
 		tiles = {"slopeSE"},
 		objects = {},
-		tooltip = "a slope" --bert
+		tooltip = "Spice things up with a 45-degree angle! Ogmo can't walk up it, sadly." --Ku
 	},
 	["t3"] = {
 		name = "Slope (Down-Left)",
@@ -264,7 +248,7 @@ levelsymbols = {
 		order = 30,
 		tiles = {"slopeSW"},
 		objects = {},
-		tooltip = "a slope"
+		tooltip = "Spice things up with a 45-degree angle! Ogmo can't walk up it, sadly."
 	},
 	["t4"] = {
 		name = "Slope (Up-Left)",
@@ -273,7 +257,7 @@ levelsymbols = {
 		order = 31,
 		tiles = {"slopeNW"},
 		objects = {},
-		tooltip = "a slope"
+		tooltip = "Spice things up with a 45-degree angle!"
 	},
 	["t5"] = {
 		name = "Slope (Up-Right)",
@@ -282,7 +266,7 @@ levelsymbols = {
 		order = 32,
 		tiles = {"slopeNE"},
 		objects = {},
-		tooltip = "a slope"
+		tooltip = "Spice things up with a 45-degree angle!"
 	},
 	["O\""] = {
 		name = "Jump Arrow",
@@ -290,11 +274,107 @@ levelsymbols = {
 		order = 33,
 		tiles = {},
 		objects = {"jumparrow"},
-		tooltip = "restores your double jump if you've used it. takes a while to regenerate" --bert
-	}
+		tooltip = "Restores your double jump if you've used it. Takes a while to regenerate." --bert
+	},
+	["t6"] = {
+		name = "Dev Wall",
+		categories = {"tiles"},
+		order = 34,
+		tiles = {"dev_wall"},
+		objects = {},
+		tooltip = "A relic of a simpler era. (An era that lasted 1 month.)" --Ku
+	},
+	["t7"] = {
+		name = "Dev Backwall",
+		categories = {"tiles"},
+		order = 35,
+		tiles = {"dev_backwall"},
+		objects = {},
+		tooltip = "A relic of a simpler era. (An era that lasted 1 month.)"
+	},
+	["x!"] = {
+		name = "Dev Death",
+		categories = {"tiles"},
+		order = 36,
+		tiles = {"dev_death"},
+		objects = {},
+		tooltip = "A relic of a simpler era. (An era that lasted 1 month.)"
+	},
+	["x\""] = {
+		name = "Spikes (Down)",
+		categories = {"tiles"},
+		rotations = {"x%", "x#"},
+		order = 37,
+		tiles = {"spikesS"},
+		objects = {},
+		tooltip = "Just pointy enough to menace Ogmo without raising a safety hazard." --Ku
+	},
+	["x#"] = {
+		name = "Spikes (Right)",
+		categories = {"tiles"},
+		rotations = {"x\"", "x$"},
+		order = 38,
+		tiles = {"spikesE"},
+		objects = {},
+		tooltip = "Just pointy enough to menace Ogmo without raising a safety hazard."
+	},
+	["x$"] = {
+		name = "Spikes (Up)",
+		categories = {"tiles"},
+		rotations = {"x#", "x%"},
+		order = 39,
+		tiles = {"spikesN"},
+		objects = {},
+		tooltip = "Just pointy enough to menace Ogmo without raising a safety hazard."
+	},
+	["x%"] = {
+		name = "Spikes (Left)",
+		categories = {"tiles"},
+		rotations = {"x$", "x\""},
+		order = 40,
+		tiles = {"spikesW"},
+		objects = {},
+		tooltip = "Just pointy enough to menace Ogmo without raising a safety hazard."
+	},
+	["x&"] = {
+		name = "Short Spikes (Down)",
+		categories = {"tiles"},
+		rotations = {"x)", "x'"},
+		order = 41,
+		tiles = {"shortspikesS"},
+		objects = {},
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous." --Ku
+	},
+	["x'"] = {
+		name = "Short Spikes (Right)",
+		categories = {"tiles"},
+		rotations = {"x&", "x("},
+		order = 42,
+		tiles = {"shortspikesE"},
+		objects = {},
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous. Ogmo can slide under this." --Ku
+	},
+	["x("] = {
+		name = "Short Spikes (Up)",
+		categories = {"tiles"},
+		rotations = {"x'", "x)"},
+		order = 43,
+		tiles = {"shortspikesN"},
+		objects = {},
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous."
+	},
+	["x)"] = {
+		name = "Short Spikes (Left)",
+		categories = {"tiles"},
+		rotations = {"x(", "x&"},
+		order = 44,
+		tiles = {"shortspikesW"},
+		objects = {},
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous."
+	},
 }
 
-levelsymbols_sortedkeys_byraw = {} --by raw key text. i don't think you'd ever need this but it does sort by (kind of arbitrary, probably subject to change) categories and show when things were added in each category. see legend.txt for more info about the innate categories each key uses
+levelsymbols_sortedkeys_byraw = {} --by raw key text. i don't think you'd ever need this but it does sort by (kind of arbitrary, probably subject to change) categories and show when things were added in each category (except when things get deleted). see legend.txt for more info about the innate categories each key uses
 levelsymbols_sortedkeys_byorder = {} --by corresponding values' "order" fields
 for k, _ in pairs(levelsymbols) do
 	table.insert(levelsymbols_sortedkeys_byraw, k)
@@ -304,7 +384,7 @@ table.sort(levelsymbols_sortedkeys_byraw, function(a,b)
 	return a < b
 end)
 table.sort(levelsymbols_sortedkeys_byorder, function(a,b)
-	if levelsymbols[a].order == levelsymbols[b].order and a ~= b --[[a ~= b is because occasionally sort tries something against itself for some reason]] then
+	if levelsymbols[a].order == levelsymbols[b].order and a ~= b and not (levelsymbols[a].nevershow or levelsymbols[b].nevershow) --[[a ~= b is because occasionally sort tries something against itself for some reason]] then
 		print("hm, symbols '" .. a .. "' and '" .. b .. "' share an order")
 	end
 	return levelsymbols[a].order < levelsymbols[b].order

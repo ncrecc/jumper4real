@@ -1,0 +1,10 @@
+for i=1, #collidee.mask do
+	local toprint = ""
+	for ii=1, #collidee.mask[i] do
+		local toconcat = 0
+		if collidee.mask[i][ii] then toconcat = 1 end
+		toprint = toprint .. toconcat
+	end
+	print(toprint)
+end
+print("====")

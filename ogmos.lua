@@ -23,12 +23,22 @@ ogmos = {
 		name = "MO",
 		order = 5,
 		description = "HI MO" --Ku
+	},
+	["warrior"] = {
+		name = "Warrior",
+		order = 6,
+		description = "In search of a new car, it's the Warrior, from Dicey Dungeons! Fanmade skin by not mario." --bert/Ku
+	},
+	["robot"] = {
+		name = "Robot",
+		order = 7,
+		description = "In search of new spreadsheet software, it's the Robot, from Dicey Dungeons! Fanmade skin by not mario." --bert/Ku
 	}
 }
 
 ashleys = {
 	["ashley"] = {
-		name = "Ashley"
+		name = "Ashley",
 		description = "actually idk when ashley skins will ever be implemented. if ever. sorry lol" --bert
 	}
 }
