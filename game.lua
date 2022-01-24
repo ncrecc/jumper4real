@@ -1,3 +1,4 @@
+local font = love.graphics.getFont()
 game = {
 	playeramt = 0,
 	liveplayeramt = 0,
@@ -17,7 +18,16 @@ game = {
 	background = "#341160",
 	paused = false,
 	pausedformenu = false,
-	fact = nil
+	pausedfortextbox = false,
+	hints = {},
+	hinttext = love.graphics.newText(font, ""),
+	textboxwraplimit = 350,
+	textboxwidth = nil,
+	textboxheight = nil,
+	textboxpadding = 25,
+	textboxX = nil,
+	textboxY = nil,
+	fact = nil,
 }
 
 function game.begin()
@@ -39,7 +49,7 @@ function game.update(dt)
 		end
 		]=]
 		for i=1, #game.loadedobjects do
-			if game.loadedobjects[i] then --briefly after loading a level, all contents of game.loadedobjects are set to nil - game.loadedobjects = {} seems first to set contents to nil and then clear it very slightly later. calling garbage collection early doesn't help with this
+			if game.loadedobjects[i] then --briefly after loading a level, #game.loadedobjects > 0 even though game.loadedobjects is set to an empty table. weird. does it still briefly regard the keys as pointing to non-nil values?
 				game.loadedobjects[i]:update()
 			end
 		end
@@ -54,13 +64,26 @@ function game.update(dt)
 	end
 end
 
+function game.showtextbox(text)
+	game.pausedfortextbox = true
+	audio.playsfx("hint")
+	game.hinttext:setf(text, game.textboxwraplimit, "left")
+	game.textboxheight = game.hinttext:getHeight() + (game.textboxpadding * 2)
+	game.textboxwidth = game.hinttext:getWidth() + (game.textboxpadding * 2)
+	game.textboxX = math.floor((love.graphics.getWidth() - game.textboxwidth) / 2)
+	game.textboxY = math.floor((love.graphics.getHeight() - game.textboxheight) / 2)
+end
+
 function game.keypressed(key)
-	for i=1, #game.loadedobjects do
-		--if game.loadedobjects[i].keyreactions and game.loadedobjects[i].keyreactions[key] then
-		if game.loadedobjects[i].keypressed then
-			game.loadedobjects[i]:keypressed(key)
+	if not game.paused then
+		for i=1, #game.loadedobjects do
+			--if game.loadedobjects[i].keyreactions and game.loadedobjects[i].keyreactions[key] then
+			if game.loadedobjects[i].keypressed then
+				game.loadedobjects[i]:keypressed(key)
+			end
 		end
 	end
+	--if key == "g" then game.showtextbox("hello. this is my incredibly lengthy text that is ridiculously lengthy") end
 	if key == "escape" or (game.editormode and key == "tab") then
 		if not game.editormode then
 			statemachine.setstate("menu")
@@ -68,9 +91,9 @@ function game.keypressed(key)
 			statemachine.setstate("editor")
 		end
 	end
+	if key == "return" and game.pausedfortextbox then game.pausedfortextbox = false end
 	if key == "p" then
-		game.paused = not game.paused
-		game.pausedformenu = game.paused
+		game.pausedformenu = not game.pausedformenu
 		audio.playsfx("pause")
 		if game.pausedformenu then
 			game.fact = facts[love.math.random(1, #facts)]
@@ -100,6 +123,7 @@ function game.keypressed(key)
       debug.debug()
    end
    ]]--
+	if game.pausedfortextbox or game.pausedformenu then game.paused = true else game.paused = false end
 end
 
 function game.draw()
@@ -131,8 +155,14 @@ function game.draw()
 	for i=1, #game.loadedobjects do
 		game.loadedobjects[i]:draw()
 	end
+	if game.pausedfortextbox then
+		love.graphics.setColor(0, 0, 0, 1)
+		love.graphics.rectangle("fill", game.textboxX, game.textboxY, game.textboxwidth, game.textboxheight)
+		love.graphics.setColor(r, g, b, a)
+		love.graphics.draw(game.hinttext, game.textboxX + game.textboxpadding, game.textboxY + game.textboxpadding)
+		love.graphics.printf("(press enter)", game.textboxX, (game.textboxY + game.textboxheight) - (math.floor(game.textboxpadding / 2)), game.textboxwidth / 0.75, "right", 0, 0.75)
+	end
 	if game.pausedformenu then
-		local r, g, b, a = love.graphics.getColor()
 		love.graphics.setColor(0, 0, 0, 0.5)
 		love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 		love.graphics.setColor(r, g, b, a)
@@ -162,7 +192,6 @@ function game.loadLevel(levelfilename, firstargisactuallevel) --pretty messy. ev
 	--print(levelfile)
 	
 	--initial parsing (e.g. sections)
-	--witness kept saying i was "applying for the fucking iso" for not just using plain seperators instead of using the header/content thing
 	local phase = nil
 	local subphase = nil
 	
@@ -289,6 +318,7 @@ function game.stop()
 	audio.stoploopingsfxall()
 	game.paused = false
 	game.pausedformenu = false
+	game.pausedfortextbox = false
 	if audio.activesong ~= nil then
 		song = audio.loadedsongs[audio.activesong]
 		if audio.activesongoneshot then

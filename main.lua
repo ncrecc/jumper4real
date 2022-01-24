@@ -30,7 +30,7 @@ function printAsTooltip(str, scale)
 		str,
 		0,
 		love.graphics.getHeight() - 16,
-		(love.graphics.getWidth() / editor.tooltipScale),
+		(love.graphics.getWidth() / (scale or 0.75)),
 		"center",
 		0,
 		scale or 0.75
@@ -201,7 +201,7 @@ for tilename,tile in pairs(tiles) do
 	local masks = {}
 	local i = 0
 	for _,graphic in ipairs(tile.graphics) do
-		print(tilename)
+		--print(tilename)
 		i = i + 1
 		if not graphic.referencename then graphic.referencename = tilename end
 		if not graphic.ingameoffset then graphic.ingameoffset = {0, 0} end
@@ -222,7 +222,7 @@ for tilename,tile in pairs(tiles) do
 					graphic.ingameoffset[1] or 0,
 					graphic.ingameoffset[2] or 0
 				)
-				if tilename == "shortspikesS" then
+				--[[if tilename == "shortspikesS" then
 					for ii=1, #masks[i] do
 						local toprint = ""
 						for iii=1, #masks[i][ii] do
@@ -233,7 +233,7 @@ for tilename,tile in pairs(tiles) do
 						print(toprint)
 					end
 					print("====")
-				end
+				end]]
 				graphic.quad = love.graphics.newQuad(
 					graphic.quad[1] or 0,
 					graphic.quad[2] or 0,
