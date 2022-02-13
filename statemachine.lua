@@ -9,7 +9,8 @@ statemachine = {
 
 function statemachine.setstate(state)
 	print ("statemachine: changing to state \"" .. state .. "\"!")
-	statemachine.currentstate.stop()
+	statemachine.currentstate.stop(state)
+	local previousstate = statemachine.currentstate
 	statemachine.currentstate = statemachine.states[state]
-	statemachine.currentstate.begin()
+	statemachine.currentstate.begin(previousstate)
 end

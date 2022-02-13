@@ -22,7 +22,7 @@ function fakeindicator:update(checkonly)
 end
 
 function fakeindicator:draw()
-	if universalsettings.seetheunseeable then love.graphics.draw(graphics.load("fakeindicator"), self.x, self.y) end
+	if settings.seetheunseeable then love.graphics.draw(graphics.load("fakeindicator"), self.x, self.y) end
 end
 
 return fakeindicator

@@ -13,7 +13,7 @@ function choiceblock.editordraw(x, y, options)
 		end
 	end
 	local mystate = "pass"
-	if (inverse and not universalsettings.choice) or (not inverse and universalsettings.choice) then mystate = "solid" end
+	if (inverse and not settings.choice) or (not inverse and settings.choice) then mystate = "solid" end
 	love.graphics.draw(graphics.load("choiceblock"), choiceblock.quads[mystate], x, y)
 end
 
@@ -26,7 +26,7 @@ function choiceblock:init(x, y, inverse)
 	self.width = tilesize
 	self.height = tilesize
 	self.inverse = inverse
-	self.solid = universalsettings.choice
+	self.solid = settings.choice
 	if self.inverse then self.solid = not self.solid end
 end
 

@@ -90,25 +90,23 @@ function ogmo.editordraw(x, y, options)
 	love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[quadtodraw], x, y)
 end
 
-function ogmo:keyDown(key)
-	return love.keyboard.isDown(controls["P" .. self.playerno .. key:upper()])
-end
-
-function ogmo:init(x, y, width, height, gost, playerno)
+function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
+	self.edge = edge
+	self.magicvalue = magicvalue
+	self.initializationdone = false
+	self.cutscene_firstfreemovement = false --this refers to the first frame after initialization if you're in a cutscene movement. this is a kludge that gets checked so that you can't jump while you're out of bounds and hit your face on the outer wall, or move onto the ceiling if you start the level while falling. this isn't necessary for starting the level jumping since in that case your vertical momentum 
+	
 	self.type = "ogmo"
-	self.player = true--[[
-	self.keyreactions = {
-		["up"] = true
-	}]]
+	self.player = true
 	self.playerno = playerno or 1
 	self.x = x
 	self.y = y
-	self.width = width
-	self.height = height
+	self.width = width or tilesize
+	self.height = height or tilesize
 	self.id = nil --just ego and superego here folks
 	self.gost = gost
 	self.solid = true
-	if self.gost and self.solid then self.solid = false end
+	--if self.gost and self.solid then self.solid = false end
 	self.alive = true
 	self.x_clamped = x
 	self.y_clamped = y
@@ -137,14 +135,26 @@ function ogmo:init(x, y, width, height, gost, playerno)
 	self.tempfrictiontimer = 0
 	self.walljumptempfrictionframes = 24
 	self.tempfrictionphaseouttimer = 12
+	self.cutscenemovement = nil --"right", "left", "up", or "down"
 	self.verticaled = "none"
 	self.verticaledby = {}
+	self.grounded = false
 	self.walled = "none"
 	self.walledby = {}
+	self.overlaps = {}
+	self.overlappingwin = false
+	self.collisioncondition = function(self, collidee)
+		if collidee == "levelborder" then
+			if (not not self.cutscenemovement) or ((not self.gost) and self.overlappingwin) then return false end
+		end
+		if collidee.type == "ogmo" and ((not not collidee.gost) ~= (not not self.gost)) then return false end
+		return true
+	end
 	self.skidding = "none"
 	self.skiddingframes = 12
 	self.skiddingtimer = 0
 	self.skiddingspeedleniency = 0 --formerly 0.5. alt solution to a problem that startskiddingtimer solved - adding leniency to allowing the player to start skidding after they reach max speed. unlike startskiddingtimer, this solution was implemented in a way that doesn't allow players to skid by letting go of the direction they're moving in and then pressing the other direction (only worked with an interim of holding both keys at once)
+	--this could also be good for just... plain leniency
 	self.startskiddingframes = 4
 	self.startskiddingtimer = 0
 	self.ducking = false
@@ -166,18 +176,47 @@ function ogmo:init(x, y, width, height, gost, playerno)
 	self.animframestotumble = 3
 end
 
-function ogmo:setup(x, y, options)
+function ogmo:setup(x, y, options, level, edge, magicvalue)
+	--[[
+	if (not magicvalue) and level.entrance == 0 then magicvalue = 0 end
+	if (not magicvalue) then magicvalue = 1 end
+	]] --uncommenting this, and removing 'type(magicvalue) == "number"' from the next line, makes it so un-numbered ogmos will only show when level.entrance is 0 or 1
+	if type(magicvalue) == "number" and level.entrance ~= magicvalue then return nil end
 	gost = false
 	for i=1, #options do
 		if options[i] == "gost" then
 			gost = true
 		end
 	end
-	if not gost then game.playeramt = game.playeramt + 1 end
-	return ogmo:new(x, y, tilesize, tilesize, gost)
+	if not gost then level.playeramt = level.playeramt + 1 end
+	if edge and not gost then
+		if edge == "left" then
+			x = x - 16
+		elseif edge == "right" then
+			x = x + 16
+		elseif edge == "up" then
+			y = y - 16
+		elseif edge == "down" then
+			y = y + 16
+		end
+	end
+	return ogmo:new(x, y, tilesize, tilesize, gost, 1, edge, magicvalue)
+end
+
+function ogmo:keyDown(key, ignorecutscenelogic)
+	if ignorecutscenelogic then
+		return love.keyboard.isDown(controls["P" .. self.playerno .. key:upper()])
+	else
+		if     key == "right" and self.cutscenemovement == "right" then return true
+		elseif key == "left" and self.cutscenemovement == "left" then return true
+		elseif self.cutscenemovement == "right" or self.cutscenemovement == "left" then return false
+		elseif self.cutscene_firstfreemovement and (self.cutscenemovement == "down" or self.cutscenemovement == "up") then return false end
+		return love.keyboard.isDown(controls["P" .. self.playerno .. key:upper()])
+	end
 end
 
 function ogmo:update(dt)
+	if not self.level then print("OGMO SEZ: I'M IN A NIL LEVEL SO I'M GONNA BE ANGRY ABOUT IT AND FLOOD THE CONSOLE!") end
 	if self.alive then
 		self:movement(dt)
 		
@@ -238,7 +277,7 @@ function ogmo:update(dt)
 					else self.currentquad = "idleblink" end
 				end
 			end
-
+			
 			if string.sub(self.currentquad, 1, 4) == "idle" and self.lookingup then 
 				if self.blinkingquads[self.currentquad] then self.currentquad = "lookupblink"
 				elseif self.canblinkquads[self.currentquad] then self.currentquad = "lookup" end
@@ -289,12 +328,40 @@ end
 
 function ogmo:movement(dt)
 	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of counteracting the player moving against their current momentum but forgetting to apply the same harshness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste and jumper 2
+	if self.cutscenemovement == "up" and not self.level.options.bottombordersolid then
+		self.cutscenemovement = nil --if you jump into the level, you should only be counted as doing cutscenemovement for the minimum amount of time for things to work as they should
+	end
+	
+	self.cutscene_firstfreemovement = false
+	if not self.initializationdone then
+		if self.edge == "left" then
+			self.cutscenemovement = "right"
+			self.cutscene_firstfreemovement = true
+		elseif self.edge == "right" then
+			self.cutscenemovement = "left"
+			self.cutscene_firstfreemovement = true
+		elseif self.edge == "up" then
+			self.cutscenemovement = "down"
+			self.cutscene_firstfreemovement = true
+		elseif self.edge == "down" then
+			self.cutscenemovement = "up"
+			self.vmom = -1 * self.jumpforce
+		end
+		self.initializationdone = true
+	end
+	
+	if self.cutscenemovement and self.x >= 0 and self.x + self.width <= self.level.width and self.y >= 0 and self.y + self.height <= self.level.height then
+		self.cutscenemovement = nil
+	end
+	
 	if self.tempfrictiontimer ~= 0 and self.tempfriction == nil then
 		self.tempfrictiontimer = 0
 	end
 	if self.tempfrictiontimer > 0 then
 		self.tempfrictiontimer = self.tempfrictiontimer - 1
 	end
+	
+	self.grounded = (self.verticaled == "down")
 	
 	if self.verticaled ~= "down" then
 		self.skiddingtimer = 0
@@ -366,7 +433,7 @@ function ogmo:movement(dt)
 	end
 	
 	if (self:notWalkingRight() and self.hmom > 0) or self.hmom > self.maxspeed then --apply friction if player is not moving OR if player is going faster than their normally attainable speed
-		if self:keyDown("right") and self.hmom > self.maxspeed and self.hmom - friction <= self.maxspeed then
+		if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
 			self.hmom = self.maxspeed
 		else
 			self.hmom = self.hmom - (self.tempfriction or self.friction)
@@ -377,7 +444,7 @@ function ogmo:movement(dt)
 			self.hmom = 0
 		end
 	elseif (self:notWalkingLeft() and self.hmom < 0) or (self.hmom * -1) > self.maxspeed then --ditto
-		if self:keyDown("right") and self.hmom > self.maxspeed and self.hmom - friction <= self.maxspeed then
+		if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
 			self.hmom = self.maxspeed
 		else
 			self.hmom = self.hmom + (self.tempfriction or self.friction)
@@ -395,7 +462,9 @@ function ogmo:movement(dt)
 		self.hmom = self.hmom_min
 	end
 	
-	self.vmom = self.vmom + self.gravity
+	if not self.dont_move_vert_on_first_update_of_horiz_edge_entry then
+		self.vmom = self.vmom + self.gravity
+	end
 	
 	if self.vmom > self.vmom_max then
 		self.vmom = self.vmom_max
@@ -413,20 +482,15 @@ function ogmo:movement(dt)
 	local collisionfunctions = {
 		horizontal = function()
 			local newposition
+			local newwalled
+			local newwalledby
 			
-			self.walled, newposition, self.walledby = mobtools.doCollisionScan("horizontal", self)
-			local gostignorecollide = false
-			if self.gost then
-				gostignorecollide = true
-				for _,collider in ipairs(self.walledby) do
-					if collider.type ~= "ogmo" then
-						gostignorecollide = false
-						break
-					end
-				end
-			end
+			newwalled, newposition, newwalledby = mobtools.doCollisionScan("horizontal", self)
 			
-			if newposition == nil or gostignorecollide then
+			self.walled = newwalled
+			self.walledby = newwalledby
+			
+			if newposition == nil then
 				self.x = self.x + self.hmom
 			else
 				local bounce = false
@@ -436,7 +500,7 @@ function ogmo:movement(dt)
 						break
 					end
 				end
-				if bounce then --why do i keep nerd sniping myself into implementing will-never-be-used shit like rubber instead of the basics of jumper
+				if bounce or game.imrubber then --why do i keep nerd sniping myself into implementing will-never-be-used shit like rubber instead of the basics of jumper
 					self.hmom = -self.hmom
 					if math.abs(self.hmom) < 1 then self.hmom = 0 end --no subpixel bouncing
 					local frictiondivisor = math.abs(self.hmom) * 2
@@ -456,20 +520,15 @@ function ogmo:movement(dt)
 		
 		vertical = function()
 			local newposition
-			local colliders
+			local newverticaled
+			local newverticaledby
 			
-			self.verticaled, newposition, self.verticaledby = mobtools.doCollisionScan("vertical", self)
-			local gostignorecollide = false
-			if self.gost then
-				gostignorecollide = true
-				for _,collider in ipairs(self.verticaledby) do
-					if collider.type ~= "ogmo" then
-						gostignorecollide = false
-						break
-					end
-				end
-			end
-			if newposition == nil or gostignorecollide then
+			newverticaled, newposition, newverticaledby = mobtools.doCollisionScan("vertical", self)
+			
+			self.verticaled = newverticaled
+			self.verticaledby = newverticaledby
+			
+			if newposition == nil then
 				self.y = self.y + self.vmom
 			else
 				local bounce = false
@@ -479,7 +538,7 @@ function ogmo:movement(dt)
 						break
 					end
 				end
-				if bounce then
+				if bounce or game.imrubber then
 					self.vmom = -self.vmom
 					if math.abs(self.vmom) < 1 then self.vmom = 0 end
 				else self.vmom = 0 end
@@ -506,12 +565,20 @@ function ogmo:movement(dt)
 		collisionfunctions.horizontal()
 	end
 	
-	local overlaps = mobtools.doOverlapScan(self)
-	for _,obj in ipairs(overlaps) do
+	self.overlaps = mobtools.doOverlapScan(self)
+	local juststoppedoverlappingwin = false
+	if self.overlappingwin then
+		juststoppedoverlappingwin = true
+	end
+	self.overlappingwin = false
+	for _,obj in ipairs(self.overlaps) do --oops, this is a bit of a misnomer. this handles both objects AND tiles killing ogmo, because when collision processes a tile, it returns it formatted like an object.
 		if(obj.deathly) then
-			self:die()
+			if not game.godmode then self:die() end
 		elseif(obj.type == "ogmo" and not obj.gost and self.gost) then
 			self:die(true)
+		elseif obj.type == "win" then
+			self.overlappingwin = true
+			juststoppedoverlappingwin = false
 		end
 	end
 	
@@ -524,24 +591,29 @@ function ogmo:movement(dt)
 	--self.x = self.x + self.hmom
 	--self.y = self.y + self.vmom
 	
-	if not self.gost then --gost's block can't duck. you can use this to your advantage
+	if true then --if not self.gost then --gost's block can't duck. you can use this to your advantage
 		if self:keyDown("down") and self.verticaled == "down" and not self.ducking then
 			self.ducking = true
-			self.height = 13
-			self.y = self.y + 3
+			if not self.gost then
+				self.height = 13
+				self.y = self.y + 3
+			end
 		end
 		if ((self.verticaled == "none") or (not self:keyDown("down"))) and self.ducking then
-			--do we have space to unduck? this is emulated by pretending to give the player a vertical momentum of 3 pixels upward, at their current height, and then seeing if they would collide with anything.
-			--subtly this means you can actually be ducking while in midair if you're being followed by something that gives you no room to unduck. @sylviefluff cute jump 4 mechanic
-			local oldvmom = self.vmom
-			self.vmom = -2.999 --if we use 3 here it will always be true if you duck in a one-tile-high corridor, since the collision scan uses >=/<= (or not </not >) somewhere instead of >/< for some reason. might have to do with when player is flush to the ground?
-			local collisionresult = mobtools.doCollisionScan("vertical", self)
-			if collisionresult == "none" then --if player did not collide with anything while simulating upward movement
-				self.ducking = false
-				self.height = 16
-				self.y = self.y - 3
+			if self.gost then self.ducking = false --when gost's block ducks, it doesn't actually change height, it just stops being able to move
+			else
+				--do we have space to unduck? this is emulated by pretending to give the player a vertical momentum of 3 pixels upward, at their current height, and then seeing if they would collide with anything.
+				--subtly this means you can actually be ducking while in midair if you're being followed by something that gives you no room to unduck. @sylviefluff cute jump 4 mechanic
+				local oldvmom = self.vmom
+				self.vmom = -2.999 --if we use 3 here it will always be true if you duck in a one-tile-high corridor, since the collision scan uses >=/<= (or not </not >) somewhere instead of >/< for some reason. might have to do with when player is flush to the ground?
+				local collisionresult = mobtools.doCollisionScan("vertical", self)
+				if collisionresult == "none" then --if player did not collide with anything while simulating upward movement
+					self.ducking = false
+					self.height = 16
+					self.y = self.y - 3
+				end
+				self.vmom = oldvmom
 			end
-			self.vmom = oldvmom
 		end
 		if self:keyDown("up") and self.verticaled == "down" and self.hmom == 0 and not self.ducking then
 		--if self:keyDown("up") and self.verticaled == "down" and not self.ducking and self:notWalkingLeft() and self:notWalkingRight() then --the former more closely matches behavior in jumper 3
@@ -562,12 +634,21 @@ function ogmo:movement(dt)
 		self.y = self.y_clamped
 	end
 	
-	if self.y > game.levelheight then self:die() end
+	if self.y > self.level.height and not (self.overlappingwin or juststoppedoverlappingwin) then self:die() end
 end
 
 function ogmo:keypressed(key)
-	if key == controls["P" .. self.playerno .. "JUMP"] and self.alive then self:jump()
-	elseif key == controls["P" .. self.playerno .. "DIE"] and self.alive and not self.gost then self:die() end 
+	if key == controls["P" .. self.playerno .. "JUMP"] and self.alive and self.cutscenemovement ~= "down" and
+		not ((self.cutscenemovement == "right" or self.cutscenemovement == "left") and self.cutscene_firstfreemovement)
+	then self:jump()
+	elseif key == controls["P" .. self.playerno .. "DIE"] and self.alive and not self.gost then self:die(false, true); audio.playsfxonce("ogmo die");
+	elseif key == controls["P" .. self.playerno .. "INTERACT"] and self.alive then
+		for _,obj in ipairs(self.overlaps) do
+			if(obj.onInteract) then
+				obj:onInteract(self)
+			end
+		end
+	end
 end
 
 function ogmo:jump()
@@ -613,21 +694,22 @@ function ogmo:jump()
 	self.skidding = "none"
 end
 
-function ogmo:die(vanish) --"vanish" arg is for if you are gost's block and you've been touched by an ogmo
-	if not self.alive then print ("todo: you died, but you're already dead? figure this out. postmovecollision is being called after you're already dead") else
+function ogmo:die(vanish, nosfx) --"vanish" arg is for if you are gost's block and you've been touched by an ogmo
+	if self.alive and not self.level.frozen then
 		if vanish then
 			audio.playsfx("gostblock vanish")
 			print("gost's block vanished")
 		end
-		if not self.gost then audio.playsfx("ogmo die") end
+		if not self.gost and not nosfx then audio.playsfx("ogmo die") end
 		self.alive = false
 		self.solid = false
+		local level = self.level
 		if not self.gost then
-			game.liveplayeramt = game.liveplayeramt - 1
-			if game.liveplayeramt > 0 then print("ogmo is dead! players remaining: " .. game.liveplayeramt) end
+			level.liveplayeramt = level.liveplayeramt - 1
+			if level.liveplayeramt > 0 then print("ogmo is dead! players remaining: " .. level.liveplayeramt) end
 		elseif not vanish then
-			for i=1, #game.loadedobjects do
-				obj = game.loadedobjects[i]
+			for i=1, #level.objects do
+				obj = level.objects[i]
 				if obj.type == "ogmo" and not obj.gost then
 					obj:die()
 					break
@@ -651,8 +733,8 @@ function ogmo:draw()
 	love.graphics.setColor(0, 0, 0, a)
 	love.graphics.rectangle("fill", 400, 0, 400, 16)
 	love.graphics.setColor(r, g, b, a)
-	love.graphics.print(self.hmom, 400)
-	love.graphics.print(self.vmom, 416)
+	love.graphics.print(self.x, 400)
+	love.graphics.print(self.y, 416)
 	--]]
 	--if game.playeramt == 1 then love.graphics.print(self.tempfrictiontimer .. "", 400) end
 end

@@ -99,7 +99,7 @@ function game.loadLevel(levelfilename)
 	game.playeramt = 0
 	game.loadedobjects = {}
 	--collectgarbage()
-	levelfile = love.filesystem.read("levelling/"..levelfilename..".txt")
+	levelfile = love.filesystem.read("levelsets/"..levelfilename..".txt")
 	if levelfile == nil then print "hey your level file ain't jack shit" end
 	
 	

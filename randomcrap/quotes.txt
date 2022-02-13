@@ -1,0 +1,5 @@
+[while talking about collision stuff and how math.floor and math.ceil get interchanged for collision in the opposite direction] "that makes sense, that you swap the ceilings for floors and the floors for ceilings. haha that sounds like an epic house prank" -bert 12/21/2021
+
+if math.abs(((obj.y + self.vmom) - (self.y + self.vmom))) < self.height then --adding vmom/hmom is a quick lazy way to check where the object will be next update. could potentially cause some collision jankiness with objects that are moving into walls but are yet to have their momentum canceled - and could cause unexpected deaths with objects that are going so fast their projected position goes past a wall, or with deadly objects behind a very thin wall. well, whatever. probably won't have to deal with those situations any time soon.
+				--the above cmoment sounds like the comment you write when you're about to raise enormous problems for your future self tbh
+ -bert (probably early-mid december), completely oblivious to what (x + z) - (y + z) entails

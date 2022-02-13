@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 --also this actually makes sense now that we read PiL, holy shit
 
-__HAS_SECS_COMPATIBLE_CLASSES__ = true --bert sez: wut
+__HAS_SECS_COMPATIBLE_CLASSES__ = true
 
 local class_mt = {}
 

@@ -1,72 +1,66 @@
-empty map
-===MAP===
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
-t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+===MAP:1===
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
 ===MAP:5===
-t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t                                                             t 
-t     M                                                       t 
-t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 
-===EXITS===
-yorwinnr
-===MUSIC===
-beedoo beedoo
-===OPTIONS===
+|t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t     M                                                       t 
+|t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t t 

@@ -66,6 +66,7 @@ levelsymbols = {
 		name = "Choice Block A",
 		categories = {"objects"},
 		order = 8,
+		rotations = {"O!", "O!"},
 		tiles = {},
 		objects = {"choiceblock"},
 		tooltip = "The solidity of this block is the player's choice! It's solid only if Choice is ON." --ku
@@ -74,25 +75,26 @@ levelsymbols = {
 		name = "Choice Block B",
 		categories = {"objects"},
 		order = 9,
+		rotations = {"O ", "O "},
 		tiles = {},
 		objects = {"choiceblock;inverse"},
 		tooltip = "The solidity of this block is the player's choice! It's solid only if Choice is OFF." --ku
 	},
 	[" !"] = {
-		name = "Win (1)",
+		name = "Win",
 		categories = {"invisible"},
 		order = 10,
 		tiles = {},
-		objects = {"win;1"},
-		tooltip = "Win tile! Takes you to the 1st exit specified for this level." --ku
+		objects = {"win"},
+		tooltip = "Win tile! Takes you to another level. You can specify which with Magic Numbers." --ku
 	},
 	[" \""] = {
-		name = "Win (2)",
+		name = "Invisible",
 		categories = {"invisible"},
 		order = 11,
-		tiles = {},
-		objects = {"win;2"},
-		tooltip = "Win tile! Takes you to the 2nd exit specified for this level." --ku
+		tiles = {"invisible"},
+		objects = {},
+		tooltip = "It looks exactly like nothing is here, and yet: an invisible block!" --ku
 	},
 	--[[
 		[" "] = {
@@ -134,13 +136,105 @@ levelsymbols = {
 		objects = {},
 		tooltip = "A grassy floor, now with 80% less ticks!" --ku
 	},
-	[" #"] = {
-		name = "Invisible",
+	[" 0"] = {
+		name = "Magic Number (0)",
 		categories = {"invisible"},
-		order = 16,
-		tiles = {"invisible"},
+		rotations = {" 9", " 1"},
+		order = 16.0,
+		tiles = {"magic0"},
+		magicvalue = 0,
 		objects = {},
-		tooltip = "It looks exactly like nothing is here, and yet: an invisible block!" --ku
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 1"] = {
+		name = "Magic Number (1)",
+		categories = {"invisible"},
+		rotations = {" 0", " 2"},
+		order = 16.1,
+		tiles = {"magic1"},
+		magicvalue = 1,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 2"] = {
+		name = "Magic Number (2)",
+		categories = {"invisible"},
+		rotations = {" 1", " 3"},
+		order = 16.2,
+		tiles = {"magic2"},
+		magicvalue = 2,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 3"] = {
+		name = "Magic Number (3)",
+		categories = {"invisible"},
+		rotations = {" 2", " 4"},
+		order = 16.3,
+		tiles = {"magic3"},
+		magicvalue = 3,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 4"] = {
+		name = "Magic Number (4)",
+		categories = {"invisible"},
+		rotations = {" 3", " 5"},
+		order = 16.4,
+		tiles = {"magic4"},
+		magicvalue = 4,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 5"] = {
+		name = "Magic Number (5)",
+		categories = {"invisible"},
+		rotations = {" 4", " 6"},
+		order = 16.5,
+		tiles = {"magic5"},
+		magicvalue = 5,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 6"] = {
+		name = "Magic Number (6)",
+		categories = {"invisible"},
+		rotations = {" 5", " 7"},
+		order = 16.6,
+		tiles = {"magic6"},
+		magicvalue = 6,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 7"] = {
+		name = "Magic Number (7)",
+		categories = {"invisible"},
+		rotations = {" 6", " 8"},
+		order = 16.7,
+		tiles = {"magic7"},
+		magicvalue = 7,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 8"] = {
+		name = "Magic Number (8)",
+		categories = {"invisible"},
+		rotations = {" 7", " 9"},
+		order = 16.8,
+		tiles = {"magic8"},
+		magicvalue = 8,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
+	},
+	[" 9"] = {
+		name = "Magic Number (9)",
+		categories = {"invisible"},
+		rotations = {" 8", " 0"},
+		order = 16.9,
+		tiles = {"magic9"},
+		magicvalue = 9,
+		objects = {},
+		tooltip = "This can modify the tile or object on the layer below it." --ku
 	},
 	["t&"] = {
 		name = "Black",
@@ -352,7 +446,7 @@ levelsymbols = {
 		order = 42,
 		tiles = {"shortspikesE"},
 		objects = {},
-		tooltip = "Shorter, perhaps, but no less pointy and dangerous. Ogmo can slide under this." --Ku
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous."
 	},
 	["x("] = {
 		name = "Short Spikes (Up)",
@@ -361,7 +455,7 @@ levelsymbols = {
 		order = 43,
 		tiles = {"shortspikesN"},
 		objects = {},
-		tooltip = "Shorter, perhaps, but no less pointy and dangerous."
+		tooltip = "Shorter, perhaps, but no less pointy and dangerous. Ogmo can slide under this." --Ku
 	},
 	["x)"] = {
 		name = "Short Spikes (Left)",
@@ -371,6 +465,38 @@ levelsymbols = {
 		tiles = {"shortspikesW"},
 		objects = {},
 		tooltip = "Shorter, perhaps, but no less pointy and dangerous."
+	},
+	["O#"] = {
+		name = "Hint Block",
+		categories = {"objects"},
+		order = 45,
+		tiles = {},
+		objects = {"hintblock"},
+		tooltip = "shows you some text when you hit it from below" --bert
+	},
+	["O$"] = {
+		name = "Door",
+		categories = {"objects"},
+		order = 46,
+		tiles = {},
+		objects = {"door"},
+		tooltip = "similar to a win tile, but requires interacting with it" --bert
+	},
+	["t8"] = {
+		name = "Darkness",
+		categories = {"tiles"},
+		order = 47,
+		tiles = {"dark"},
+		objects = {},
+		tooltip = "add a bit of dark to enhance the mood" -- bert
+	},
+	["t9"] = {
+		name = "Lightness",
+		categories = {"tiles"},
+		order = 48,
+		tiles = {"light"},
+		objects = {},
+		tooltip = "add a bit of light to detract from the mood" -- bert
 	},
 }
 

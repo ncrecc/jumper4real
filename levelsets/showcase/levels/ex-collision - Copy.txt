@@ -1,0 +1,208 @@
+===MAP:1===
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!                t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!  t!t!t!t!t!t!  t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!  t!    t!t!t!  t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!  t!    t!  t!  t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!  t!t!t!t!t!t!  t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!                t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!  t!t!t!t!  t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+===MAP:2===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                          O$    
+|                                                                
+===MAP:3===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                           8    
+|                                                                
+===MAP:4===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                              t&                                
+|                                t&                              
+|                                  t&                            
+|                                    t&                          
+|                      t&              t&                        
+|                        t&              t&                      
+|                          t&                                    
+|                            t&                                  
+|                            t&t&                                
+|                                t&                              
+|                                  t&                            
+===MAP:5===
+|t&t&t&t&t t t t t t t t t t t t   t t t t t t t t t t t t t t t 
+|t&t&t&t&t               t t t t   t t t t t                   t 
+|t&t&t&t&t                                 t             O#    t 
+|t t t t t                 t t   t t t                         t 
+|t             O#                          t                   t 
+|t                                         t         t t t2t t t 
+|t                   t t t t                         t t&t&t&t&t&
+|t                                                   t t&t&t&t&t&
+|t                                           O#      t t t t&t&t&
+|t t       t t t t t t t t t t t       t                 t t&t&t&
+|t&t       t t&t&t&t&t&t&t&t&t&t x&x&x&t                 t t&t&t&
+|t&t       t t&t&t&t&t&t&t&t&t&t t t t t t t t t t t t   t t&t&t&
+|t&t       t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&x%  x#t&t&t&
+|t t       t t t&t&t&t&t&                t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&  t&t&t&t&t&t&  t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&  t&    t&t&t&  t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&  t&    t&  t&  t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&  t&t&t&t&t&t&  t&t&t&t&t&t&x%  x#t&t&t&
+|t x)  O#  x't t&t&t&t&t&                t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&t&  t&t&t&t&  t&t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&x%  x#t&t&t&
+|t x)      x't t t t t t t t t t3t&t&t&t&t&t&t&t&t&t&x%  x#t&t&t&
+|t x)                        t5t t)t&t&t&t&t&t&t&t&t&x%  x#t&t&t&
+|t x)                          t5t t3t&t&t&t&t&t&t&t&x%  x#t&t&t&
+|t t t t t t t t t t t t t3      t5t t,t&t&t t t t t t   t t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t&t5t t3      t5t t3t&t             t t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t&t&t+t t3      t5t t)t     O#      t t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t5t t3      t5t t             t t t t 
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t*t t3        t+                  t 
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t5t t3                          t 
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t+t t3    t)t3      M     M   t 
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t5t t t t t t t t t t t t t t 
+===MAP:6===
+|                                                                
+|                                                                
+|                                                         3      
+|                                                                
+|               4                                                
+|                                                                
+|                                                                
+|                                                                
+|                                             5                  
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|       2                                                        
+|                                                                
+|                                                                
+|                                                                
+|                            t*  t3                              
+|                                                                
+|                        t,      t+  t3                          
+|                                                                
+|                        t5  t)      t*  t3       1              
+|                                                                
+|                            t5  t,                              
+|                                                                
+|                                t5                   0     8    
+|                                                                
+===MUSIC===
+|
+===BACKGROUND===
+|#FFFFFF
+===HINTS===
+|jumper 4 allows objects and tiles to have pixel-perfect collision and overlap detection. this is a tougher feat than it sounds, as this game was built almost entirely from scratch in love2d, with the exception of some very simple stuff nicked from other projects and the internet (hex to color, string split, class system via metatables, etc.) love2d doesn't inherently handle collision and overlaps, unlike multimedia fusion (knytt stories) and game maker (jumper).\n\ntiles/objects with collision more complex than a 16x16 box either specify the size of their hitbox (and the offset of it, if it's a tile), or use a "mask" system where individual pixels are given values of "true" or "false". the "mask" can be either automatically generated based on the opacity of pixels in an image (including the image that the object/tile normally displays) or manually entered pixel by pixel.\n\nthere's no special logic that would let ogmo walk up slopes right now though, partially since he never actually enters a surface when he collides with it. see next textbox for more info
+|collision and overlap are distinct. overlap just checks if two objects/tiles are overlapping. collision, meanwhile, detects if one object has enough momentum to move into a solid object/tile on the next update, and also returns a suggested position the collider should snap to if they would collide with anything. a full collision check sets the collider's position to whatever position, out of all the suggested positions given by the different things they collided with, cancels their movement the most. this momentum check means that objects can't pass through things by having enough speed.\nat extremely high (not normally attainable) vertical speeds, though, this seems to fail, for some reason.
+|also, there's still a minor kink in the collision. try walking back and forth across this slope slowly. the gap (15 pixels wide) is too small for ogmo (16 pixels wide) to fit, but sometimes he'll briefly lower by one pixel, then immediately snap back up. (strangely, this only happens with slopes facing left.)\n\na similar bug can occur when walking very slowly near a one-tile gap in the ceiling and jumping repeatedly without being aligned. occasionally, you'll briefly clip into the ceiling.
+|one-tile gaps are difficult to get into, unless they're aligned with a surface. you can even run straight over one-tile gaps in the floor. i might change this, though there's very little reason to use one-tile gaps in actual level design.
+|as a final note: collision between two objects that both use "mask" collision isn't supported yet... but that situation never comes up in any of the original jumper games, as far as i'm aware.

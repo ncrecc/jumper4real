@@ -19,7 +19,10 @@ menu_substates = {
 			},
 			[3] = {
 				name = "editor",
-				tooltip = "Work in progress, whoo!",
+				tooltip = "make your own levels. some things like exits, music, and background color have to be set in the file.",
+				--tooltip = "Think you have what it takes to outclass the official levels? You probably do!",
+				--tooltip = "Make your own levels, just like the official levels.",
+				--tooltip = "Work in progress, whoo!",
 				--tooltip = "TODO! It will be awesome. Or at least usable. Awesomely usable?",
 				action = function()
 					statemachine.setstate("editor")
@@ -48,7 +51,7 @@ menu_substates = {
 				vartoggle = "playaudio",
 				tooltip = "Play audio?",
 				action = function()
-					if universalsettings["playaudio"] then
+					if settings["playaudio"] then
 						love.audio.setVolume(1)
 					else
 						love.audio.setVolume(0)
@@ -60,8 +63,8 @@ menu_substates = {
 				name = "sfx: ",
 				vartoggle = "playsfx",
 				tooltip = "Play sound effects?",
-				action = function()
-					if universalsettings["playsfx"] then
+				action = function() --this might look nonsensical but note that if vartoggle is defined, then the corresponding variable gets toggled in settings, *then* if action is defined it runs action
+					if settings["playsfx"] then
 						audio.changesfxvolume(1)
 					else
 						audio.changesfxvolume(0)
@@ -73,7 +76,7 @@ menu_substates = {
 				vartoggle = "playmusic",
 				tooltip = "Play the sweet music?",
 				action = function()
-					if universalsettings["playmusic"] then
+					if settings["playmusic"] then
 						audio.changemusicvolume(1)
 					else
 						audio.changemusicvolume(0)
@@ -97,7 +100,7 @@ menu_substates = {
 				tooltip = "Exit to the title screen.",
 				action = function()
 					if menu.changedsettings then
-						writetouniversalsettings()
+						writetosettings()
 					end
 					menu.changeSubstate("title")
 					menu.picker = 2
@@ -116,12 +119,12 @@ menu_substates = {
 		},
 		onLoad = function()
 			menu.options = {} --we have to explicitly do this or else some weird bug can pop up with table.sort somehow accessing the "back" button on subsequent visits of this menu and making it the second option... before the back button is actually loaded. pretty weird
-			levelsets = love.filesystem.getDirectoryItems("levelling")
-			ext_levelsets = love.filesystem.getDirectoryItems("ext_levelling")
+			levelsets = love.filesystem.getDirectoryItems("levelsets")
+			ext_levelsets = love.filesystem.getDirectoryItems("ext_levelsets")
 			local i = 1
 			while i <= #levelsets do
 				local thislevelset = levelsets[i]
-				local levelsetinfo = love.filesystem.read("levelling/" .. thislevelset .. "/LEVELINFO.txt")
+				local levelsetinfo = love.filesystem.read("levelsets/" .. thislevelset .. "/LEVELINFO.txt")
 				levelsetinfo = correctnewlines(levelsetinfo)
 				levelsetinfo = split(levelsetinfo, "\n")
 				local firstmap = levelsetinfo[3]
@@ -129,8 +132,7 @@ menu_substates = {
 					name = levelsetinfo[1],
 					tooltip = levelsetinfo[2],
 					action = function()
-						game.currentlevelset = thislevelset --not clear that game.mapname and game.currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
-						game.mapname = firstmap
+						game.loadLevelset("levelsets/" .. thislevelset, levelsetinfo)
 						statemachine.setstate("game")
 					end
 				}
@@ -139,8 +141,8 @@ menu_substates = {
 			local ii = 1
 			while ii <= #ext_levelsets do
 				local thislevelset = ext_levelsets[ii]
-				if love.filesystem.getInfo("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt") ~= nil then
-					local levelsetinfo = love.filesystem.read("ext_levelling/" .. thislevelset .. "/LEVELINFO.txt")
+				if love.filesystem.getInfo("ext_levelsets/" .. thislevelset .. "/LEVELINFO.txt") ~= nil then
+					local levelsetinfo = love.filesystem.read("ext_levelsets/" .. thislevelset .. "/LEVELINFO.txt")
 					levelsetinfo = correctnewlines(levelsetinfo)
 					levelsetinfo = split(levelsetinfo, "\n")
 					local firstmap = levelsetinfo[3]
@@ -148,8 +150,7 @@ menu_substates = {
 						name = levelsetinfo[1],
 						tooltip = levelsetinfo[2],
 						action = function()
-							game.currentlevelset = thislevelset --not clear that game.mapname and game.currentlevelset are globals :/ lots of stuff in game needs to be made a member of the game table
-							game.mapname = firstmap
+							game.loadLevelset("ext_levelsets/" .. thislevelset, levelsetinfo)
 							statemachine.setstate("game")
 						end
 					}

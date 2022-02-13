@@ -1,0 +1,180 @@
+===MAP:1===
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!                                    t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&                            t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&                            t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&    t&t&t&t&                t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&    t&t&t&t&      t&t&t&    t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&    t&t&t&t&      t&t&t&    t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&                            t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&                            t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&          t&t&t&t&t&        t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&          t&t&t&t&t&        t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&          t&t&t&t&t&        t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&                            t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!  t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&  t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!      t&  t&            t&  t&      t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!      t&  t&            t&  t&      t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!      t&t&t&            t&t&t&      t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!                                    t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+===MAP:2===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                  t9t9t9t9t9t9t9t9t9t9t9                        
+|                  t9t9t9t9t9t9                                  
+|                  t9t9              t8t8t8  t8                  
+|                  t9t9        t9  t8        t8                  
+|                  t9          t9  t8      t9t8                  
+|                  t9    t9t9t9        t9t9  t8                  
+|                  t9        t8t8t8t8t8      t8                  
+|                  t9      t8              t8t8                  
+|                  t9      t8              t8t8                  
+|                          t8          t8t8t8t8                  
+|                      t8t8t8t8t8t8t8t8t8t8t8t8                  
+|                                                                
+|                      t8                t8                      
+|                      t8                t8                      
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|        O$                                                      
+|                                                                
+|                                                                
+|                                                                
+===MAP:3===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                    t9t9t9t9t9t9t9t9                            
+|                  t9t9                                          
+|                  t9                                            
+|                  t9                                            
+|                  t9                        t8                  
+|                  t9                        t8                  
+|                  t9                        t8                  
+|                  t9                        t8                  
+|                                            t8                  
+|                                          t8t8                  
+|                            t8t8t8t8t8t8t8t8                    
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|         8                                                      
+|                                                                
+|                                                                
+|                                                                
+===MAP:5===
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t&t&t&t t t t t t t t t t t t t t t t t t t t t&t&t&t&t&t&
+|t&t&t t t t t     x(x(x(x(            x(x(x(x(    t t t t t t&t&
+|t&t&t                                                     t t&t&
+|t&t&t                                                     t t&t&
+|t&t&t                       x&x&x&x&                      t t&t&
+|t&t t       t t t t t t t t t t t t t t t t t t t t       t t t&
+|t&t         t                                     t         t t&
+|t&t         t                                     t         t t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t         t                                     t         t t&
+|t&t       x't                                     t x)      t t&
+|t&t       x't                                     t x)      t t&
+|t&t       x't                                     t x)      t t&
+|t&t       x't                                     t x)      t t&
+|t&t         t                                     t         t t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t x)      t                                     t       x't t&
+|t&t         t                                     t         t t&
+|t&t         t                                     t         t t&
+|t&t t       t t t t t t t t t t t t t t t t t t t t       t t t&
+|t&t&t                       x(x(x(x(                      t t&t&
+|t&t&t                                                     t t&t&
+|t&t&t   M   M                                             t t&t&
+|t&t&t t t t t     x&x&x&x&            x&x&x&x&    t t t t t t&t&
+|t&t&t&t&t&t&t t t t t t t t t t t t t t t t t t t t t&t&t&t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+===MAP:6===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|         8   0                                                  
+|                                                                
+|                                                                
+|                                                                
+===MUSIC===
+|art
+===OPTIONS===
+|pauseoldmusic
+===BACKGROUND===
+|#FF1C00
+===EXITS===
+|
+|
+|
+|
+|
+|
+|
+|room1

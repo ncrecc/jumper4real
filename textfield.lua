@@ -1,6 +1,6 @@
 textfield = class:new()
 
-function textfield:init(x, y, width, height, id, textsource, tooltip)
+function textfield:init(x, y, width, height, id, textsource, tooltip, forbidden)
 	self.id = id
 	self.x = x
 	self.y = y
@@ -9,10 +9,11 @@ function textfield:init(x, y, width, height, id, textsource, tooltip)
 	self.focus = false
 	self.textsource = textsource
 	self.tooltip = tooltip
+	self.forbidden = forbidden or {} --forbidden characters; not handled by textfield itself but by the environment in which textfield appears
 end
 
-function textfield:setup(x, y, width, height, id, textsource, tooltip)
-	return textfield:new(x, y, width, height, id, textsource, tooltip)
+function textfield:setup(x, y, width, height, id, textsource, tooltip, forbidden)
+	return textfield:new(x, y, width, height, id, textsource, tooltip, forbidden)
 end
 
 function textfield:update()

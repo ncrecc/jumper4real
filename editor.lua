@@ -19,12 +19,15 @@ editor = {
 	viewallsymbolmaps = true,
 	tilebaroffset_x = tilesize,
 	tilebaroffset_y = tilesize,
+	currentlevelset = "",
+	currentlevel = "",
 	currentpath = "",
 	currenttool = "pencil",
 	originalmousepress = nil,
 	eyedropperused = false,
 	levelpackedfortesting = nil,
 	returningfromgame = false,
+	transitioningtogame = false,
 	
 	selectionquads = {
 		["lmb"] = quad(0, 0, 16, 16, selectionimg),
@@ -35,7 +38,7 @@ editor = {
 		["rmb_orig"] = quad(32, 16, 16, 16, selectionimg),
 		["any"] = quad(0, 32, 16, 16, selectionimg)
 	},
-	inactiveselectionalpha = 0.75,
+	inactiveselectionalpha = 0.5,
 	
 	tools = {
 		"pencil",
@@ -63,7 +66,9 @@ editor = {
 	hoveredelement = nil
 }
 editor.textfields = {
-	textfield:setup(256, 528, 160, 16, "saveload", "currentpath", "The level that should be saved to with Ctrl+S, or loaded with Ctrl+L.")
+	--textfield:setup(256, 528, 160, 16, "saveload", "currentpath", "The level that should be saved to with Ctrl+S, or loaded with Ctrl+L.")
+	textfield:setup(252, 528, 80, 16, "currentlevelset", "currentlevelset", "name of levelset the level is in", set("\\", "/", ":", "*", "?", "\"", "<", ">", "|")), --excluded characters set is windows-centric :/
+	textfield:setup(340, 528, 80, 16, "currentlevel", "currentlevel", "name of level, within levelset, to save/load", set("\\", ":", "*", "?", "\"", "<", ">", "|"))
 }
 editor.focusedfield = nil
 
@@ -96,16 +101,16 @@ for i, v in ipairs(editor.tools) do
 	))
 end
 
-function editor.loadLevel(levelfilename)
+function editor.loadLevel(levelfile)
 	--[[for i=1, #game.loadedobjects do
 		for ii=1, #game.loadedobjects[i] do
 			game.loadedobjects[i][ii]:obliterate()
 		end
 	end]]
 	--collectgarbage()
-	levelfile = love.filesystem.read(levelfilename..".txt")
+	--levelfile = love.filesystem.read(levelfilename)
 	if levelfile == nil then print "hey your level file ain't jack shit" end
-	--print("levelling/" .. levelfilename .. ".txt")
+	--print("levelsets/" .. levelfilename .. ".txt")
 	
 	--print(levelfile)
 	
@@ -116,12 +121,14 @@ function editor.loadLevel(levelfilename)
 	
 	levelfile = correctnewlines(levelfile)
 	levelfile = split(levelfile, "\n")
-		
+	
+	local newcomments = {}
 	local newsymbolmaps = {}
 	local newexits = {}
 	local newmusic = ""
 	local newoptions = {}
 	local newbackground = ""
+	local newhints = {}
 	local y_tiled = 0
 	local maplength = nil
 	local symbolmapisempty = true
@@ -139,9 +146,11 @@ function editor.loadLevel(levelfilename)
 			y_tiled = 0
 			justsetphase = true
 			symbolmapisempty = true
+		elseif not phase then
+			table.insert(newcomments, row)
 		end
 		--writes padding the beginning of each non-header row with | fixes the problem of === in user input potentially screwing things up. here adding | is optional to ensure... trivial backward-compatibility
-		if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
+		if phase and string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
 		if not justsetphase then
 			if phase == "MAP" then
 				if subphase == nil then subphase = 1 end
@@ -171,16 +180,21 @@ function editor.loadLevel(levelfilename)
 				table.insert(newoptions, row)
 			elseif phase == "BACKGROUND" then
 				newbackground = row
+			elseif phase == "HINTS" then
+				table.insert(newhints, row)
 			end
 		end
 	end
 	
 	if newbackground == "" then newbackground = editor.background end
-	return newsymbolmaps, newexits, newmusic, newoptions, newbackground
+	return newcomments, newsymbolmaps, newexits, newmusic, newoptions, newbackground, newhints
 end
 
-function editor.packLevel()
+function editor.packLevel(splitme)
 	levelfile = ""
+	for i=1, #editor.comments do
+		levelfile = levelfile .. editor.comments[i] .. "\n"
+	end
 	for i=1, #editor.symbolmaps do
 		if not editor.symbolmaps[i].isempty then
 			levelfile = levelfile .. "===MAP:" .. i .. "===\n"
@@ -193,21 +207,31 @@ function editor.packLevel()
 			end
 		end
 	end
-	levelfile = levelfile .. "===EXITS===\n"
-	for i=1, #editor.exits do
-		if editor.exits[i] ~= "" then levelfile = levelfile .. "|" .. editor.exits[i] .. "\n" end
+	if #editor.exits > 0 then
+		levelfile = levelfile .. "===EXITS===\n"
+		for i=1, #editor.exits do
+			levelfile = levelfile .. "|" .. editor.exits[i] .. "\n"
+		end
 	end
-	levelfile = levelfile .. "===MUSIC===\n" .. "|" .. editor.music .. "\n"
-	levelfile = levelfile .. "===OPTIONS===\n"
-	--print("there's options")
-	--print(#editor.options)
-	for i=1, #editor.options do
-		if editor.options[i] ~= "" then levelfile = levelfile .. "|" .. editor.options[i] .. "\n" end
+	if editor.music then levelfile = levelfile .. "===MUSIC===\n" .. "|" .. editor.music .. "\n" end
+	if #editor.options > 0 then
+		levelfile = levelfile .. "===OPTIONS===\n"
+		for i=1, #editor.options do
+			if editor.options[i] ~= "" then levelfile = levelfile .. "|" .. editor.options[i] .. "\n" end
+		end
 	end
-	return levelfile
+	if editor.background then levelfile = levelfile .. "===BACKGROUND===\n" .. "|" .. editor.background .. "\n" end
+	if #editor.hints > 0 then
+		levelfile = levelfile .. "===HINTS===\n"
+		for i=1, #editor.hints do
+			levelfile = levelfile .. "|" .. editor.hints[i] .. "\n"
+		end
+	end
+	if not splitme then return levelfile
+	else return split(levelfile, "\n") end
 end
 
-editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background = editor.loadLevel("defaultlevel")
+editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(love.filesystem.read("defaultlevel.txt"))
 
 
 
@@ -297,9 +321,11 @@ table.insert(editor.buttons, button:setup(
 ))
 
 function editor.begin()
-	if not editor.returningfromgame then for k,v in pairs(editor_pages) do editor.pages[k] = v end end
-	love.window.updateMode(512 + editor.addedwidth, 512 + editor.addedheight)
-	if not editor.returningfromgame then audio.playsong("groove") end
+	if not editor.returningfromgame then
+		for k,v in pairs(editor_pages) do editor.pages[k] = v end
+		love.window.updateMode(512 + editor.addedwidth, 512 + editor.addedheight)
+		audio.playsong("groove")
+	end
 	editor.returningfromgame = false
 	editor.levelpackedfortesting = nil
 end
@@ -323,6 +349,52 @@ function getSymbolTooltip(symbol)
 	if symbol.name ~= "Ogmo" then tooltip = symbol.name .. ": " .. symbol.tooltip
 	else tooltip = ogmos[game.ogmoskin].name .. ": " .. ogmos[game.ogmoskin].description end
 	return tooltip
+end
+
+function editor.trySymbolRotate(dir)
+	--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotating), so which do we rotate?
+	--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
+	local rotatetile = nil
+	local hasrotations = {false, false, false}
+	for k,v in ipairs(editor.mbtilekeys) do
+		hasrotations[k] = not not levelsymbols[editor[v]].rotations
+	end
+	
+	local mbtotry = editor.lastmbtouched
+	if not hasrotations[mbtotry] then
+		mbtotry = 1
+		local mbstried = 0
+		while not hasrotations[mbtotry] do
+			mbstried = mbstried + 1
+			mbtotry = ((mbtotry + 1) % 3) + 1 --see if another mouse button has a rotateable tile
+			if mbstried >= 3 then break end
+		end
+	end
+	
+	rotatetile = editor.mbtilekeys[mbtotry] or "lmbtile"
+	
+	local rotations = levelsymbols[editor[rotatetile]].rotations
+	if rotations then
+		if dir == "back" and rotations[1] then
+			for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+				for k,symbol in ipairs(row) do
+					if symbol == editor[rotatetile] then
+						editor.pages[editor.currentpage][rownum][k] = rotations[1]
+					end
+				end
+			end
+			editor[rotatetile] = rotations[1]
+		elseif dir == "forward" and rotations[2] then
+			for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+				for k,symbol in ipairs(row) do
+					if symbol == editor[rotatetile] then
+						editor.pages[editor.currentpage][rownum][k] = rotations[2]
+					end
+				end
+			end
+			editor[rotatetile] = rotations[2]
+		end
+	end
 end
 
 function editor.update(dt)
@@ -435,82 +507,52 @@ function editor.keypressed(key)
 		menu.picker = 3
 	end
 	if editor.focusedfield == nil then
-		if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and key == "s" then
-			local levelfile = editor.packLevel()
+		if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and key == "s" then --previously just ctrl+s but i got paranoid about accidentally saving the current map as something instead of loading since there's no "really save?" prompt
+			local fulllevelpath = "ext_levelsets/" .. editor.currentlevelset .. "/levels/" .. editor.currentlevel .. ".txt"
+			local levelfile = editor.packLevel(false)
 			--love.filesystem.write("boink.txt",levelfile)
 			local pathuptolevel = ""
-			local pathuptoleveltemp = split(editor.currentpath, "/")
+			local pathuptoleveltemp = {editor.currentlevelset, "levels"}
+			if not editor.currentlevelset or editor.currentlevelset == "" then
+				pathuptoleveltemp = {"ZZZorphanedlevels", "levels"}
+				fulllevelpath = "ext_levelsets/ZZZorphanedlevels/levels/" .. editor.currentlevel .. ".txt"
+				print("no levelset specified, so this will be saved to ZZZorphanedlevels")
+			end
+			local levelandsubfolders = split(editor.currentlevel, "/")
+			for i=1, #levelandsubfolders do pathuptoleveltemp[#pathuptoleveltemp + 1] = levelandsubfolders[i] end
 			for i=1, #pathuptoleveltemp - 1 do
 				pathuptolevel = pathuptolevel .. pathuptoleveltemp[i]
 				if i ~= #pathuptoleveltemp - 1 then pathuptolevel = pathuptolevel .. "/" end
 			end
-			if pathuptolevel == "" then
-				print("saving, but since you didn't specify a folder this won't be playable...")
-			else
-				love.filesystem.createDirectory("ext_levelling/" .. pathuptolevel)
-			end
-			local success, message = love.filesystem.write("ext_levelling/" .. editor.currentpath .. ".txt",levelfile)
+			love.filesystem.createDirectory("ext_levelsets/" .. pathuptolevel)
+			local success, message = love.filesystem.write(fulllevelpath,levelfile)
 			if success then
-				print("saved to " .. editor.currentpath .. ".txt!")
+				print("saved to " .. fulllevelpath .. "!")
 			else
 				print("save failed. " .. message)
 			end
 		elseif (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and key == "l" then
-			if love.filesystem.getInfo("ext_levelling/"..editor.currentpath..".txt") == nil then print("mate you're not loading shit")
+			local currentlevelset = editor.currentlevelset
+			if currentlevelset == "" or not currentlevelset then currentlevelset = "ZZZorphanedlevels" end
+			local fulllevelpath = "ext_levelsets/" .. currentlevelset .. "/levels/" .. editor.currentlevel .. ".txt"
+			if love.filesystem.getInfo(fulllevelpath) == nil then print("mate you're not loading shit: " .. fulllevelpath .. " is invalid")
 			else
-				editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background = editor.loadLevel("ext_levelling/"..editor.currentpath)
+				editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(love.filesystem.read(fulllevelpath))
 				editor.handleLoadedLevel()
-				print("loaded level " .. editor.currentpath .. ".txt!")
+				print("loaded level " .. fulllevelpath .. "!")
 			end
 		elseif key == "tab" then
-			editor.levelpackedfortesting = editor.packLevel()
+			editor.levelpackedfortesting = editor.packLevel(true)
+			editor.transitioningtogame = true
 			game.editormode = true
-			game.map, game.tilemap, game.exits, game.currentsong, game.leveloptions, game.background = game.loadLevel(editor.levelpackedfortesting, true)
+			local testlevel = level:new(editor.levelpackedfortesting, nil, 0)
+			game.templatelevels[1] = testlevel
+			game.activelevels[1] = testlevel:clone()
 			statemachine.setstate("game")
-		elseif key == "," or key == "." then
-			--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotating), so which do we rotate?
-			--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
-			local rotatetile = nil
-			local hasrotations = {false, false, false}
-			for k,v in ipairs(editor.mbtilekeys) do
-				hasrotations[k] = not not levelsymbols[editor[v]].rotations
-			end
-			
-			local mbtotry = lastmbtouched
-			if not hasrotations[mbtotry] then
-				mbtotry = 1
-				local mbstried = 0
-				while not hasrotations[mbtotry] do
-					mbstried = mbstried + 1
-					mbtotry = ((mbtotry + 1) % 3) + 1 --see if another mouse button has a rotateable tile
-					if mbstried >= 3 then break end
-				end
-			end
-			
-			rotatetile = editor.mbtilekeys[mbtotry] or "lmbtile"
-			
-			local rotations = levelsymbols[editor[rotatetile]].rotations
-			if rotations then
-				if key == "," and rotations[1] then
-					for rownum,row in ipairs(editor.pages[editor.currentpage]) do
-						for k,symbol in ipairs(row) do
-							if symbol == editor[rotatetile] then
-								editor.pages[editor.currentpage][rownum][k] = rotations[1]
-							end
-						end
-					end
-					editor[rotatetile] = rotations[1]
-				elseif key == "." and rotations[2] then
-					for rownum,row in ipairs(editor.pages[editor.currentpage]) do
-						for k,symbol in ipairs(row) do
-							if symbol == editor[rotatetile] then
-								editor.pages[editor.currentpage][rownum][k] = rotations[2]
-							end
-						end
-					end
-					editor[rotatetile] = rotations[2]
-				end
-			end
+		elseif key == "," then
+			editor.trySymbolRotate("back")
+		elseif key == "." then
+			editor.trySymbolRotate("forward")
 		elseif editor.toolbindings[key] ~= nil then
 			editor.currenttool = editor.toolbindings[key]
 		elseif tonumber(key) ~= nil then
@@ -607,9 +649,26 @@ function editor.mousereleased(x, y, button)
 end
 
 function editor.textinput(t)
-	if editor.focusedfield ~= nil then
+	if editor.focusedfield ~= nil and not editor.focusedfield.forbidden[t] then
 		local field = editor.focusedfield
 		editor[field.textsource] = editor[field.textsource] .. t
+	end
+end
+
+function editor.filedropped(file)
+	file:open("r")
+	editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(file:read())
+	file:close()
+	editor.handleLoadedLevel()
+	print("loaded dropped-in level " .. file:getFilename() .. "!")
+end
+
+function editor.wheelmoved(x, y)
+	--ignoring x so that things won't be nightmarish if you have one of those mouse wheels that actually can scroll in the x direction
+	if y < 0 then
+		editor.trySymbolRotate("back")
+	elseif y > 0 then
+		editor.trySymbolRotate("forward")
 	end
 end
 
@@ -756,7 +815,8 @@ function editor.draw()
 	end
 end
 
-function editor.stop()
-	love.window.updateMode(512, 512)
+function editor.stop(newstate)
+	if not editor.transitioningtogame then love.window.updateMode(512, 512) end
+	editor.transitioningtogame = false
 	love.keyboard.setKeyRepeat(false)
 end

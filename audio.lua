@@ -12,7 +12,8 @@ audio = {
 		type = 'lowpass',
 		volume = 0.5,
 		highgain = 0.025
-	}
+	},
+	oncesfx = {}
 }
 
 function audio.stopsong()
@@ -54,46 +55,48 @@ function audio.flushpauses()
 end
 
 function audio.playsong(songname, oneshot, pauseold)
-	--is specifying it's a oneshot necessary? should this just be able to determine whether it's a oneshot on its own
-	if pauseold then
-		audio.pausesong()
-	else
-		audio.stopsong()
-	end
-	if audio.loadedsongs[songname] == nil then
-		if not oneshot then
-			audio.loadedsongs[songname] = {
-				loop_playing = false, --initially this was for a dumb kludge to play the loop again when it wasn't already playing because i had no idea :setLooping() was a thing. i have no idea why i kept this. helps with pause() a bit i guess
-				loop = love.audio.newSource("audial/" .. songname .. " loop.ogg", "stream")
-			}
-			if love.filesystem.getInfo("audial/" .. songname .. " intro.ogg") then
-				audio.loadedsongs[songname].intro = love.audio.newSource("audial/" .. songname .. " intro.ogg", "stream")
+	if (songname) and (songname ~= "") and (songname ~= " ") then
+		--is specifying it's a oneshot necessary? should this just be able to determine whether it's a oneshot on its own
+		if pauseold then
+			audio.pausesong()
+		else
+			audio.stopsong()
+		end
+		if audio.loadedsongs[songname] == nil then
+			if not oneshot then
+				audio.loadedsongs[songname] = {
+					loop_playing = false, --initially this was for a dumb kludge to play the loop again when it wasn't already playing because i had no idea :setLooping() was a thing. i have no idea why i kept this. helps with pause() a bit i guess
+					loop = love.audio.newSource("audial/" .. songname .. " loop.ogg", "stream")
+				}
+				if love.filesystem.getInfo("audial/" .. songname .. " intro.ogg") then
+					audio.loadedsongs[songname].intro = love.audio.newSource("audial/" .. songname .. " intro.ogg", "stream")
+				end
+			else
+				audio.loadedsongs[songname] = love.audio.newSource("audial/" .. songname .. ".ogg", "stream")
 			end
+		end
+		song = audio.loadedsongs[songname]
+		if oneshot then
+			song:setVolume(audio.musicvolume)
+			love.audio.play(song)
+			audio.activesongoneshot = true
 		else
-			audio.loadedsongs[songname] = love.audio.newSource("audial/" .. songname .. ".ogg", "stream")
+			if song.intro ~= nil then
+				song.intro:setVolume(audio.musicvolume)
+			end
+			song.loop:setVolume(audio.musicvolume)
+			if song.intro ~= nil and not song.loop_playing then
+				love.audio.play(song.intro)
+			else
+				song.loop:setLooping(true)
+				love.audio.play(song.loop)
+				song.loop_playing = true
+			end
+			audio.activesongoneshot = false
 		end
+		audio.activesong = songname
+		print("now playing: " .. audio.activesong)
 	end
-	song = audio.loadedsongs[songname]
-	if oneshot then
-		song:setVolume(audio.musicvolume)
-		love.audio.play(song)
-		audio.activesongoneshot = true
-	else
-		if song.intro ~= nil then
-			song.intro:setVolume(audio.musicvolume)
-		end
-		song.loop:setVolume(audio.musicvolume)
-		if song.intro ~= nil and not song.loop_playing then
-			love.audio.play(song.intro)
-		else
-			song.loop:setLooping(true)
-			love.audio.play(song.loop)
-			song.loop_playing = true
-		end
-		audio.activesongoneshot = false
-	end
-	audio.activesong = songname
-	print("now playing: " .. audio.activesong)
 end
 
 function audio.playsfx(soundname, looping)
@@ -104,6 +107,10 @@ function audio.playsfx(soundname, looping)
 		table.insert(audio.loopingsfx, sfx)
 	end
 	love.audio.play(sfx)
+end
+
+function audio.playsfxonce(soundname)
+	audio.oncesfx[soundname] = true
 end
 
 function audio.stoploopingsfx(soundname)
@@ -148,5 +155,14 @@ function audio.update()
 		print("stopping " .. audio.activesong)
 		audio.stopsong()
 	end
-	
+	local oncesfxnonempty = false
+	for k,v in pairs(audio.oncesfx) do
+		oncesfxnonempty = true
+		if v then
+			local sfx = love.audio.newSource("audial/sfx/" .. k .. ".ogg", "static")
+			sfx:setVolume(audio.sfxvolume)
+			love.audio.play(sfx)
+		end
+	end
+	if oncesfxnonempty then audio.oncesfx = {} end
 end

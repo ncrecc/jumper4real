@@ -1,7 +1,0 @@
-bert's block
-
-my block idea's pretty simple. you just click on it (or drag your mouse onto it while held down) and it changes from solid to nonsolid, or nonsolid to solid
-
-far in the future this will need some gamepad version (gets toggled when right joystick points towards it?) but that's not now
-
--bert

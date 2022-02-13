@@ -1,0 +1,215 @@
+===MAP:1===
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+|t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!t!
+===MAP:2===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|      O$                                                        
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+===MAP:3===
+|                                                                
+|                                                                
+|                                                                
+|                        t&t&t&t&t&t&t&t&t&t&t&                  
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|       8                                                        
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+===MAP:4===
+|                        t&t&t&t&t&t&t&t&t&t&t&t&t&t&            
+|                                                                
+|                                                                
+|                                            t*                  
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+===MAP:5===
+|t&t&t&t&t&t&t&t&t&t&t&t&t)t)t)t)t)t)t)t)t)t)t)t)t)t)t&t&t&t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t&t&t                         t t&t t t t t 
+|t&t&t&t&t&t&t&t&t&t&t&t&t   M"                    t t&t x$x$x$t 
+|t&t&t&t&t&t t t t t t&t&t+t+t+t+t+t+t+t+t+t+t+    t t&t       t 
+|t&t&t&t&t&t       t t&t&t&t t+t+t+t+t+t+t+t+t+    t t&t       t 
+|t&t&t&t&t&t   O#  t t&t&t&t                       t t&t       t 
+|t&t&t&t&t&t       t t t t t               t)t)t)t)t t&t       t 
+|t t t t t t                   O#          t t&t&t&t&t&t       t 
+|t                                         t t t t t t t       t 
+|t                                                             t 
+|t     M         M                                             t 
+|t t t t t t t t t t t   t t t t t t t t t t t t t t t t t t t t 
+|t&t&t&t&t&t&t&t&t&t&t   t t&t&t&t&t                 x't t&t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t   t t&t&t&t&t                 x't t&t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t   t t&t&t&t&t                 x't t&t&t&t&
+|t&t&t&t&t&t&t&t&t&t&t   t t&t&t&t&t   M             x't t&t&t&t&
+|t&t&t&t&t&t&t t t t t   t t&t&t&t&t t t t t t t t t t t t&t&t&t&
+|t&t&t&t&t&t&t           t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t&t&t&t           t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t t t t           t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t         M       t t&t&t&t&t&t&t t t t t t t t&t&t&t&t&t&
+|t&t&t&t   t t t t t t t t t t t t&t&t&t           t t&t&t&t&t&t&
+|t&t&t&t                       t t&t&t&t           t t&t&t&t&t&t&
+|t&t&t&t                       t t&t&t&t           t t&t&t&t&t&t&
+|t&t&t&t                       t t t t t           t t&t&t&t&t&t&
+|t&t&t&t                                   M       t t&t&t&t&t&t&
+|t&t&t&t                       t t t t t t t t t t t t&t&t&t&t&t&
+|t&t&t&t                       t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t                       t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t                       t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t   M               M   t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+|t&t&t&t t t t t t t t t t t t t t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&t&
+===MAP:6===
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|               1                                                
+|                                                                
+|                               2                                
+|                                                                
+|                                                                
+|       8         0                                              
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+===EXITS===
+|
+|
+|
+|
+|
+|
+|
+|room4
+|
+===MUSIC===
+|t-shirt cannon
+===BACKGROUND===
+|#341160
+===HINTS===
+|just look at those gorgeous ogmos!\n\nogmo isn't a special object. any amount of ogmos can be in a level, and any ogmo can reach a door or a "win" tile to win the level. and if an ogmo dies, the level will only be reset if all other ogmos are dead as well. if you die here, any other ogmo can take your place... how existential!\n\n(also take especial notice to how you can alternate between standing/looking up/ducking without it interrupting your blinking pattern)
+|that block up there is a gost block. it copies your movements, and causes the first loaded ogmo to die if it dies. (most levels with it only have one ogmo, so this can be simplified to "you die if it dies".) you can also make contact with it to safely eliminate it from the level.\n\naside from copying ogmo's movement, it can't do most things that ogmos can do, such as win a level, activate hint blocks, or use doors.

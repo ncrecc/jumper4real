@@ -10,3 +10,5 @@
 |s
 ===P1DIE===
 |r
+===P1INTERACT===
+|a

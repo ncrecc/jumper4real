@@ -189,11 +189,11 @@ tiles = {
 		["deathly"] = false,
 		["bounce"] = true
 	},
-	["levelborder"] = { --this tile was created as a kludge for collision and normally is never drawn, but if you do create a levelsymbol for it and place it for whatever reason, it just acts like black but not walljumpable. also, the level border will always be solid, but notwalljumpable being true here is why you can't walljump from it
+	["levelborder"] = { --this tile was created as a kludge for collision and normally is never drawn, but if you do create a levelsymbol for it and place it for whatever reason, it just acts like black but not walljumpable. also, the level border will always be solid, but notwalljumpable being true here is why you can't walljump from it. kludges, woo!
 		["graphics"] = {{["referencename"] = "basictiles", ["quad"] = {64, 0}}},
 		["solid"] = true,
 		["deathly"] = false,
-		["notwalljumpable"] = true,
+		["notwalljumpable"] = true
 	},
 	["dev_wall"] = {
 		["graphics"] = {
@@ -222,5 +222,35 @@ tiles = {
 		},
 		["solid"] = false,
 		["deathly"] = true,
-	}
+	},
+	["dark"] = {
+		["graphics"] = {{["referencename"] = "lighting", ["quad"] = {0, 0}}},
+		["solid"] = false,
+		["deathly"] = false
+	},
+	["light"] = {
+		["graphics"] = {{["referencename"] = "lighting", ["quad"] = {0, 16}}},
+		["solid"] = false,
+		["deathly"] = false
+	},
 }
+
+for i=0, 9 do
+	tiles["magic" .. i] = {
+		["graphics"] = {
+			{
+				["referencename"] = "ui/subscripts",
+				["quad"] = { i * 16, 0}
+			}
+		},
+		["invisible"] = true
+	}
+end
+
+for k,v in ipairs(tiles) do
+	v.type = k
+end
+
+--test to make sure the tables don't get shared with the above generative thing. gets annoying that there's no explicit table constructor
+--print(tiles["magic1"].graphics[1].quad[1])
+--print(tiles["magic5"].graphics[1].quad[1])

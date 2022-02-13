@@ -11,19 +11,45 @@ frameadvance = false
 --print("boop bop mother fuckers")
 --print(type(nil) == nil) this one exercise in pil got me, lol
 
+function table.copy(src, dest, overwrite) --taken from the knytt stories mod "knytt stories ex" which might have taken this from elsewhere. does not recursively copy tables
+	if not dest or overwrite then
+		dest = dest or {}
+		for k,v in pairs(src) do
+			dest[k] = v
+		end
+	else
+		for k,v in pairs(src) do
+			if dest[k] == nil then
+				dest[k] = v
+			end
+		end
+	end
+	return dest
+end
+
 function quad(...)
 	return love.graphics.newQuad(...)
 end
 
-function printWithOutline(str)
+function set(...)
+	local newtable = {}
+	for k,v in pairs({...}) do
+		newtable[v] = true
+	end
+	return newtable
+end
+
+function printWithOutline(str, x, y)
+		x = x or 0
+		y = y or 0
 		local r, g, b, a = love.graphics.getColor()
 		love.graphics.setColor(0, 0, 0, a)
-		love.graphics.print(str, -1, 0)
-		love.graphics.print(str, 1, 0)
-		love.graphics.print(str, 0, -1)
-		love.graphics.print(str, 0, 1)
+		love.graphics.print(str, x - 1, y)
+		love.graphics.print(str, x + 1, y)
+		love.graphics.print(str, x, y - 1)
+		love.graphics.print(str, x, y + 1)
 		love.graphics.setColor(r, g, b, a)
-		love.graphics.print(str)
+		love.graphics.print(str, x, y)
 end
 function printAsTooltip(str, scale)
 	love.graphics.printf(
@@ -63,6 +89,7 @@ end]]
 
 require "ogmos"
 require "game"
+require "level"
 require "textfield"
 require "button"
 require "menu_substates"
@@ -275,15 +302,15 @@ function booltostr(bool) --lol
 	if(bool) then return "true" else return "false" end
 end
 
-function writetouniversalsettings()
+function writetosettings()
 	local towrite = ""
-	for i=1, #universalsettingsargs do
-		towrite = towrite .. booltostr(universalsettings[universalsettingsargs[i]]) .. "\n"
+	for i=1, #settingsargs do
+		towrite = towrite .. booltostr(settings[settingsargs[i]]) .. "\n"
 	end
-	love.filesystem.write("universalsettings.txt",towrite)
+	love.filesystem.write("settings.txt",towrite)
 end
 
-universalsettingsargs = {
+settingsargs = {
 	"playaudio",
 	"playsfx",
 	"playmusic",
@@ -291,7 +318,7 @@ universalsettingsargs = {
 	"seetheunseeable"
 }
 
-universalsettings = {
+settings = {
 	playaudio = true,
 	playsfx = true,
 	playmusic = true,
@@ -299,12 +326,12 @@ universalsettings = {
 	seetheunseeable = true
 }
 
-local universalsettingsfile = love.filesystem.read("universalsettings.txt")
-if universalsettingsfile ~= nil then
-	universalsettingsfile = correctnewlines(universalsettingsfile) --probably unnecessary
-	local ustemp = split(universalsettingsfile, "\n")
-	for i=1, #universalsettingsargs do
-		universalsettings[universalsettingsargs[i]] = strtobool(ustemp[i])
+local settingsfile = love.filesystem.read("settings.txt")
+if settingsfile ~= nil then
+	settingsfile = correctnewlines(settingsfile) --probably unnecessary
+	local ustemp = split(settingsfile, "\n")
+	for i=1, #settingsargs do
+		settings[settingsargs[i]] = strtobool(ustemp[i])
 	end
 else
 	--Randomize the Choice variable the very first time the player starts the game, which should lead to some interesting results and reinforce that there is no canonical Choice value!
@@ -312,8 +339,8 @@ else
 	local choicerand = love.math.random(0, 1)
 	if choicerand == 0 then choicerand = false
 	else choicerand = true end
-	universalsettings.choice = choicerand
-	writetouniversalsettings()
+	settings.choice = choicerand
+	writetosettings()
 end
 
 controls = {}
@@ -349,16 +376,16 @@ do
 end
 
 function love.load()
-	if not universalsettings.playaudio then love.audio.setVolume(0) end
-	if not universalsettings.playsfx then audio.changesfxvolume(0) end
-	if not universalsettings.playmusic then audio.changemusicvolume(0) end
+	if not settings.playaudio then love.audio.setVolume(0) end
+	if not settings.playsfx then audio.changesfxvolume(0) end
+	if not settings.playmusic then audio.changemusicvolume(0) end
 	statemachine.setstate("menu")
 end
 
 function love.update(dt)
 	if statemachine.currentstate ~= "game" then frameadvance = false end
-	audio.update()
 	if not frameadvance then statemachine.currentstate.update(dt) end
+	audio.update()
 end
 
 function love.keypressed(key)
@@ -368,20 +395,32 @@ function love.keypressed(key)
 end
 
 function love.mousepressed(x, y, button)
-	if statemachine.currentstate.mousepressed ~= nil then
+	if statemachine.currentstate.mousepressed then
 		statemachine.currentstate.mousepressed(x, y, button)
 	end
 end
 
 function love.mousereleased(x, y, button)
-	if statemachine.currentstate.mousereleased ~= nil then
+	if statemachine.currentstate.mousereleased then
 		statemachine.currentstate.mousereleased(x, y, button)
 	end
 end
 
 function love.textinput(t)
-	if statemachine.currentstate.textinput ~= nil then
+	if statemachine.currentstate.textinput then
 		statemachine.currentstate.textinput(t)
+	end
+end
+
+function love.filedropped(file)
+	if statemachine.currentstate.filedropped then
+		statemachine.currentstate.filedropped(file)
+	end
+end
+
+function love.wheelmoved(x, y)
+	if statemachine.currentstate.wheelmoved then
+		statemachine.currentstate.wheelmoved(x, y)
 	end
 end
 

@@ -1,0 +1,96 @@
+this shit is all a pretty arbitrary messy system and doesn't matter that much since i decided very shortly after making this that levelsymbols should have probably have category fields
+· invisible/internal
+!
+"
+#
+$
+%
+&
+'
+(
+)
+*
++
+,
+-
+.
+/
+0 reserved for users
+1 reserved for users
+2 reserved for users
+3 reserved for users
+4 reserved for users
+5 reserved for users
+6 reserved for users
+7 reserved for users
+8 reserved for users
+9 reserved for users
+:
+;
+<
+=
+>
+?
+@
+A
+B
+C
+D decor (objects)
+E
+F
+G
+H
+I
+J
+K
+L
+M mobs
+N mobs pt 2
+O generic objects
+P generic objects pt 2
+Q generic objects pt 3
+R
+S
+T
+U
+V
+W
+X deadly objects
+Y
+Z
+[
+\
+]
+^
+_
+`
+a
+b
+c
+d decor
+e
+f
+g
+h
+i
+j
+k
+l
+m
+n
+o
+p
+q
+r
+s
+t generic tiles
+u generic tiles pt 2
+v generic tiles pt 3
+w
+x deadly tiles
+y
+z
+{
+|
+}
+~

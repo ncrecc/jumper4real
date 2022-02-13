@@ -3,6 +3,7 @@ ashley = class:new()
 function ashley:init(x, y, red, fast)
 	self.type = "ashley"
 	self.player = true
+	self.playerno = 1
 	self.x = x
 	self.y = y
 	self.x_clamped = x
@@ -18,10 +19,12 @@ function ashley:init(x, y, red, fast)
 	if fast then self.speed = 2 end
 	self.collisiondir = "none"
 	self.alive = true
+	self.grounded = true
 end
 
 function ashley:setup(x, y, options)
-	game.playeramt = game.playeramt + 1
+	local level = self.level
+	level.playeramt = level.playeramt + 1
 	red = false
 	fast = false
 	for i=1, #options do
@@ -35,11 +38,12 @@ function ashley:setup(x, y, options)
 end
 
 function ashley:die() --rip
+	local level = self.level
 	self.alive = false
 	self.solid = false
 	audio.playsfx("ogmo die")
-	game.liveplayeramt = game.liveplayeramt - 1
-	if game.liveplayeramt > 0 then print("ashley is dead! players remaining: " .. game.liveplayeramt) end
+	level.liveplayeramt = level.liveplayeramt - 1
+	if level.liveplayeramt > 0 then print("ashley is dead! players remaining: " .. level.liveplayeramt) end
 end
 
 function ashley:update()
