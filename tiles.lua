@@ -233,6 +233,12 @@ tiles = {
 		["solid"] = false,
 		["deathly"] = false
 	},
+	["strangeslab"] = {
+		["graphics"] = {{["referencename"] = "strangeslab"}},
+		["solid"] = true,
+		["deathly"] = false,
+		["automask"] = true
+	},
 }
 
 for i=0, 9 do

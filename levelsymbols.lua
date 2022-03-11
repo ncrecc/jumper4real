@@ -497,7 +497,7 @@ levelsymbols = {
 		tiles = {"light"},
 		objects = {},
 		tooltip = "add a bit of light to detract from the mood" -- bert
-	},
+	}
 }
 
 levelsymbols_sortedkeys_byraw = {} --by raw key text. i don't think you'd ever need this but it does sort by (kind of arbitrary, probably subject to change) categories and show when things were added in each category (except when things get deleted). see legend.txt for more info about the innate categories each key uses

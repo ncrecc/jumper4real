@@ -45,10 +45,13 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 			table.insert(collidees, v)
 		end
 	end
+	--strangely, changing occurerences of (collider.x) to (collider.x_clamped or collider.x) makes a lot of natural movement leniency (which i never really questioned or analyzed) stop working. e.g. ogmo on the floor can no longer properly walks into a level during cutscene movement (he instead strangely collides with and oscollates on the corner of the wall), and MO now has to be extra-precise to enter one-tile wall gaps even if the ceiling extends outward. i expected the *opposite* effect, where MO (and like characters) would benefit from x_clamped being used since if they're visually aligned with a gap that should mean they'd be able to enter it.
+	local collider_rightedge = (collider.x) + collider.width - 1
+	local collider_leftedge = (collider.x)
+	local collider_top = (collider.y)
+	local collider_bottom = (collider.y) + collider.height - 1
 	if axis == "horizontal" and collider.hmom ~= 0 then
 		if not collider.collisioncondition or collider:collisioncondition("levelborder") then
-			local collider_rightedge = collider.x + collider.width - 1
-			local collider_leftedge = collider.x
 			--colliding against the level borders
 			if collider_rightedge + collider.hmom + 1 >= level.width and dir == "right" then
 				--[[
@@ -70,10 +73,6 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 				updateValuesToReturn("left", 0, {tiles["levelborder"]})
 			end
 		end
-		local collider_top = collider.y
-		local collider_bottom = collider.y + collider.height - 1
-		local collider_leftedge = collider.x
-		local collider_rightedge = collider.x + collider.width - 1
 		for y_tiled=1, #level.tilemap do
 			local tile_top = (y_tiled - 1) * tilesize
 			local tile_bottom = ((y_tiled - 1) * tilesize) + tilesize - 1
@@ -102,8 +101,8 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 			obj = level.objects[i]
 			--gost's block shouldn't collide with ogmos
 			--if not (collider.gost and obj.type == "ogmo") then
-			local obj_top = obj.y
-			local obj_bottom = obj.y + obj.height - 1
+			local obj_top = (obj.y)
+			local obj_bottom = (obj.y) + obj.height - 1
 			if obj.solid and collider_top <= obj_bottom and collider_bottom >= obj_top then
 				if not collider.collisioncondition or collider:collisioncondition(obj) then
 					updateValuesToReturn(mobtools.doCollisionCheck(axis, collider, obj))
@@ -111,8 +110,6 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 			end
 		end
 	elseif axis == "vertical" and collider.vmom ~= 0 then
-		local collider_bottom = collider.y + collider.height - 1
-		local collider_top = collider.y
 		if not collider.collisioncondition or collider:collisioncondition("levelborder") then
 			if level.options.bottombordersolid and collider_bottom + collider.vmom + 1 >= level.height and dir == "down" then
 				--return "down", level.height - collider.height, {"levelborder"}
@@ -121,10 +118,6 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 				updateValuesToReturn("up", 0, {"levelborder"})
 			end
 		end
-		local collider_top = collider.y
-		local collider_bottom = collider.y + collider.height - 1
-		local collider_leftedge = collider.x
-		local collider_rightedge = collider.x + collider.width - 1
 		for y_tiled=1, #level.tilemap do
 			for x_tiled=1, #level.tilemap[y_tiled] do
 				local tile_leftedge = (x_tiled - 1) * tilesize
@@ -152,8 +145,8 @@ function mobtools.doCollisionScan(axis, collider, dontusemask, ignoretype, ignor
 		for i=1, #level.objects do
 			obj = level.objects[i]
 			--if not (collider.gost and obj.type == "ogmo") then
-			local obj_leftedge = obj.x
-			local obj_rightedge = obj.x + obj.width - 1
+			local obj_leftedge = (obj.x)
+			local obj_rightedge = (obj.x) + obj.width - 1
 			if obj.solid and collider_leftedge <= obj_rightedge and collider_rightedge >= obj_leftedge then
 				if not collider.collisioncondition or collider:collisioncondition(obj) then
 					updateValuesToReturn(mobtools.doCollisionCheck(axis, collider, obj))
@@ -196,14 +189,14 @@ function mobtools.doCollisionCheck(axis, collider, collidee, dontusemask)
 		end
 	end
 	
-	local collider_rightedge = collider.x + collider.width - 1
-	local collider_leftedge = collider.x
-	local collidee_rightedge = collidee.x + collidee.width - 1
-	local collidee_leftedge = collidee.x
-	local collider_bottom = collider.y + collider.height - 1
-	local collider_top = collider.y
-	local collidee_bottom = collidee.y + collidee.height - 1
-	local collidee_top = collidee.y
+	local collider_rightedge = (collider.x) + collider.width - 1
+	local collider_leftedge = (collider.x)
+	local collidee_rightedge = (collidee.x) + collidee.width - 1
+	local collidee_leftedge = (collidee.x)
+	local collider_bottom = (collider.y) + collider.height - 1
+	local collider_top = (collider.y)
+	local collidee_bottom = (collidee.y) + collidee.height - 1
+	local collidee_top = (collidee.y)
 	local y_min
 	local y_max
 	local x_min
@@ -217,7 +210,7 @@ function mobtools.doCollisionCheck(axis, collider, collidee, dontusemask)
 		end
 		if dir == "right" then
 			if collidee_rightedge > collider_rightedge then --if right edge of tile is to the right of right edge of player. this means player is potentially able to collide with the block or any mask pixels of the block
-				if collidee_leftedge - collider_rightedge - 1 --[[1 is subtracted here because if ogmo is flush with the wall that counts as being 0 pixels away from it]] <= collider.hmom then --checks that distance between left surface of tile and right surface of ogmo is less than ogmo's momentum. this includes if ogmo is inside the tile and moving further
+				if collidee_leftedge - collider_rightedge - 1 --[[1 is subtracted here because if ogmo is flush with the wall that counts as being 0 pixels away from it]] < collider.hmom then --checks that distance between left surface of tile and right surface of ogmo is less than ogmo's momentum. this includes if ogmo is inside the tile and moving further
 					if collidee.mask == nil then
 						--[[
 						if not checkonly then
@@ -287,7 +280,7 @@ function mobtools.doCollisionCheck(axis, collider, collidee, dontusemask)
 			end
 		elseif dir == "left" then
 			if collidee_leftedge < collider_leftedge then
-				if collidee_rightedge - collider_leftedge + 1 >= collider.hmom then
+				if collidee_rightedge - collider_leftedge + 1 > collider.hmom then
 					if collidee.mask == nil then
 						updateValuesToReturn("left", collidee_rightedge + 1, {collidee})
 					else
@@ -320,7 +313,7 @@ function mobtools.doCollisionCheck(axis, collider, collidee, dontusemask)
 		end
 		if dir == "down" then
 			if collidee_bottom > collider_bottom then
-				if collidee_top - collider_bottom - 1 <= collider.vmom then
+				if collidee_top - collider_bottom - 1 < collider.vmom then
 					if collidee.mask == nil then
 						updateValuesToReturn("down", collidee_top - collider.height, {collidee})
 					else
@@ -345,7 +338,7 @@ function mobtools.doCollisionCheck(axis, collider, collidee, dontusemask)
 			end
 		elseif dir == "up" then
 			if collidee_top < collider_top then
-				if collidee_bottom - collider_top + 1 >= collider.vmom then
+				if collidee_bottom - collider_top + 1 > collider.vmom then
 					if collidee.mask == nil then
 						updateValuesToReturn("up", collidee_bottom + 1, {collidee})
 					else
@@ -377,10 +370,10 @@ function mobtools.doOverlapScan(collider, objectsonly, level)
 	level = level or collider.level
 	local collidees = {}
 	if not objectsonly then
-		local collider_top = collider.y
-		local collider_bottom = collider.y + collider.height - 1
-		local collider_leftedge = collider.x
-		local collider_rightedge = collider.x + collider.width - 1
+		local collider_rightedge = (collider.x) + collider.width - 1
+		local collider_leftedge = (collider.x)
+		local collider_top = (collider.y)
+		local collider_bottom = (collider.y) + collider.height - 1
 		for y_tiled=1, #level.tilemap do
 			local tile_top = (y_tiled - 1) * tilesize
 			local tile_bottom = ((y_tiled - 1) * tilesize) + tilesize - 1
@@ -425,14 +418,14 @@ end
 
 function mobtools.doOverlapCheck(collider, collidee)
 	--this is simpler than docollisioncheck because we don't need a collision direction or suggested position, just whether or not the -er and -ee overlap
-	local collider_rightedge = collider.x + collider.width - 1
-	local collider_leftedge = collider.x
-	local collidee_rightedge = collidee.x + collidee.width - 1
-	local collidee_leftedge = collidee.x
-	local collider_bottom = collider.y + collider.height - 1
-	local collider_top = collider.y
-	local collidee_bottom = collidee.y + collidee.height - 1
-	local collidee_top = collidee.y
+	local collider_rightedge = (collider.x) + collider.width - 1
+	local collider_leftedge = (collider.x)
+	local collidee_rightedge = (collidee.x) + collidee.width - 1
+	local collidee_leftedge = (collidee.x)
+	local collider_bottom = (collider.y) + collider.height - 1
+	local collider_top = (collider.y)
+	local collidee_bottom = (collidee.y) + collidee.height - 1
+	local collidee_top = (collidee.y)
 	if collider_top <= collidee_bottom and collider_bottom >= collidee_top then
 		if collider_leftedge <= collidee_rightedge and collider_rightedge >= collidee_leftedge then
 			if collidee.mask == nil and collider.mask == nil then
@@ -492,14 +485,14 @@ function mobtools.doPastEdgeScan(collider, dir, mustalign, level)
 end
 
 function mobtools.doPastEdgeCheck(collider, collidee, dir, mustalign)
-	local collider_rightedge = collider.x + collider.width - 1
-	local collider_leftedge = collider.x
-	local collidee_rightedge = collidee.x + collidee.width - 1
-	local collidee_leftedge = collidee.x
-	local collider_bottom = collider.y + collider.height - 1
-	local collider_top = collider.y
-	local collidee_bottom = collidee.y + collidee.height - 1
-	local collidee_top = collidee.y
+	local collider_rightedge = (collider.x) + collider.width - 1
+	local collider_leftedge = (collider.x)
+	local collidee_rightedge = (collidee.x) + collidee.width - 1
+	local collidee_leftedge = (collidee.x)
+	local collider_bottom = (collider.y) + collider.height - 1
+	local collider_top = (collider.y)
+	local collidee_bottom = (collidee.y) + collidee.height - 1
+	local collidee_top = (collidee.y)
 	local horizontallyaligned = collider_top <= collidee_bottom and collider_bottom >= collidee_top
 	local verticallyaligned   = collider_leftedge <= collidee_rightedge and collider_rightedge >= collidee_leftedge
 		if dir == "left"  then

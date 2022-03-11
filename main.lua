@@ -1,5 +1,12 @@
 --print(love)
 --^it's tables all the way down man -bert
+version = "0.3.0"
+local lastversion = love.filesystem.read("version.txt")
+if lastversion ~= version then
+	love.filesystem.write("version.txt", version); print("updating version file");
+	love.filesystem.write("Jumper 4 Real.chm", love.filesystem.read("Jumper 4 Real.chm")); print("updating help file");  --t.appendidentity
+	love.filesystem.delete("Jumper 4 Real.chw"); print("deleting old help index");
+end
 tilesize = 16
 scale = 1
 --the above two settings don't actually do anything useful if changed
@@ -10,6 +17,10 @@ frameadvance = false
 
 --print("boop bop mother fuckers")
 --print(type(nil) == nil) this one exercise in pil got me, lol
+
+function tern(expression, value1, value2) --more compact than declaring and running a function, and miles less ugly than (a and b or c), but doesn't short-circuit
+	if expression then return value1 else return value2 end
+end
 
 function table.copy(src, dest, overwrite) --taken from the knytt stories mod "knytt stories ex" which might have taken this from elsewhere. does not recursively copy tables
 	if not dest or overwrite then
@@ -68,6 +79,7 @@ require "correctnewlines"
 require "hex2color"
 require "class"
 require "split"
+
 require "audio"
 require "levelsymbols"
 require "tiles"
@@ -87,9 +99,12 @@ end]]
 
 --if levelsymbols["="] ~= nil then error("ERROR: equals sign (=) cannot be a level symbol") end
 
-require "ogmos"
+objects = {}
 require "game"
+require "cheat"
 require "level"
+objects["ogmo"] = require "objection/ogmo"
+require "ogmos"
 require "textfield"
 require "button"
 require "menu_substates"
@@ -100,6 +115,10 @@ require "statemachine"
 
 require "mobtools"
 
+game.ogmoskin = love.filesystem.read("ogmoskin.txt") or "ogmo"
+if not ogmos[game.ogmoskin] then game.ogmoskin = "ogmo" end
+game.ogmosnapto = ogmos[game.ogmoskin].snapto or 1
+
 --math.randomseed(os.time())
 
 facts = love.filesystem.read("facts.txt")
@@ -109,11 +128,10 @@ function math.clamp(x, a, b) --help me i went down a rabbit hole of different me
   return math.max(a, math.min(b, x))
 end
 
-objects = {}
 objectfiles = love.filesystem.getDirectoryItems("objection")
 for i=1, #objectfiles do
 	local s = objectfiles[i]
-	if string.sub(s, #s - 3) == ".lua" then
+	if s ~= "ogmo.lua" and string.sub(s, #s - 3) == ".lua" then
 		object = require ("objection/" .. string.sub(s, 1, #s - 4))
 		objects[string.sub(s, 1, #s - 4)] = object
 	end
@@ -302,13 +320,46 @@ function booltostr(bool) --lol
 	if(bool) then return "true" else return "false" end
 end
 
-function writetosettings()
-	local towrite = ""
-	for i=1, #settingsargs do
-		towrite = towrite .. booltostr(settings[settingsargs[i]]) .. "\n"
+writeto = {
+	settings = function()
+		--[=[
+		local towrite = ""
+		for i=1, #settingsargs do
+			towrite = towrite .. booltostr(settings[settingsargs[i]]) .. "\n"
+		end
+		]=]
+		local towrite = {}
+		for i=1, #settingsargs do
+			towrite[#towrite + 1] = booltostr(settings[settingsargs[i]])
+		end
+		love.filesystem.write("settings.txt",table.concat(towrite, "\n"))
+	end,
+	ogmoskin = function()
+		love.filesystem.write("ogmoskin.txt",game.ogmoskin)
+	end,
+	unlockedcheats = function()
+		local towrite = {}
+		for i=1, #cheat.unlockedcheats do
+			towrite[#towrite + 1] = cheat.unlockedcheats[i]
+		end
+		love.filesystem.write("unlockedcheats.txt",table.concat(towrite, "\n"))
+	end,
+	activecheats = function()
+		local towrite = {}
+		for i=1, #cheat.activecheats do
+			towrite[#towrite + 1] = cheat.activecheats[i]
+		end
+		love.filesystem.write("activecheats.txt",table.concat(towrite, "\n"))
+	end,
+	controls = function()
+		local towrite = ""
+		local phase = nil
+		for k,v in pairs(controls) do
+			towrite = towrite "===" .. k .. "===\n|" .. v .. "\n"
+		end
+		love.filesystem.write("controls.txt",towrite)
 	end
-	love.filesystem.write("settings.txt",towrite)
-end
+}
 
 settingsargs = {
 	"playaudio",
@@ -340,19 +391,10 @@ else
 	if choicerand == 0 then choicerand = false
 	else choicerand = true end
 	settings.choice = choicerand
-	writetosettings()
+	writeto.settings()
 end
 
 controls = {}
-
-function writetocontrols()
-	local towrite = ""
-	local phase = nil
-	for k,v in pairs(controls) do
-		towrite = towrite "===" .. k .. "===\n|" .. v .. "\n"
-	end
-	love.filesystem.write("controls.txt",towrite)
-end
 
 do
 	local controlsfile = love.filesystem.read("controls.txt")
@@ -379,19 +421,57 @@ function love.load()
 	if not settings.playaudio then love.audio.setVolume(0) end
 	if not settings.playsfx then audio.changesfxvolume(0) end
 	if not settings.playmusic then audio.changemusicvolume(0) end
+	local unlockedcheats = split(correctnewlines(love.filesystem.read("unlockedcheats.txt") or ""), "\n")
+	for i,v in ipairs(unlockedcheats) do
+		local thischeat = cheat.get(v)
+		if thischeat then print("cheat is unlocked: " .. v); thischeat.unlocked = true; table.insert(cheat.unlockedcheats, v) end
+	end
+	
+	--kludge for automatically unlocking all cheats that are active but not unlocked
+	local cheatset = {}
+	for i,v in ipairs(cheat.unlockedcheats) do
+		cheatset[v] = true
+	end
+	local activecheats = split(correctnewlines(love.filesystem.read("activecheats.txt") or ""), "\n")
+	local updateunlocked = false
+	for i,v in ipairs(activecheats) do
+		if cheat.get(v) and not cheatset[v] then
+			cheatset[v] = true
+			print("cheat " .. v .. " was active but not unlocked, so it's unlocked now")
+			table.insert(cheat.unlockedcheats, v)
+			updateunlocked = true
+		end
+	end
+	
+	if updateunlocked then writeto.unlockedcheats() end
+	
+	menu.changeSubstate("title")
 	statemachine.setstate("menu")
+	
+	for i,v in ipairs(activecheats) do
+		local thischeat = cheat.get(v)
+		if thischeat then print("starting with cheat: " .. v); cheat.invoke(thischeat) end
+	end
+	menu.changed.activecheats = false
+end
+
+function love.quit()
+	menu.handleWrites()
 end
 
 function love.update(dt)
-	if statemachine.currentstate ~= "game" then frameadvance = false end
+	if statemachine.currentstate ~= game then frameadvance = false end
 	if not frameadvance then statemachine.currentstate.update(dt) end
 	audio.update()
 end
 
 function love.keypressed(key)
-	if statemachine.currentstate == "game" and key == "f" and allowframeadvance then frameadvance = not frameadvance end
+	if statemachine.currentstate == game and key == "f" and allowframeadvance then frameadvance = not frameadvance end
 	if frameadvance and key == "g" then statemachine.currentstate.update(dt) end
 	statemachine.currentstate.keypressed(key)
+	if key == "f1" and (statemachine.currentstate == editor or statemachine.currentstate == menu) then
+		love.system.openURL("file://"..love.filesystem.getSaveDirectory().."/Jumper 4 Real.chm"); print("opening help file");
+	end
 end
 
 function love.mousepressed(x, y, button)
@@ -426,4 +506,7 @@ end
 
 function love.draw()
 	statemachine.currentstate.draw()
+	if statemachine.currentstate == game or statemachine.currentstate == editor then
+		
+	end
 end

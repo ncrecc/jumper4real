@@ -1,0 +1,105 @@
+===MAP:1===
+|  t!    t!    t!    t!    t!    t!    t!    t!    t!            
+|  t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!            
+|  t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!            
+|  t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!t&t&t!            
+|  t!    t!    t!    t!    t!    t!    t!    t!    t!            
+|  t"          t"    t"          t"          t"                  
+|        t"    t"          t"    t"                t"            
+|                    t"    t"    t"                              
+|                                      t"    t"    t"            
+|                                                                
+|                                                                
+|                                                                
+|    t!      t!  t!t!t!t!t!  t!t!t!t!t!  t!t!t!                  
+|    t!      t!  t!      t!      t!      t!    t!                
+|    t!      t!  t!      t!      t!      t!      t!              
+|    t!      t!  t!      t!      t!      t!      t!              
+|    t!      t!  t!      t!      t!      t!      t!              
+|      t!  t!    t!      t!      t!      t!    t!                
+|        t!      t!t!t!t!t!  t!t!t!t!t!  t!t!t!                  
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+===MAP:5===
+|t M t t M t t M t t M t t M t t M t t M t t M t t M t t t t t t 
+|t   t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t         t 
+|t   t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t         t 
+|t   t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t,t*  t         t 
+|t   t t   t t   t t   t t   t t   t t   t t   t t   t         t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t                                                             t 
+|t-                                                            t 
+|t-  t9      t9  t9t9t9t9t9  t9t9t9t9t9  t9t9t9                t 
+|t-              t9                      t9                    t 
+|t-                                                            t 
+|t-                                                            t 
+|t-                                              t8            t 
+|t-    t8  t8    t8      t8      t8      t8    t8              t 
+|t-      t8      t8t8t8t8t8  t8t8t8t8t8  t8t8t8                t-
+|t-                                                            t-
+|t-                                                            t-
+|t-                                                            t-
+|t-                                                            t-
+|t-                O"          O"                              t-
+|t-                                                      t-t-t-t-
+|t-                                                            t-
+|t-                      O#                                    t-
+|t-                                                            t-
+|t-                                                            t-
+|t-                                                            t-
+|t-                              M                       t-t-t-t-
+|t t t t t t t t t t t t t t t t t t t t t t t t-t-t t-t-t-t&t&t&
+===MAP:6===
+|   1     2     3     4     5     6     7     8     9            
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                                                
+|                                 0                              
+|                                                                
+===MUSIC===
+|
+===BACKGROUND===
+|#341160
+===HINTS===
+|oh no! you've stumbled straight into a voidroom. how unfortunate. this happened because the level author had a door or wintile that was supposed to lead to a valid room, but didn't.\nif you were playing with "see the unseeable" disabled, then take note of which entrance you appeared from here.\n\nin the meantime, enjoy these rubber blocks placed with the intent of being vaguely entertaining.

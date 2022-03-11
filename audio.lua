@@ -50,7 +50,7 @@ function audio.flushpauses()
 			if song.intro then song.intro:seek(0) end
 			song.loop:seek(0)
 			song.loop_playing = false
-		else v:seek(0) end
+		else song:seek(0) end
 	end
 end
 

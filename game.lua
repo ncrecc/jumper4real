@@ -19,12 +19,10 @@ game = {
 	levelheight = 512,
 	hints = {},
 	]]
-	cliquemode = false,
-	scrollmove = false,
-	imrubber = false,
 	godmode = false,
 	editormode = false,
 	ogmoskin = "ogmo",
+	ogmosnapto = 1,
 	paused = false,
 	pausedformenu = false,
 	pausedfortextbox = false,
@@ -58,7 +56,7 @@ end
 
 function game.loadLevel(filepath, entrance)
 	local leveldata = love.filesystem.read(filepath..".txt")
-	if leveldata == nil then print "hey your level file ain't jack shit" end
+	if leveldata == nil then print "hey your level file ain't jack shit"; leveldata = love.filesystem.read("void.txt"); end
 	leveldata = correctnewlines(leveldata)
 	leveldata = split(leveldata, "\n")
 	local baselevel = level:new(leveldata, filepath, entrance)
@@ -90,19 +88,8 @@ function game.update(dt)
 		end
 		]=]
 		for i,level in ipairs(game.activelevels) do
-			if not level.frozen then
-				for i=1, #level.objects do
-					if level.objects[i] then --a long time in the past there was a bug where the "objects" table would report a length over 0 when all its contents were nil. not risking it
-						level.objects[i]:update()
-					end
-				end
-				if level.liveplayeramt == 0 and level.playeramt > 0 then
-				--also, diane levels need logic so that entering a diane block with a corresponding active level should just bring you to the level instead of cloning it, and make sure they don't end until no more players are inside of it. also make it so you can't enter other diane levels while one diane level is active
-					local levelname = level.filepath or "(unnamed lol)"
-					print("all players in level " .. levelname .. " are dead! :(")
-					doreset = true
-				end
-			end
+			level:update()
+			if level.doreset then doreset = true end
 		end
 	end
 	if doreset then
@@ -125,11 +112,7 @@ end
 function game.keypressed(key)
 	if not game.paused then
 		for i,level in ipairs(game.activelevels) do
-			for i=1, #level.objects do
-				if level.objects[i].keypressed then
-					level.objects[i]:keypressed(key)
-				end
-			end
+			level:keypressed(key)
 		end
 	end
 	--if key == "g" then game.showtextbox("hello. this is my incredibly lengthy text that is ridiculously lengthy") end
@@ -139,9 +122,8 @@ function game.keypressed(key)
 		else
 			statemachine.setstate("editor")
 		end
-	end
-	if key == "return" and game.pausedfortextbox then game.pausedfortextbox = false end
-	if key == "p" then
+	elseif key == "return" and game.pausedfortextbox then game.pausedfortextbox = false
+	elseif key == "p" then
 		game.pausedformenu = not game.pausedformenu
 		audio.playsfx("pause")
 		if game.pausedformenu then
@@ -166,6 +148,24 @@ function game.keypressed(key)
 				end
 			end
 		end
+	elseif cheat.isactive("smallsteps") then
+		if key == "[" then
+			for _,level in ipairs(game.activelevels) do
+				for _,object in ipairs(level.objects) do
+					if object.type == "ogmo" then
+						object.x = object.x - 1
+					end
+				end
+			end
+		elseif key == "]" then
+			for _,level in ipairs(game.activelevels) do
+				for _,object in ipairs(level.objects) do
+					if object.type == "ogmo" then
+						object.x = object.x + 1
+					end
+				end
+			end
+		end
 	end
 	--[[
    if key == "rctrl" then
@@ -176,14 +176,14 @@ function game.keypressed(key)
 end
 
 function game.mousepressed(x, y, button)
-	if game.cliquemode and button == 1 then
+	if cheat.isactive("clique") and button == 1 then
 		local newogmo = ogmo:new(x - (tilesize / 2), y - (tilesize / 2))
 		local toplevel = game.activelevels[#game.activelevels]
 		newogmo.level = toplevel
 		table.insert(toplevel.objects, newogmo)
 		toplevel.playeramt = toplevel.playeramt + 1
 		toplevel.liveplayeramt = toplevel.liveplayeramt + 1
-	elseif game.scrollmove and button == 3 then
+	elseif cheat.isactive("scroller1") and button == 3 then
 		for _,level in ipairs(game.activelevels) do
 			for _,object in ipairs(level.objects) do
 				if object.type == "ogmo" then
@@ -201,7 +201,7 @@ function game.mousepressed(x, y, button)
 end
 
 function game.wheelmoved(x, y)
-	if game.scrollmove then
+	if cheat.isactive("scroller1") then
 		if love.mouse.isDown(2) then x, y = y, x end
 		for _,level in ipairs(game.activelevels) do
 			for _,object in ipairs(level.objects) do
@@ -223,36 +223,7 @@ function game.draw()
 	--game.tilemap is like map but instead of containing just symbols it just contains the tile names the symbols would point to
 	--for each row in the game.tilemap:
 	for _,level in ipairs(game.activelevels) do
-		for y_tiled=1, #level.tilemap do
-			--for each entry of the row
-			for x_tiled=1, #level.tilemap[y_tiled] do
-				--for each tile in the entry (each entry can have multiple tiles)
-				for i=1, #level.tilemap[y_tiled][x_tiled] do
-					--make this less typing to reference later
-					local tilename = level.tilemap[y_tiled][x_tiled][i]
-					--now we're actually using the tile as a key for the "tiles" array from tiles.lua, there was actually a redundant for loop here that couldn't have iterated through anything that i caught by commentating this
-					local tile = tiles[tilename]
-					--graphics is fairly self-explanatory
-					if settings.seetheunseeable or not tile.invisible then
-						for ii,graphic in ipairs(tile.graphics) do
-							love.graphics.draw(graphic.reference, graphic.quad, ((x_tiled - 1) * tilesize) + graphic.ingameoffset[1], ((y_tiled - 1) * tilesize) + graphic.ingameoffset[2])
-						end
-					end
-				end
-			end
-		end
-		local objects_nonsolid = {}
-		local objects_solid = {}
-		for _,obj in ipairs(level.objects) do
-			if not obj.solid then table.insert(objects_nonsolid, obj)
-			else table.insert(objects_solid, obj) end
-		end
-		for i=1, #objects_nonsolid do
-			objects_nonsolid[i]:draw()
-		end
-		for i=1, #objects_solid do
-			objects_solid[i]:draw()
-		end
+		level:draw()
 	end
 	if game.pausedfortextbox then
 		love.graphics.setColor(0, 0, 0, 1)
@@ -289,16 +260,21 @@ function game.win(number, level)
 			statemachine.setstate("editor")
 		else
 			if number == nil then number = 1 end
-			if not level.exits[number] then error("invalid level exit " .. number, 2) end
-			print ("won! time to load " .. level.exits[number])
-			local newlevel = level.exits[number]
-			if newlevel == "WINLEVELSET" then
-				print("YOU WON THE LEVELSET!!!!!")
-				statemachine.setstate("menu")
+			--if not level.exits[number] then error("invalid level exit " .. number, 2) end
+			if not level.exits[number] then
+				print("invalid level exit. entering void")
+				game.loadLevel("void", number)
 			else
-				local pauseoldmusic = false
-				local playmusicevenifsame = false
-				game.loadLevel(game.levelsetpath .. "/levels/" .. newlevel, number)
+				print ("won! time to load " .. level.exits[number])
+				local newlevel = level.exits[number]
+				if newlevel == "WINLEVELSET" then
+					print("YOU WON THE LEVELSET!!!!!")
+					statemachine.setstate("menu")
+				else
+					local pauseoldmusic = false
+					local playmusicevenifsame = false
+					game.loadLevel(game.levelsetpath .. "/levels/" .. newlevel, number)
+				end
 			end
 		end
 	end

@@ -1,4 +1,7 @@
+local font = love.graphics.getFont()
 menu = {
+	width = 512,
+	height = 512,
 	substateTemplate = "",
 	options = {
 		[1] = {
@@ -15,9 +18,9 @@ menu = {
 	page = 1,
 	numpages = 1,
 	
-	changedsettings = false,
+	changed = {},
 	
-	picker = 1,
+	picker = nil,
 	pickerHoldMoveDelayResetToLong = 30, --frames
 	pickerHoldMoveDelayResetToShort = 7,
 	pickerHoldMoveDelayCurrent = 0,
@@ -30,17 +33,48 @@ menu = {
 	niftyimg = {},
 	lastmousepos = {x = nil, y = nil},
 	mousepos = {x = 0, y = 0},
-	cancheat = true
+	cancheat = true,
+	logoname = "J4R Logo 2x",
+	onLoad = function() end,
+	stack = {},
+	pickerstack = {},
+	pagestack = {}, --i think in an ideal implementation, this would be redundant to pickerstack. and you'd just do modulo 7 stuff and assume anything past index 7 is special and the stacks don't need to be concerned with it
+--	pagesstack = {}, --this is definitely stupid and only for visual purposes)
+	multipage = false,
+	pages = 1,
+	page = 1,
+	fulloptions = {},
+	itemsperpage = 7,
+	misctext = love.graphics.newText(font, ""),
 }
 
 function menu.begin()
+	--[[
+	menu.stackreset()
+	menu.picker = nil
 	menu.changeSubstate("title")
+	]]
 	audio.flushpauses()
-	audio.playsong("34")
+	if not cheat.isactive("jumper4imaginary") then
+		audio.playsong("34")
+	else
+		audio.playsong("trollful horns")
+	end
 	menu.cheatcode = ""
 end
 
+function menu.changelogo(logoname)
+	if logoname ~= menu.logoname then
+		menu.logoname = logoname
+		graphics.load(menu.logoname)
+		graphics.load(menu.logoname .. " blink")
+		menu.blinktimer = nil
+	end
+end
+
 function menu.update(dt)
+	if menu.blinktimer and menu.blinktimer > 0 then menu.blinktimer = menu.blinktimer - 1 end
+	if menu.blinktimer and menu.blinktimer <= 0 then menu.blinktimer = nil end
 	menu.onUpdate()
 	--picker movement logic
 	if menu.pickerHoldMoveDelayCurrent > 0 then
@@ -70,17 +104,20 @@ function menu.update(dt)
 		menu.pickerHoldMoveDelayCurrent = 0
 		menu.pickerLongHoldPassed = false
 	end
+	
+	
 	if menu.cheatcodetimer > 0 then menu.cheatcodetimer = menu.cheatcodetimer - 1
 	else menu.cheatcodetimer = 0; menu.cheatcode = ""; end
 	
+	
 	--oh god this entire part is just for a "scribble stuff on the menu" cheat
-	if menu.nifty then
+	if cheat.isactive("nifty") then
 		local mouseisdown = love.mouse.isDown(1, 2, 3)
 		menu.lastmousepos.x, menu.lastmousepos.y = menu.mousepos.x, menu.mousepos.y
 		if not mouseisdown then menu.lastmousepos.x, menu.lastmousepos.y = nil, nil end
 		menu.mousepos.x, menu.mousepos.y = love.mouse.getPosition()
 		if mouseisdown then
-			if (not (menu.lastmousepos.x and menu.lastmousepos.y)) or ((menu.lastmousepos.x == menu.mousepos.x) and (menu.lastmousepos.y == menu.mousepos.y)) then --we check if last mouse pos is nil *or* if it's the same as mouse pos, because in either case the "make a line" procedure is unnecessary and will error deu to either nil values or a division by zero
+			if (not (menu.lastmousepos.x and menu.lastmousepos.y)) or ((menu.lastmousepos.x == menu.mousepos.x) and (menu.lastmousepos.y == menu.mousepos.y)) then --we check if last mouse pos is nil *or* if it's the same as mouse pos, because in either case the "make a line" procedure is unnecessary and would error due to either nil values or a division by zero
 				local y = menu.mousepos.y
 				local x = menu.mousepos.x
 				if menu.niftyimg[y + 1] ~= nil and menu.niftyimg[y + 1][x + 1] ~= nil then
@@ -128,66 +165,42 @@ end
 function menu.keypressed(key)
 	if key == "return" then
 		local option = menu.options[menu.picker]
-		if option.vartoggle ~= nil then
+		if option.vartoggle ~= nil then --this is hardcoded but could very easily be replaced with getname()
 			settings[option.vartoggle] = not settings[option.vartoggle]
-			menu.changedsettings = true
+			menu.changed.settings = true
 		end
 		option.action()
-	end
-	if key == "backspace" then
+	elseif key == "backspace" then
 		menu.cheatcode = ""
 		menu.cheatcodetimer = 0
-	end
+	elseif key == "escape" then
+		if #menu.stack == 1 then
+			love.event.quit()
+		else
+			menu.back()
+		end
+    end
 end
 
 function menu.textinput(t)
 	if menu.cancheat then
 		menu.cheatcode = menu.cheatcode .. t
 		menu.cheatcodetimer = 100
-		local didcheat = false
-		if menu.cheatcode == "rhubarb" then
-			if menu.changedsettings then
-				writetosettings()
-			end
-			menu.changeSubstate("rhubarbsettings")
-			didcheat = true
-		elseif menu.cheatcode == "ransom" then
-			if audio.activesong ~= "ransom in the sand" then
-				audio.playsong("ransom in the sand", true)
-			end
-			didcheat = true
-		elseif menu.cheatcode == "boing" then
-			if audio.activesong ~= "boing" then
-				audio.playsong("boing", true)
-			end
-			didcheat = true
-		elseif menu.cheatcode == "clique" then
-			game.cliquemode = true
-			didcheat = true
-		elseif menu.cheatcode == "nifty" then
-			menu.nifty = true
-			for y=1, love.graphics.getHeight() do
-				menu.niftyimg[y] = {}
-				for x=1, love.graphics.getWidth() do
-					menu.niftyimg[y][x] = false
-				end
-			end
-			didcheat = true
-		elseif menu.cheatcode == "scroller1" then
-			game.scrollmove = true
-			didcheat = true
-		elseif menu.cheatcode == "youreglue" then
-			game.imrubber = not game.imrubber
-			didcheat = true
-		elseif menu.cheatcode == "agodami" then
-			game.godmode = not game.godmode
-			didcheat = true
-		end
-		
-		if didcheat then
+		local thischeat = cheat.get(menu.cheatcode)
+		if thischeat then
+			local cheatmenu_firstunlock = not next(cheat.unlockedcheats)
+			menu.blinktimer = 8
 			menu.cheatcodetimer = 0
-			menu.cheatcode = ""
 			audio.playsfx("cheat")
+			cheat.invoke(thischeat)
+			if not thischeat.unlocked then
+				print(menu.cheatcode .. " unlocked via typing!")
+				thischeat.unlocked = true
+				table.insert(cheat.unlockedcheats, menu.cheatcode)
+				menu.changed.unlockedcheats = true
+			end
+			menu.cheatcode = ""
+			menu.onCheat(cheatmenu_firstunlock)
 		end
 	end
 end
@@ -196,9 +209,11 @@ function menu.draw()
 	--love.graphics.print("welcome to hte menu Prass Enter to Play")
 	local r, g, b, a = love.graphics.getColor()
 	for i=1, #menu.options do
-		local optionname = menu.options[i].name
+		local optionname
+		if menu.options[i].getname then optionname = menu.options[i]:getname() end
+		if not optionname then optionname = menu.options[i].name end
 		if menu.options[i].vartoggle ~= nil then
-			toggletext = "NO"
+			local toggletext = "NO"
 			if settings[menu.options[i].vartoggle] then toggletext = "YES" end
 			optionname = optionname .. toggletext
 		end
@@ -208,10 +223,22 @@ function menu.draw()
 		love.graphics.print(optionname, menu.offsetfromleft, menu.offsetfromtop + (menu.linedistance * (i - 1)))
 		if menu.options[i].alpha ~= nil then love.graphics.setColor(r, g, b, a) end
 	end
+	menu.onDraw()
 	love.graphics.print(">", menu.offsetfromleft - 10, menu.offsetfromtop + (menu.linedistance * (menu.picker - 1)))
 	printAsTooltip(menu.options[menu.picker].tooltip, menu.tooltipScale)
-	if menu.showlogo then love.graphics.draw(graphics.load("J4R Logo 2x"), 172, 10) end
-	if menu.nifty then
+	if menu.showlogo then
+		local imagetoshow
+		if menu.blinktimer then imagetoshow = graphics.load(menu.logoname .. " blink") end
+		if not imagetoshow then imagetoshow = graphics.load(menu.logoname) end
+		love.graphics.draw(imagetoshow, math.floor((menu.width - imagetoshow:getWidth()) / 2), 10)
+	end
+	menu.misctext:setf(table.concat(menu.stack, " > "), menu.width, "left")
+	love.graphics.draw(menu.misctext)
+	menu.misctext:setf("v" .. version, menu.width, "left")
+	love.graphics.draw(menu.misctext, menu.width - menu.misctext:getWidth(), menu.height - menu.misctext:getHeight())
+	--love.graphics.print(table.concat(menu.pickerstack, " > "), 0, 16)
+	if menu.pages > 1 then love.graphics.print("(" .. menu.page .. "/" .. menu.pages .. ")", 242, 72) end
+	if cheat.isactive("nifty") then
 		love.graphics.setColor(1, 0, 1, 1)
 		for y=1, love.graphics.getHeight() do
 			if menu.niftyimg[y] then
@@ -225,7 +252,7 @@ function menu.draw()
 end
 
 function menu.stop()
-	menu.nifty = false
+	menu.handleWrites()
 	menu.niftyimg = {}
 end
 
@@ -236,15 +263,106 @@ function menu.movePicker(dir)
 	if menu.picker > #menu.options then menu.picker = 1 end
 end
 
-function menu.changeSubstate(substate)
+function menu.stackreset()
+	menu.stack = {}
+	menu.pickerstack = {}
+end
+
+function menu.back()
+	--menul.stack (which contains substates) keeps the current substate in the stack, but menu.pickerstack and menu.pagestack don't keep the current picker position/page in the stack. not sure how it 1ended up like this. probably something to do with how stack pushes are triggered by changing substate.
+	table.remove(menu.stack)
+	menu.picker = menu.pickerstack[#menu.pickerstack]
+	table.remove(menu.pickerstack)
+	menu.page = menu.pagestack[#menu.pagestack]
+	table.remove(menu.pagestack)
+	menu.changeSubstate(menu.stack[#menu.stack], true)
+end
+
+function menu.refresh()
+	menu.changeSubstate(menu.stack[#menu.stack], true, true)
+end
+
+function menu.appendBackOption(name, tooltip)
+	menu.options[#menu.options + 1] = {
+		name = name or "back",
+		tooltip = tooltip or "return to previous screen",
+		action = menu.back
+	}
+end
+
+function menu.pageSetup()
+	menu.options = {}
+	local i = 0
+	for ii = (7 * (menu.page - 1)) + 1, 7 * menu.page do
+		i = i + 1
+		menu.options[i] = menu.fulloptions[ii]
+	end
+	menu.appendChangePageOption("previous", -1, tern(menu.noback, 1, 2))
+	menu.appendChangePageOption("next", 1, tern(menu.noback, 0, 1))
+	if not menu.noback then
+		menu.appendBackOption(menu.backname, menu.backtooltip)
+	end
+end
+
+function menu.appendChangePageOption(kind, amt, offsetfrombottom)
+	local newpage = menu.page + amt
+	menu.options[#menu.options + 1] = {
+		name = kind .. " page",
+		tooltip = "go to the " .. kind .. " page",
+		alpha = tern(newpage > 0 and newpage <= menu.pages, 1, 0.5),
+		action = function()
+			if newpage > 0 and newpage <= menu.pages then
+				menu.page = newpage
+				menu.pageSetup()
+				menu.picker = #menu.options - offsetfrombottom
+			end
+		end
+	}
+end
+
+function menu.handleWrites()
+	for k,v in pairs(menu.changed) do
+		if v then
+			print(k .. " changed, writing")
+			writeto[k]()
+		end
+	end
+	menu.changed = {}
+end
+
+function menu.changeSubstate(substate, neutral, ignorewriting)
+	if not ignorewriting then menu.handleWrites() end
+	menu.fulloptions = {}
+	menu.multipage = false
+	menu.pages = 1
+	if not neutral then
+		table.insert(menu.stack, substate) --again, when a substate change triggers stack pushes, the NEW substate is pushed onto the substate stack, not the old one. this is contrary to how the pickerstack and pagestack work. some day it's going to turn out i'm actually just writing gibberish on the walls inside a padded cell
+		table.insert(menu.pickerstack, menu.picker)
+		table.insert(menu.pagestack, menu.page)
+	end
+	if not neutral then menu.picker = 1 end
+	if not neutral then menu.page = 1 end
 	menu.substateTemplate = substate
 	local ss = menu_substates[substate]
-	menu.options = ss.options
-	menu.linedistance = ss.linedistance
-	menu.offsetfromleft = ss.offsetfromleft
-	menu.offsetfromtop = ss.offsetfromtop
-	menu.onUpdate = ss.onUpdate
+	menu.options = table.copy(ss.options)
+	menu.linedistance = ss.linedistance or 40
+	menu.offsetfromleft = ss.offsetfromleft or 192
+	menu.offsetfromtop = ss.offsetfromtop or 96
+	menu.onUpdate = ss.onUpdate or function() end
+	menu.onDraw = ss.onDraw or function() end
 --menu.showlogo = ss.showlogo
-	menu.picker = 1
-	ss.onLoad()
+	menu.onCheat = ss.onCheat or function() end
+	menu.onLoad = ss.onLoad or function() end
+	menu.onLoad()
+	menu.noback = ss.noback
+	menu.backname = ss.backname
+	menu.backtooltip = ss.backtooltip
+	if #menu.options > menu.itemsperpage then
+		menu.pages = math.ceil(#menu.options / menu.itemsperpage)
+		menu.fulloptions = table.copy(menu.options)
+		menu.multipage = true
+		menu.pageSetup()
+	elseif not ss.noback then
+		menu.appendBackOption(ss.backname, ss.backtooltip)
+	end
 end

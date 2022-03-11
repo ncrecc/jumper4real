@@ -73,10 +73,12 @@ ogmo.blinkingquads = {
 	["lookupblink"] = "lookup"
 } 
 
+--[=[ --this is done in ogmos.lua now, per-skin, using each skin image's width/height respectively instead of always just being 64 and 160
 for i=0, 32 do --32 instead of 31. yes, we're starting at 0 and for loop syntax is inclusive in lua, so starting at 0 and iterating to 32 means we get 33 elements, but there is a 33rd element! gost's block, an object that acts like an additional ogmo and causes another ogmo to die when it dies
 	--table.insert(ogmo.quads, love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160))
 	ogmo.quads[ogmo.quaddefs[i + 1]] = love.graphics.newQuad((i % 4) * 16, math.floor(i / 4) * 16, 16, 16, 64, 160)
 end
+]=]
 
 function ogmo.editordraw(x, y, options)
 	local gost = false
@@ -215,6 +217,15 @@ function ogmo:keyDown(key, ignorecutscenelogic)
 	end
 end
 
+function ogmo:canUnduck()
+	local oldvmom = self.vmom
+	self.vmom = -3 --if we use 3 here it will always be true if you duck in a one-tile-high corridor, since the collision scan uses >=/<= (or not </not >) somewhere instead of >/< for some reason. might have to do with when player is flush to the ground?
+	local collisionresult
+	collisionresult = mobtools.doCollisionScan("vertical", self)
+	self.vmom = oldvmom
+	if collisionresult == "none" then return true else return false end
+end
+
 function ogmo:update(dt)
 	if not self.level then print("OGMO SEZ: I'M IN A NIL LEVEL SO I'M GONNA BE ANGRY ABOUT IT AND FLOOD THE CONSOLE!") end
 	if self.alive then
@@ -223,7 +234,7 @@ function ogmo:update(dt)
 		--major, game-breaking glitch in the following code: if you time your ducks or unducks frame perfectly, you can avoid blinking ever while idling/ducking, thus making you a monster depriving ogmo of sleep
 		if self.animtimer > 0 then self.animtimer = self.animtimer - 1 end
 		
-		if self.vmom < 0 then
+		if self.vmom < 0 or (self.vmom == 0 and not self.grounded) then
 			if string.sub(self.currentquad, 1, 4) ~= "jump" then
 				self.currentquad = "jump1"
 				self.animtimer = self.animframestotumble
@@ -361,8 +372,6 @@ function ogmo:movement(dt)
 		self.tempfrictiontimer = self.tempfrictiontimer - 1
 	end
 	
-	self.grounded = (self.verticaled == "down")
-	
 	if self.verticaled ~= "down" then
 		self.skiddingtimer = 0
 		self.startskiddingtimer = 0
@@ -462,7 +471,7 @@ function ogmo:movement(dt)
 		self.hmom = self.hmom_min
 	end
 	
-	if not self.dont_move_vert_on_first_update_of_horiz_edge_entry then
+	if not self.dont_move_vert_on_first_update_of_horiz_edge_entry then --i don't think this variable is actually used
 		self.vmom = self.vmom + self.gravity
 	end
 	
@@ -500,7 +509,7 @@ function ogmo:movement(dt)
 						break
 					end
 				end
-				if bounce or game.imrubber then --why do i keep nerd sniping myself into implementing will-never-be-used shit like rubber instead of the basics of jumper
+				if bounce or cheat.isactive("youreglue") then --why do i keep nerd sniping myself into implementing will-never-be-used shit like rubber instead of the basics of jumper
 					self.hmom = -self.hmom
 					if math.abs(self.hmom) < 1 then self.hmom = 0 end --no subpixel bouncing
 					local frictiondivisor = math.abs(self.hmom) * 2
@@ -538,7 +547,7 @@ function ogmo:movement(dt)
 						break
 					end
 				end
-				if bounce or game.imrubber then
+				if bounce or cheat.isactive("youreglue") then
 					self.vmom = -self.vmom
 					if math.abs(self.vmom) < 1 then self.vmom = 0 end
 				else self.vmom = 0 end
@@ -573,7 +582,7 @@ function ogmo:movement(dt)
 	self.overlappingwin = false
 	for _,obj in ipairs(self.overlaps) do --oops, this is a bit of a misnomer. this handles both objects AND tiles killing ogmo, because when collision processes a tile, it returns it formatted like an object.
 		if(obj.deathly) then
-			if not game.godmode then self:die() end
+			if not cheat.isactive("agodami") then self:die() end
 		elseif(obj.type == "ogmo" and not obj.gost and self.gost) then
 			self:die(true)
 		elseif obj.type == "win" then
@@ -581,6 +590,9 @@ function ogmo:movement(dt)
 			juststoppedoverlappingwin = false
 		end
 	end
+	
+	
+	self.grounded = (self.verticaled == "down")
 	
 	if self.justjumped == false and oldverticaledtemp == "down" and self.verticaled == "none" then
 		self.jumps = self.jumps - 1
@@ -594,6 +606,7 @@ function ogmo:movement(dt)
 	if true then --if not self.gost then --gost's block can't duck. you can use this to your advantage
 		if self:keyDown("down") and self.verticaled == "down" and not self.ducking then
 			self.ducking = true
+			self.vmom = 0
 			if not self.gost then
 				self.height = 13
 				self.y = self.y + 3
@@ -604,15 +617,12 @@ function ogmo:movement(dt)
 			else
 				--do we have space to unduck? this is emulated by pretending to give the player a vertical momentum of 3 pixels upward, at their current height, and then seeing if they would collide with anything.
 				--subtly this means you can actually be ducking while in midair if you're being followed by something that gives you no room to unduck. @sylviefluff cute jump 4 mechanic
-				local oldvmom = self.vmom
-				self.vmom = -2.999 --if we use 3 here it will always be true if you duck in a one-tile-high corridor, since the collision scan uses >=/<= (or not </not >) somewhere instead of >/< for some reason. might have to do with when player is flush to the ground?
-				local collisionresult = mobtools.doCollisionScan("vertical", self)
-				if collisionresult == "none" then --if player did not collide with anything while simulating upward movement
+				local canunduck = self:canUnduck()
+				if canunduck then --if player did not collide with anything while simulating upward movement
 					self.ducking = false
 					self.height = 16
 					self.y = self.y - 3
 				end
-				self.vmom = oldvmom
 			end
 		end
 		if self:keyDown("up") and self.verticaled == "down" and self.hmom == 0 and not self.ducking then
@@ -623,15 +633,53 @@ function ogmo:movement(dt)
 		end
 	end
 	
-	self.x_clamped = math.floor(self.x + .5)
-	self.y_clamped = math.floor(self.y + .5)
+	if game.ogmosnapto ~= 1 then
+		--[[
+		local newx_pt1 = math.floor(self.x + .5)
+		local remainder = newx_pt1 % game.ogmosnapto
+		if remainder > (game.ogmosnapto / 2) then
+			self.x_clamped = newx_pt1 + (game.ogmosnapto - remainder)
+		else
+			self.x_clamped = newx_pt1 - remainder
+		end
+		
+		local newy_pt1 = math.floor(self.y + .5)
+		local remainder = newy_pt1 % game.ogmosnapto
+		if remainder > (game.ogmosnapto / 2) then
+			self.y_clamped = newy_pt1 + (game.ogmosnapto - remainder)
+		else
+			self.y_clamped = newy_pt1 - remainder
+		end
+		]]
+		
+		self.x_clamped = math.floor((self.x / game.ogmosnapto) + .5) * game.ogmosnapto
+		self.y_clamped = math.floor(self.y + .5)
+	else
+		self.x_clamped = math.floor(self.x + .5)
+		self.y_clamped = math.floor(self.y + .5)
+	end
+	
+	if self.hmom ~= 0 then self.noxclampattempt = true end
+	if self.vmom ~= 0 then self.noyclampattempt = true end
 	
 	--if math.abs(self.hmom) < 0.1 then
-	if self.hmom == 0 then
-		self.x = self.x_clamped
+	if self.hmom == 0 and self.noxclampattempt then
+		local oldhmom = self.hmom
+		self.hmom = self.x_clamped - self.x
+		local collisionresult
+		collisionresult = mobtools.doCollisionScan("horizontal", self)
+		self.hmom = oldhmom
+		if collisionresult == "none" then self.x = self.x_clamped end
+		self.noxclampattempt = false
 	end
-	if self.vmom == 0 then
-		self.y = self.y_clamped
+	if self.vmom == 0 and self.noyclampattempt then
+		local oldvmom = self.vmom
+		self.vmom = self.y_clamped - self.y
+		local collisionresult
+		collisionresult = mobtools.doCollisionScan("vertical", self)
+		self.vmom = oldvmom
+		if collisionresult == "none" then self.y = self.y_clamped end
+		self.noyclampattempt = false
 	end
 	
 	if self.y > self.level.height and not (self.overlappingwin or juststoppedoverlappingwin) then self:die() end
@@ -652,46 +700,58 @@ function ogmo:keypressed(key)
 end
 
 function ogmo:jump()
-	local canwalljump = false
-	if self.verticaled ~= "down" and self.walled ~= "none" then
-		for _,thing in ipairs(self.walledby) do
-			if not thing.notwalljumpable then
-				canwalljump = true
+	local canjump = not self.ducking
+	if not canjump then
+		local canunduck = self:canUnduck()
+		if canunduck and self.ducking then --if player did not collide with anything while simulating upward movement
+			self.ducking = false
+			self.height = 16
+			self.y = self.y - 3
+			canjump = true
+		end
+	end
+	if canjump then
+		local canwalljump = false
+		if self.verticaled ~= "down" and self.walled ~= "none" then
+			for _,thing in ipairs(self.walledby) do
+				if not thing.notwalljumpable then
+					canwalljump = true
+				end
 			end
 		end
-	end
-	if canwalljump then
-		self.vmom = (self.vmom * self.jumpzaniness) - self.walljumpforce
-		if self.walled == "left" then
-			self.hmom = self.walljumpspeed
-			self.tempfriction = self.walljumptempfriction
-			self.tempfrictiontimer = self.walljumptempfrictionframes
-		elseif self.walled == "right" then
-			self.hmom = (-1 * self.walljumpspeed)
-			self.tempfriction = self.walljumptempfriction
-			self.tempfrictiontimer = self.walljumptempfrictionframes
+		if canwalljump then
+			self.vmom = (self.vmom * self.jumpzaniness) - self.walljumpforce
+			if self.walled == "left" then
+				self.hmom = self.walljumpspeed
+				self.tempfriction = self.walljumptempfriction
+				self.tempfrictiontimer = self.walljumptempfrictionframes
+			elseif self.walled == "right" then
+				self.hmom = (-1 * self.walljumpspeed)
+				self.tempfriction = self.walljumptempfriction
+				self.tempfrictiontimer = self.walljumptempfrictionframes
+			end
+			if not self.gost then audio.playsfx("ogmo jump") end
+			self.justjumped = true
+		elseif self.jumps > 0 then
+			self.tempfriction = nil --having temp friction stop when you jump feels more natural for some reason
+			--self.tempfrictiontimer = 0 --for alternate behavior, uncomment this line and comment the above line. this makes it so when you jump you get the standard tempfriction phase-out as when your tempfriction from a walljump ends normally, rather than your friction immediately becoming normal. this *looks* nicer, but feels far less precise
+			local jumpsound = "ogmo jump"
+			self.vmom = (self.vmom * self.jumpzaniness) - self.jumpforce
+			if self.skiddingtimer > 0 and self.verticaled == "down" then
+				self.vmom = self.vmom - self.skidjumpextraforce
+				--skidding cancels out all momentum in the direction you're skidding away from. in the original games i think skidding just killed all your horizontal momentum, period... but so did most things :p
+				if self.skidding == "left" and self.hmom > 0 then self.hmom = 0
+				elseif self.skidding == "right" and self.hmom < 0 then self.hmom = 0 end
+				if self.skidding == "none" then print "how did you skidjump with no skidding state?" end
+				jumpsound = "superjump"
+			end
+			self.jumps = self.jumps - 1
+			if not self.gost then audio.playsfx(jumpsound) end
+			self.justjumped = true
 		end
-		if not self.gost then audio.playsfx("ogmo jump") end
-		self.justjumped = true
-	elseif self.jumps > 0 then
-		self.tempfriction = nil --having temp friction stop when you jump feels more natural for some reason
-		--self.tempfrictiontimer = 0 --for alternate behavior, uncomment this line and comment the above line. this makes it so when you jump you get the standard tempfriction phase-out as when your tempfriction from a walljump ends normally, rather than your friction immediately becoming normal. this *looks* nicer, but feels far less precise
-		local jumpsound = "ogmo jump"
-		self.vmom = (self.vmom * self.jumpzaniness) - self.jumpforce
-		if self.skiddingtimer > 0 and self.verticaled == "down" then
-			self.vmom = self.vmom - self.skidjumpextraforce
-			--skidding cancels out all momentum in the direction you're skidding away from. in the original games i think skidding just killed all your horizontal momentum, period... but so did most things :p
-			if self.skidding == "left" and self.hmom > 0 then self.hmom = 0
-			elseif self.skidding == "right" and self.hmom < 0 then self.hmom = 0 end
-			if self.skidding == "none" then print "how did you skidjump with no skidding state?" end
-			jumpsound = "superjump"
-		end
-		self.jumps = self.jumps - 1
-		if not self.gost then audio.playsfx(jumpsound) end
-		self.justjumped = true
+		self.skiddingtimer = 0
+		self.skidding = "none"
 	end
-	self.skiddingtimer = 0
-	self.skidding = "none"
 end
 
 function ogmo:die(vanish, nosfx) --"vanish" arg is for if you are gost's block and you've been touched by an ogmo
@@ -719,12 +779,42 @@ function ogmo:die(vanish, nosfx) --"vanish" arg is for if you are gost's block a
 	end
 end
 
+function ogmo:calculate_y_drawat()
+	local y_drawat = self.y_clamped
+	local duckoffset = 0
+	if game.ogmosnapto ~= 1 and (self.gost or not (self.currentquad == "duck" or self.currentquad == "duckblink")) then
+		y_drawat = math.floor((self.y / game.ogmosnapto) + .5) * game.ogmosnapto
+	end
+	if not self.gost then
+		if self.currentquad == "duck" or self.currentquad == "duckblink" then
+			if game.ogmosnapto == 1 then
+				duckoffset = -3
+			else
+				y_drawat = math.floor(((self.y - 3) / game.ogmosnapto) + .5) * game.ogmosnapto
+			end
+		end
+	end
+	return y_drawat + duckoffset
+end
+
 function ogmo:draw()
 	if self.alive then
-		local duckoffset = 0
-		if self.currentquad == "duck" or self.currentquad == "duckblink" then duckoffset = -3 end
-		if not self.gost then love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, self.y_clamped + duckoffset)
-		else love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, self.y_clamped) end
+		local y_drawat = self.y_clamped
+		if game.ogmosnapto ~= 1 and (self.gost or not (self.currentquad == "duck" or self.currentquad == "duckblink")) then
+			y_drawat = math.floor((self.y / game.ogmosnapto) + .5) * game.ogmosnapto
+		end
+		if self.gost then love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads["gost"], self.x_clamped, y_drawat)
+		else
+			local duckoffset = 0
+			if self.currentquad == "duck" or self.currentquad == "duckblink" then
+				if game.ogmosnapto == 1 then
+					duckoffset = -3
+				else
+					y_drawat = math.floor(((self.y - 3) / game.ogmosnapto) + .5) * game.ogmosnapto
+				end
+			end
+			love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[self.currentquad], self.x_clamped, y_drawat + duckoffset)
+		end
 	end--[[
 	love.graphics.print(booltostr(self.ducking), 400)
 	love.graphics.print(booltostr(self.lookingup), 432)
