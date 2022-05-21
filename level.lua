@@ -210,6 +210,15 @@ function level:init(leveldata, filepath, entrance, skipall) --1st arg must be ac
 					for ii=1, #symbol.objects do
 						local obj = symbol.objects[ii]
 						local options = {}
+						local temp = split(obj, "|")
+						if #temp >  1 then
+							obj = temp[1]
+							for iii=2, #temp do
+								temp[iii] = split(temp[iii], ":")
+								options[temp[iii][1]] = temp[iii][2] or "yes"
+							end
+						end
+						--[[
 						local temp = split(obj, ";")
 						if #temp >  1 then
 							obj = temp[1]
@@ -218,6 +227,7 @@ function level:init(leveldata, filepath, entrance, skipall) --1st arg must be ac
 								table.insert(options, temp[iii])
 							end
 						end
+						]]
 						if objects[obj] == nil then print("THIS AIN'T AN OBJECT CHAMP: " .. obj) end
 						
 						local edge = nil
@@ -341,8 +351,10 @@ function level:draw()
 	end
 	local objects_nonsolid = {}
 	local objects_solid = {}
+	local objects_late = {}
 	for _,obj in ipairs(self.objects) do
-		if not obj.solid then table.insert(objects_nonsolid, obj)
+		if obj.drawlate then table.insert(objects_late, obj)
+		elseif not obj.solid then table.insert(objects_nonsolid, obj)
 		else table.insert(objects_solid, obj) end
 	end
 	for i=1, #objects_nonsolid do
@@ -350,6 +362,9 @@ function level:draw()
 	end
 	for i=1, #objects_solid do
 		objects_solid[i]:draw()
+	end
+	for i=1, #objects_late do
+		objects_late[i]:draw()
 	end
 	love.graphics.pop()
 	--[[

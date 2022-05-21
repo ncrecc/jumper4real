@@ -23,6 +23,7 @@ function jumparrow:init(x, y)
 	self.active = true
 	self.inactivetimer = 0
 	self.inactiveframes = 256
+	self.passive = true -- "passive" objects ignore each other during the overlapscan. this is to help with a lag issue that can occur with too many objects doing dooverlapscan every frame and not immediately ruling each other out.
 end
 
 function jumparrow:setup(x, y, options)

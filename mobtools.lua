@@ -391,7 +391,9 @@ function mobtools.doOverlapScan(collider, objectsonly, level)
 							tile.vmom = 0
 							tile.width = tile.hitboxwidth or tilesize
 							tile.height = tile.hitboxheight or tilesize
-							if mobtools.doOverlapCheck(collider, tile) then table.insert(collidees, tile) end
+							if not collider.overlapcondition or collider:overlapcondition(tile) then
+								if mobtools.doOverlapCheck(collider, tile) then table.insert(collidees, tile) end
+							end
 							--[=[
 							if tiles[level.tilemap[y_tiled][x_tiled][i]].deathly then
 								if math.abs((((y_tiled - 1) * tilesize) - self.y)) < self.height then
@@ -411,7 +413,11 @@ function mobtools.doOverlapScan(collider, objectsonly, level)
 	end
 	for i=1, #level.objects do
 		obj = level.objects[i]
-		if mobtools.doOverlapCheck(collider, obj) then table.insert(collidees, obj) end
+		if not ((collider.passive and obj.passive) or (obj.irrelevant) or (obj.player and not obj.alive)) then
+			if not collider.overlapcondition or collider:overlapcondition(tile) then
+				if mobtools.doOverlapCheck(collider, obj) then table.insert(collidees, obj) end
+			end
+		end
 	end
 	return collidees
 end
@@ -479,7 +485,9 @@ function mobtools.doPastEdgeScan(collider, dir, mustalign, level)
 	local collidees = {}
 	for i=1, #level.objects do
 		obj = level.objects[i]
-		if mobtools.doPastEdgeCheck(collider, obj, dir, mustalign) then table.insert(collidees, obj) end
+		if not collider.pastedgecondition or collider:pastedgecondition(obj) then
+			if mobtools.doPastEdgeCheck(collider, obj, dir, mustalign) then table.insert(collidees, obj) end
+		end
 	end
 	return collidees
 end

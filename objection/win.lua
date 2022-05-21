@@ -12,6 +12,7 @@ function win:init(x, y, edge, magicvalue)
 	self.height = tilesize
 	self.edge = edge
 	self.magicvalue = magicvalue
+	self.passive = true
 end
 
 function win:setup(x, y, options, level, edge, magicvalue)

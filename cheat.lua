@@ -135,6 +135,11 @@ cheat = {
 				end
 				love.window.updateMode(menu.width, menu.height)
 			end
+		},
+		wrongway = {
+			name = "wrong way",
+			tooltip = "launchers now spin counterclockwise, like in the original jumper games",
+			active = false
 		}
 	},
 	unlockedcheats = {},

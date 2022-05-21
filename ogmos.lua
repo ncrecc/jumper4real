@@ -52,6 +52,11 @@ ogmos = {
 		snapto = 16,
 		description = "yes",
 		hidden = true
+	},
+	["caesar"] = {
+		name = "Caesar",
+		order = 8,
+		description = "What game is complete without a cat? Fanmade skin by Sefcear." --orig author wrote this description, bert added it
 	}
 }
 

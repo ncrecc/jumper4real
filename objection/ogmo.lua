@@ -81,18 +81,15 @@ end
 ]=]
 
 function ogmo.editordraw(x, y, options)
-	local gost = false
-	for i=1, #options do
-		if options[i] == "gost" then
-			gost = true
-		end
-	end
+	local gost = options["gost"]
 	local quadtodraw = "idle"
 	if gost then quadtodraw = "gost" end
 	love.graphics.draw(graphics.load("ogmos/" .. game.ogmoskin), ogmo.quads[quadtodraw], x, y)
 end
 
 function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
+	self.irrelevant = false --"irrelevant" means "don't care about this when iterating through shit"
+	
 	self.edge = edge
 	self.magicvalue = magicvalue
 	self.initializationdone = false
@@ -100,12 +97,12 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	
 	self.type = "ogmo"
 	self.player = true
-	self.playerno = playerno or 1
+	self.playerno = playerno --NOTE: "[whatever] or value" prevents pretty much every object from inherintg
 	self.x = x
 	self.y = y
-	self.width = width or tilesize
-	self.height = height or tilesize
-	self.id = nil --just ego and superego here folks
+	self.width = width
+	self.height = height
+	self.id = false --just ego and superego here folks
 	self.gost = gost
 	self.solid = true
 	--if self.gost and self.solid then self.solid = false end
@@ -131,13 +128,13 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	self.jumpzaniness = 0 --the extent to which jumps should inherit current velocity, meaning doublejumping twice in a row lets you jump way higher. i thought i was so clever when i came up with this
 	self.walljumpforce = 5
 	self.walljumpspeed = 6
-	self.tempfriction = nil --temp friction results from doing a walljump and is lower than normal friction; it's main purpose is to disallow you from walljumping back onto the same wall quick enough to get further up
-	self.oldtempfriction = nil
+	self.tempfriction = false --temp friction results from doing a walljump and is lower than normal friction; it's main purpose is to disallow you from walljumping back onto the same wall quick enough to get further up
+	self.oldtempfriction = false
 	self.walljumptempfriction = 0.05 --what your tempfriction should be after doing a walljump
 	self.tempfrictiontimer = 0
 	self.walljumptempfrictionframes = 24
 	self.tempfrictionphaseouttimer = 12
-	self.cutscenemovement = nil --"right", "left", "up", or "down"
+	self.cutscenemovement = false --"right", "left", "up", or "down"
 	self.verticaled = "none"
 	self.verticaledby = {}
 	self.grounded = false
@@ -147,7 +144,7 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	self.overlappingwin = false
 	self.collisioncondition = function(self, collidee)
 		if collidee == "levelborder" then
-			if (not not self.cutscenemovement) or ((not self.gost) and self.overlappingwin) then return false end
+			if self.cutscenemovement or ((not self.gost) and self.overlappingwin) then return false end
 		end
 		if collidee.type == "ogmo" and ((not not collidee.gost) ~= (not not self.gost)) then return false end
 		return true
@@ -161,6 +158,10 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	self.startskiddingtimer = 0
 	self.ducking = false
 	self.lookingup = false
+	
+	self.careening = false
+	self.attachedtolauncher = false --"attached to launcher" just means "ignore a jump command if we issue it". if we were just doing normal launchers with nothing extra then this could be identical to careening (and in fact the player already does enter careening state when they enter normal launchers, and jump is already prevented while careening), but i find the notion of a launcher that doesn't actually suck you in and just gives you a momentum boost in a particular direction the next time you press jump really interesting
+	--there's also an additional kludge so that you don't jump immediately after being launched by a remote. when that happens, attachedtolauncher gets set to 2, then counts down by 1 each update until it reaches 0, at which point it's set to false again.
 	
 	self.extraverticalbits = {}
 	self.extrahorizontalbits = {}
@@ -184,12 +185,7 @@ function ogmo:setup(x, y, options, level, edge, magicvalue)
 	if (not magicvalue) then magicvalue = 1 end
 	]] --uncommenting this, and removing 'type(magicvalue) == "number"' from the next line, makes it so un-numbered ogmos will only show when level.entrance is 0 or 1
 	if type(magicvalue) == "number" and level.entrance ~= magicvalue then return nil end
-	gost = false
-	for i=1, #options do
-		if options[i] == "gost" then
-			gost = true
-		end
-	end
+	local gost = options["gost"]
 	if not gost then level.playeramt = level.playeramt + 1 end
 	if edge and not gost then
 		if edge == "left" then
@@ -227,14 +223,14 @@ function ogmo:canUnduck()
 end
 
 function ogmo:update(dt)
-	if not self.level then print("OGMO SEZ: I'M IN A NIL LEVEL SO I'M GONNA BE ANGRY ABOUT IT AND FLOOD THE CONSOLE!") end
+	if not self.level then print("OGMO SEZ: I'M IN A NIL LEVEL SO I'M GONNA BE ANGRY ABOUT IT AND FLOOD THE CONSOLE!") end --only the most professional error messages will do in this state-of-the-art video game
 	if self.alive then
 		self:movement(dt)
 		
 		--major, game-breaking glitch in the following code: if you time your ducks or unducks frame perfectly, you can avoid blinking ever while idling/ducking, thus making you a monster depriving ogmo of sleep
 		if self.animtimer > 0 then self.animtimer = self.animtimer - 1 end
 		
-		if self.vmom < 0 or (self.vmom == 0 and not self.grounded) then
+		if self.careening or self.vmom < 0 or (self.vmom == 0 and not self.grounded) then
 			if string.sub(self.currentquad, 1, 4) ~= "jump" then
 				self.currentquad = "jump1"
 				self.animtimer = self.animframestotumble
@@ -244,7 +240,7 @@ function ogmo:update(dt)
 				if self:keyDown("right") then self.currentquad = "jumpright" .. jumpnum
 				elseif self:keyDown("left") then self.currentquad = "jumpleft" .. jumpnum end
 			end
-			if self.animtimer <= 0 and not(jumpnum == 1 and self.vmom > -0.5) then
+			if self.animtimer <= 0 and not(jumpnum == 1 and (self.vmom > -0.5 and not self.careening)) then
 				local jump = string.sub(self.currentquad, 1, -2)
 				jumpnum = jumpnum + 1
 				if jumpnum > 4 then jumpnum = 1 end
@@ -338,13 +334,17 @@ function ogmo:notWalkingLeft()
 end
 
 function ogmo:movement(dt)
+	if type(self.attachedtolauncher) == "number" then
+		self.attachedtolauncher = self.attachedtolauncher - 1
+		if self.attachedtolauncher <= 0 then self.attachedtolauncher = false end
+	end
 	--can't remember precisely where but there's a lot of places here that negate maddy thorson's recurrent antipattern of counteracting the player moving against their current momentum but forgetting to apply the same harshness to the player not moving at all while they have momentum. this results in, among other things, neutraljumping being possible in celeste and jumper 2
 	if self.cutscenemovement == "up" and not self.level.options.bottombordersolid then
-		self.cutscenemovement = nil --if you jump into the level, you should only be counted as doing cutscenemovement for the minimum amount of time for things to work as they should
+		self.cutscenemovement = false --if you jump into the level, you should only be counted as doing cutscenemovement for the minimum amount of time for things to work as they should
 	end
 	
 	self.cutscene_firstfreemovement = false
-	if not self.initializationdone then
+	if not self.initializationdone then --i'm pretty sure this is just a stupid workaround for back when cutscenemovement's value for "not doing any cutscene movement" was nil so if non-nil cutscenemovement was given directly to the base ogmo, then the cloned ogmo would just inherit that cutscenemovement whenever its own cutscenemovement is nil
 		if self.edge == "left" then
 			self.cutscenemovement = "right"
 			self.cutscene_firstfreemovement = true
@@ -362,10 +362,10 @@ function ogmo:movement(dt)
 	end
 	
 	if self.cutscenemovement and self.x >= 0 and self.x + self.width <= self.level.width and self.y >= 0 and self.y + self.height <= self.level.height then
-		self.cutscenemovement = nil
+		self.cutscenemovement = false
 	end
 	
-	if self.tempfrictiontimer ~= 0 and self.tempfriction == nil then
+	if self.tempfrictiontimer ~= 0 and not self.tempfriction then
 		self.tempfrictiontimer = 0
 	end
 	if self.tempfrictiontimer > 0 then
@@ -387,21 +387,21 @@ function ogmo:movement(dt)
 	if self.startskiddingtimer > 0 then
 		self.startskiddingtimer = self.startskiddingtimer - 1
 	end
-	if self.tempfriction ~= nil and self.tempfrictiontimer == 0 then 
+	if self.tempfriction and self.tempfrictiontimer == 0 then 
 		self.oldtempfriction = self.tempfriction
 		self.tempfriction = self.tempfriction + (math.abs(self.friction - self.oldtempfriction) / self.tempfrictionphaseouttimer) --gradually phase out the temp friction
 	end
 	
 	if self.tempfriction == self.friction then
-		self.oldtempfriction = nil
-		self.tempfriction = nil
+		self.oldtempfriction = false
+		self.tempfriction = false
 	end
 	
 	if math.abs(self.hmom) >= self.maxspeed - self.skiddingspeedleniency then
 		self.startskiddingtimer = self.startskiddingframes
 	end
 	
-	if not self.ducking then
+	if not self.ducking and not self.careening then
 		if self.verticaled == "down" then
 			if self:keyDown("right") and self.hmom < 0 and self.startskiddingtimer > 0 then
 				self.skiddingtimer = self.skiddingframes
@@ -423,7 +423,7 @@ function ogmo:movement(dt)
 				end
 				self.hmom = self.hmom + accelerationcapped
 				if oldhmom * self.hmom < 0 then
-					self.tempfriction = nil
+					self.tempfriction = false
 				end
 			elseif self:keyDown("left") and (-1 * self.hmom) < self.maxspeed then
 				local oldhmom = self.hmom
@@ -435,33 +435,35 @@ function ogmo:movement(dt)
 				end
 				self.hmom = self.hmom - accelerationcapped
 				if oldhmom * self.hmom < 0 then
-					self.tempfriction = nil
+					self.tempfriction = false
 				end
 			end
 		end
 	end
 	
-	if (self:notWalkingRight() and self.hmom > 0) or self.hmom > self.maxspeed then --apply friction if player is not moving OR if player is going faster than their normally attainable speed
-		if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
-			self.hmom = self.maxspeed
-		else
-			self.hmom = self.hmom - (self.tempfriction or self.friction)
-		end
-		
-		if self.hmom <= 0 then
-			self.tempfriction = nil
-			self.hmom = 0
-		end
-	elseif (self:notWalkingLeft() and self.hmom < 0) or (self.hmom * -1) > self.maxspeed then --ditto
-		if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
-			self.hmom = self.maxspeed
-		else
-			self.hmom = self.hmom + (self.tempfriction or self.friction)
-		end
-		
-		if self.hmom >= 0 then
-			self.tempfriction = nil
-			self.hmom = 0
+	if not self.careening then --ignore friction while careening
+		if (self:notWalkingRight() and self.hmom > 0) or self.hmom > self.maxspeed then --apply friction if player is not moving OR if player is going faster than their normally attainable speed
+			if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
+				self.hmom = self.maxspeed
+			else
+				self.hmom = self.hmom - (self.tempfriction or self.friction)
+			end
+			
+			if self.hmom <= 0 then
+				self.tempfriction = false
+				self.hmom = 0
+			end
+		elseif (self:notWalkingLeft() and self.hmom < 0) or (self.hmom * -1) > self.maxspeed then --ditto
+			if self:keyDown("right") and self.hmom > self.maxspeed and (self.hmom - self.friction) <= self.maxspeed then
+				self.hmom = self.maxspeed
+			else
+				self.hmom = self.hmom + (self.tempfriction or self.friction)
+			end
+			
+			if self.hmom >= 0 then
+				self.tempfriction = false
+				self.hmom = 0
+			end
 		end
 	end
 	
@@ -471,7 +473,7 @@ function ogmo:movement(dt)
 		self.hmom = self.hmom_min
 	end
 	
-	if not self.dont_move_vert_on_first_update_of_horiz_edge_entry then --i don't think this variable is actually used
+	if not self.dont_move_vert_on_first_update_of_horiz_edge_entry and not self.careening then --i don't think the former variable is actually used
 		self.vmom = self.vmom + self.gravity
 	end
 	
@@ -502,6 +504,7 @@ function ogmo:movement(dt)
 			if newposition == nil then
 				self.x = self.x + self.hmom
 			else
+				self.careening = false
 				local bounce = false
 				for _,collider in ipairs(self.walledby) do
 					if collider.bounce then
@@ -540,6 +543,7 @@ function ogmo:movement(dt)
 			if newposition == nil then
 				self.y = self.y + self.vmom
 			else
+				self.careening = false
 				local bounce = false
 				for _,collider in ipairs(self.verticaledby) do
 					if collider.bounce then
@@ -554,7 +558,7 @@ function ogmo:movement(dt)
 				self.y = newposition
 				if self.verticaled == "down" and not (bounce and self.vmom ~= 0) then
 					self.jumps = self.defaultjumps
-					self.tempfriction = nil
+					self.tempfriction = false
 				end
 				for _,collider in ipairs(self.verticaledby) do
 					if collider.onCollide then
@@ -594,7 +598,7 @@ function ogmo:movement(dt)
 	
 	self.grounded = (self.verticaled == "down")
 	
-	if self.justjumped == false and oldverticaledtemp == "down" and self.verticaled == "none" then
+	if not self.justjumped and oldverticaledtemp == "down" and self.verticaled == "none" then
 		self.jumps = self.jumps - 1
 	end
 	
@@ -687,7 +691,8 @@ end
 
 function ogmo:keypressed(key)
 	if key == controls["P" .. self.playerno .. "JUMP"] and self.alive and self.cutscenemovement ~= "down" and
-		not ((self.cutscenemovement == "right" or self.cutscenemovement == "left") and self.cutscene_firstfreemovement)
+		(not ((self.cutscenemovement == "right" or self.cutscenemovement == "left") and self.cutscene_firstfreemovement)) and
+		(not (self.attachedtolauncher or self.careening))
 	then self:jump()
 	elseif key == controls["P" .. self.playerno .. "DIE"] and self.alive and not self.gost then self:die(false, true); audio.playsfxonce("ogmo die");
 	elseif key == controls["P" .. self.playerno .. "INTERACT"] and self.alive then
@@ -733,7 +738,7 @@ function ogmo:jump()
 			if not self.gost then audio.playsfx("ogmo jump") end
 			self.justjumped = true
 		elseif self.jumps > 0 then
-			self.tempfriction = nil --having temp friction stop when you jump feels more natural for some reason
+			self.tempfriction = false --having temp friction stop when you jump feels more natural for some reason
 			--self.tempfrictiontimer = 0 --for alternate behavior, uncomment this line and comment the above line. this makes it so when you jump you get the standard tempfriction phase-out as when your tempfriction from a walljump ends normally, rather than your friction immediately becoming normal. this *looks* nicer, but feels far less precise
 			local jumpsound = "ogmo jump"
 			self.vmom = (self.vmom * self.jumpzaniness) - self.jumpforce
@@ -762,6 +767,7 @@ function ogmo:die(vanish, nosfx) --"vanish" arg is for if you are gost's block a
 		end
 		if not self.gost and not nosfx then audio.playsfx("ogmo die") end
 		self.alive = false
+		self.irrelevant = true
 		self.solid = false
 		local level = self.level
 		if not self.gost then

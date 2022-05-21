@@ -177,11 +177,10 @@ end
 
 function game.mousepressed(x, y, button)
 	if cheat.isactive("clique") and button == 1 then
-		local newogmo = ogmo:new(x - (tilesize / 2), y - (tilesize / 2))
 		local toplevel = game.activelevels[#game.activelevels]
-		newogmo.level = toplevel
+		local newogmo = ogmo:setup(x - (tilesize / 2), y - (tilesize / 2), {}, toplevel)
 		table.insert(toplevel.objects, newogmo)
-		toplevel.playeramt = toplevel.playeramt + 1
+		newogmo.level = toplevel
 		toplevel.liveplayeramt = toplevel.liveplayeramt + 1
 	elseif cheat.isactive("scroller1") and button == 3 then
 		for _,level in ipairs(game.activelevels) do

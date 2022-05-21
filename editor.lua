@@ -786,17 +786,17 @@ function editor.drawSymbol(realsymbol, x, y)
 	for i=1, #symbol.objects do
 		local objectname = symbol.objects[i]
 		local options = {}
-		local temp = split(objectname, ";")
+		local temp = split(objectname, "|")
 		if #temp >  1 then
 			objectname = temp[1]
-			temp = split(temp[2], "|")
-			for i=1, #temp do
-				table.insert(options, temp[i])
+			for i=2, #temp do
+				temp[i] = split(temp[i], ":")
+				options[temp[i][1]] = temp[i][2] or "yes"
 			end
 		end
 		local object = objects[objectname]
 		local graphictodraw = nil
-		if object.editorimg ~= nil then
+		if object.editorimg ~= nil then --kind of deprecated, just use editordraw. this was during a period where i wasn't really aware i could just be deferring more responsibility than i was
 			graphictodraw = object.editorimg(options)
 			love.graphics.draw(graphictodraw, x, y)
 		elseif object.editordraw ~= nil then

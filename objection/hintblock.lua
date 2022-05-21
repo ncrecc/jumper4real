@@ -31,7 +31,7 @@ function hintblock:update()
 end
 
 function hintblock:onCollide(collidee, side)
-	if side == "up" and collidee.player and not collidee.gost then
+	if not game.pausedfortextbox and side == "up" and collidee.player and not collidee.gost then
 		if not self.deep then audio.playsfx("hint")
 		else audio.playsfx("hint deep") end
 		game.showtextbox(self.text)

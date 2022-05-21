@@ -263,7 +263,8 @@ menu_substates = {
 		onCheat = function() menu.refresh() end,
 		linedistance = 40,
 		offsetfromleft = 192,
-		offsetfromtop = 96
+		offsetfromtop = 96,
+		alwaysshowcheatamt = true,
 	},
 	["ogmos"] = {
 		options = {},

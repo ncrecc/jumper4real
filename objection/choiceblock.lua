@@ -6,12 +6,7 @@ choiceblock.quads = {
 }
 
 function choiceblock.editordraw(x, y, options)
-	inverse = false
-	for i=1, #options do
-		if options[i] == "inverse" then
-			inverse = true
-		end
-	end
+	local inverse = options["inverse"]
 	local mystate = "pass"
 	if (inverse and not settings.choice) or (not inverse and settings.choice) then mystate = "solid" end
 	love.graphics.draw(graphics.load("choiceblock"), choiceblock.quads[mystate], x, y)
@@ -31,12 +26,7 @@ function choiceblock:init(x, y, inverse)
 end
 
 function choiceblock:setup(x, y, options)
-	inverse = false
-	for i=1, #options do
-		if options[i] == "inverse" then
-			inverse = true
-		end
-	end
+	local inverse = options["inverse"]
 	return choiceblock:new(x, y, inverse)
 end
 

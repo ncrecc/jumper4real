@@ -44,7 +44,7 @@ levelsymbols = {
 		categories = {"mobs"},
 		order = 6,
 		tiles = {},
-		objects = {"ogmo;gost"},
+		objects = {"ogmo|gost"},
 		tooltip = "It copies your movements, and you die if it dies." --ku
 	},
 	["M!"] = {
@@ -77,7 +77,7 @@ levelsymbols = {
 		order = 9,
 		rotations = {"O ", "O "},
 		tiles = {},
-		objects = {"choiceblock;inverse"},
+		objects = {"choiceblock|inverse"},
 		tooltip = "The solidity of this block is the player's choice! It's solid only if Choice is OFF." --ku
 	},
 	[" !"] = {
@@ -497,7 +497,61 @@ levelsymbols = {
 		tiles = {"light"},
 		objects = {},
 		tooltip = "add a bit of light to detract from the mood" -- bert
-	}
+	},
+	["O%"] = {
+		name = "launcher",
+		categories = {"objects"},
+		rotations = {"O*", "O&"},
+		order = 49,
+		tiles = {},
+		objects = {"launcher"},
+		tooltip = "it deadass launches shit" --bert
+	},
+	["O&"] = {
+		name = "blue launcher",
+		categories = {"objects"},
+		rotations = {"O%", "O'"},
+		order = 50,
+		tiles = {},
+		objects = {"launcher|variant:fast"},
+		tooltip = "it deadass launches shit, but faster" --bert
+	},
+	["O'"] = {
+		name = "yellow launcher",
+		categories = {"objects"},
+		rotations = {"O&", "O("},
+		order = 51,
+		tiles = {},
+		objects = {"launcher|variant:fragile"},
+		tooltip = "it deadass launches shit but we bought it at walmart for 3 bucks don't break it" --bert
+	},
+	["O("] = {
+		name = "remote launcher",
+		categories = {"objects"},
+		rotations = {"O'", "O)"},
+		order = 52,
+		tiles = {},
+		objects = {"launcher|variant:remote"},
+		tooltip = "it launches you AFTER you touch it, when you're no longer inside it. trippy!" --bert
+	},
+	["O)"] = {
+		name = "twin launcher",
+		categories = {"objects"},
+		rotations = {"O(", "O*"},
+		order = 53,
+		tiles = {},
+		objects = {"launcher|variant:twin"},
+		tooltip = "a launcher with two cannons. i wonder what that could mean" --bert
+	},
+	["O*"] = {
+		name = "inert launcher",
+		categories = {"objects"},
+		rotations = {"O)", "O%"},
+		order = 54,
+		tiles = {},
+		objects = {"launcher|variant:inert"},
+		tooltip = "a launcher with no cannon, and yet it can still send you flying." --bert
+	},
 }
 
 levelsymbols_sortedkeys_byraw = {} --by raw key text. i don't think you'd ever need this but it does sort by (kind of arbitrary, probably subject to change) categories and show when things were added in each category (except when things get deleted). see legend.txt for more info about the innate categories each key uses

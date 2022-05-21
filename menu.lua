@@ -193,7 +193,7 @@ function menu.textinput(t)
 			menu.cheatcodetimer = 0
 			audio.playsfx("cheat")
 			cheat.invoke(thischeat)
-			if not thischeat.unlocked then
+			if not thischeat.unlocked and not thischeat.hidden then
 				print(menu.cheatcode .. " unlocked via typing!")
 				thischeat.unlocked = true
 				table.insert(cheat.unlockedcheats, menu.cheatcode)
@@ -236,6 +236,12 @@ function menu.draw()
 	love.graphics.draw(menu.misctext)
 	menu.misctext:setf("v" .. version, menu.width, "left")
 	love.graphics.draw(menu.misctext, menu.width - menu.misctext:getWidth(), menu.height - menu.misctext:getHeight())
+	local cheatamt = 0
+	if cheat.activecheats then cheatamt = #cheat.activecheats end
+	if cheatamt > 0 or menu.alwaysshowcheatamt then
+		menu.misctext:setf("cheats: " .. cheatamt, menu.width, "left")
+		love.graphics.draw(menu.misctext, menu.width - menu.misctext:getWidth(), 0)
+	end
 	--love.graphics.print(table.concat(menu.pickerstack, " > "), 0, 16)
 	if menu.pages > 1 then love.graphics.print("(" .. menu.page .. "/" .. menu.pages .. ")", 242, 72) end
 	if cheat.isactive("nifty") then
@@ -357,6 +363,7 @@ function menu.changeSubstate(substate, neutral, ignorewriting)
 	menu.noback = ss.noback
 	menu.backname = ss.backname
 	menu.backtooltip = ss.backtooltip
+	menu.alwaysshowcheatamt = ss.alwaysshowcheatamt
 	if #menu.options > menu.itemsperpage then
 		menu.pages = math.ceil(#menu.options / menu.itemsperpage)
 		menu.fulloptions = table.copy(menu.options)

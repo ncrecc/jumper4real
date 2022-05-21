@@ -16,6 +16,7 @@ function door:init(x, y, magicvalue) --typoed magicvalue as "nagucvakye" which s
 	self.magicvalue = magicvalue
 	self.keytoprint = nil
 	self.invalid = false
+	self.passive = true
 end
 
 function door:setup(x, y, options, level, edge, magicvalue)

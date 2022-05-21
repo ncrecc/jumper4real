@@ -1,11 +1,11 @@
 --print(love)
 --^it's tables all the way down man -bert
-version = "0.3.0"
+version = "0.3.1"
 local lastversion = love.filesystem.read("version.txt")
 if lastversion ~= version then
 	love.filesystem.write("version.txt", version); print("updating version file");
 	love.filesystem.write("Jumper 4 Real.chm", love.filesystem.read("Jumper 4 Real.chm")); print("updating help file");  --t.appendidentity
-	love.filesystem.delete("Jumper 4 Real.chw"); print("deleting old help index");
+	love.filesystem.remove("Jumper 4 Real.chw"); print("deleting old help index");
 end
 tilesize = 16
 scale = 1
@@ -307,7 +307,7 @@ graphics.disposeimagedata() --comment this out and make referencedata a variable
 
 for objectname,object in pairs(objects) do
 	if object.automask then
-		object.mask = makecollisionmask(love.image.newImageData("imagery/" .. objectname .. ".png"))
+		object.mask = makecollisionmask(love.image.newImageData("imagery/" .. (object.maskimagename or objectname) .. ".png"))
 	end
 end
 
