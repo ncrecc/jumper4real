@@ -265,6 +265,7 @@ menu_substates = {
 		offsetfromleft = 192,
 		offsetfromtop = 96,
 		alwaysshowcheatamt = true,
+		ischeatmenu = true,
 	},
 	["ogmos"] = {
 		options = {},

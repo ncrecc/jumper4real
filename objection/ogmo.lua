@@ -88,6 +88,8 @@ function ogmo.editordraw(x, y, options)
 end
 
 function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
+	--NOTE: in j2e, gravity does not seem to apply to ogmo on the first frame that he's jumping, resulting in his ground jump being slightly higher than his double jump
+	
 	self.irrelevant = false --"irrelevant" means "don't care about this when iterating through shit"
 	
 	self.edge = edge
@@ -112,25 +114,31 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	self.hmom = 0
 	self.hmom_min = -999
 	self.hmom_max = 999
-	self.maxspeed = 6 --natural cap on speed
+	self.maxspeed = 4 --natural cap on speed
 	self.vmom = 0
 	self.vmom_min = -999
 	self.vmom_max = 999
-	self.acceleration = 0.2 --self.acceleration is added to ogmo's speed while he's holding an arrow key in the direction he's moving
+	self.acceleration = 0.175 --self.acceleration is added to ogmo's speed while he's holding an arrow key in the direction he's moving
 	self.friction = 0.6 --self.friction is a weird opposite of self.acceleration: it's subtracted from ogmo's speed while his speed is greater than 0 but he's not holding an arrow key in the direction he's moving
-	--friction refers to how long it should take ogmo to come to a stop, and has no effect on his speed while he's moving, which probably means "friction" and "acceleration" are weird misnomers here
+	--friction refers to how long it should take ogmo to come to a stop, and has no effect on his speed while he's moving in the direction he wants to go, which probably means "friction" and "acceleration" are weird misnomers here
 	--this does mean that jumper 2-esque ice has to be implemented 
+	
+	if cheat.isactive("oldskoolbutlikewithak") then
+		self.acceleration = 999
+		self.friction = 999
+	end
+	
 	self.gravity = 0.2
 	self.defaultjumps = 2
 	self.jumps = self.defaultjumps - 1 --in case ogmo spawns in midair
-	self.jumpforce = 6
-	self.skidjumpextraforce = 2
+	self.jumpforce = 5.1
+	self.skidjumpextraforce = 1.25
 	self.jumpzaniness = 0 --the extent to which jumps should inherit current velocity, meaning doublejumping twice in a row lets you jump way higher. i thought i was so clever when i came up with this
-	self.walljumpforce = 5
-	self.walljumpspeed = 6
+	self.walljumpforce = 4
+	self.walljumpspeed = 5
 	self.tempfriction = false --temp friction results from doing a walljump and is lower than normal friction; it's main purpose is to disallow you from walljumping back onto the same wall quick enough to get further up
 	self.oldtempfriction = false
-	self.walljumptempfriction = 0.05 --what your tempfriction should be after doing a walljump
+	self.walljumptempfriction = 0.1 --what your tempfriction should be after doing a walljump
 	self.tempfrictiontimer = 0
 	self.walljumptempfrictionframes = 24
 	self.tempfrictionphaseouttimer = 12
@@ -152,8 +160,9 @@ function ogmo:init(x, y, width, height, gost, playerno, edge, magicvalue)
 	self.skidding = "none"
 	self.skiddingframes = 12
 	self.skiddingtimer = 0
-	self.skiddingspeedleniency = 0 --formerly 0.5. alt solution to a problem that startskiddingtimer solved - adding leniency to allowing the player to start skidding after they reach max speed. unlike startskiddingtimer, this solution was implemented in a way that doesn't allow players to skid by letting go of the direction they're moving in and then pressing the other direction (only worked with an interim of holding both keys at once)
+	self.skiddingspeedleniency = 0.01 --formerly 0.5. alt solution to a problem that startskiddingtimer solved - adding leniency to allowing the player to start skidding after they reach max speed. unlike startskiddingtimer, this solution was implemented in a way that doesn't allow players to skid by letting go of the direction they're moving in and then pressing the other direction (only worked with an interim of holding both keys at once)
 	--this could also be good for just... plain leniency
+	--0.01 is a way to deal with floating point shenanigans
 	self.startskiddingframes = 4
 	self.startskiddingtimer = 0
 	self.ducking = false
@@ -189,13 +198,13 @@ function ogmo:setup(x, y, options, level, edge, magicvalue)
 	if not gost then level.playeramt = level.playeramt + 1 end
 	if edge and not gost then
 		if edge == "left" then
-			x = x - 16
+			x = x - 15
 		elseif edge == "right" then
-			x = x + 16
+			x = x + 15
 		elseif edge == "up" then
-			y = y - 16
+			y = y - 15
 		elseif edge == "down" then
-			y = y + 16
+			y = y + 15
 		end
 	end
 	return ogmo:new(x, y, tilesize, tilesize, gost, 1, edge, magicvalue)
@@ -225,6 +234,7 @@ end
 function ogmo:update(dt)
 	if not self.level then print("OGMO SEZ: I'M IN A NIL LEVEL SO I'M GONNA BE ANGRY ABOUT IT AND FLOOD THE CONSOLE!") end --only the most professional error messages will do in this state-of-the-art video game
 	if self.alive then
+		if cheat.isactive("jumparound") then self:jump() end
 		self:movement(dt)
 		
 		--major, game-breaking glitch in the following code: if you time your ducks or unducks frame perfectly, you can avoid blinking ever while idling/ducking, thus making you a monster depriving ogmo of sleep
@@ -742,6 +752,9 @@ function ogmo:jump()
 			--self.tempfrictiontimer = 0 --for alternate behavior, uncomment this line and comment the above line. this makes it so when you jump you get the standard tempfriction phase-out as when your tempfriction from a walljump ends normally, rather than your friction immediately becoming normal. this *looks* nicer, but feels far less precise
 			local jumpsound = "ogmo jump"
 			self.vmom = (self.vmom * self.jumpzaniness) - self.jumpforce
+			if self.verticaled == "down" then
+				self.vmom = self.vmom - self.gravity --replicates a subtle bug in jumper/jumper 2 that makes your grounded jumps a little higher than your air jumps
+			end
 			if self.skiddingtimer > 0 and self.verticaled == "down" then
 				self.vmom = self.vmom - self.skidjumpextraforce
 				--skidding cancels out all momentum in the direction you're skidding away from. in the original games i think skidding just killed all your horizontal momentum, period... but so did most things :p

@@ -75,6 +75,7 @@ function printAsTooltip(str, scale)
 end
 
 require "correctnewlines"
+require "writer"
 
 require "hex2color"
 require "class"
@@ -320,46 +321,33 @@ function booltostr(bool) --lol
 	if(bool) then return "true" else return "false" end
 end
 
-writeto = {
-	settings = function()
-		--[=[
-		local towrite = ""
-		for i=1, #settingsargs do
-			towrite = towrite .. booltostr(settings[settingsargs[i]]) .. "\n"
+function pick(t)
+	if #t == 0 then return nil end
+	return t[love.math.random(1, #t)]
+end
+
+function pick_butnot(t, n1, n2)
+	if n1 == nil and n2 == nil then return pick(t) end
+	local t2 = table.copy(t)
+	local toremove = {}
+	for i,v in ipairs(t2) do
+		if v == n1 or v == n2 then
+			toremove[#toremove + 1] = i
 		end
-		]=]
-		local towrite = {}
-		for i=1, #settingsargs do
-			towrite[#towrite + 1] = booltostr(settings[settingsargs[i]])
-		end
-		love.filesystem.write("settings.txt",table.concat(towrite, "\n"))
-	end,
-	ogmoskin = function()
-		love.filesystem.write("ogmoskin.txt",game.ogmoskin)
-	end,
-	unlockedcheats = function()
-		local towrite = {}
-		for i=1, #cheat.unlockedcheats do
-			towrite[#towrite + 1] = cheat.unlockedcheats[i]
-		end
-		love.filesystem.write("unlockedcheats.txt",table.concat(towrite, "\n"))
-	end,
-	activecheats = function()
-		local towrite = {}
-		for i=1, #cheat.activecheats do
-			towrite[#towrite + 1] = cheat.activecheats[i]
-		end
-		love.filesystem.write("activecheats.txt",table.concat(towrite, "\n"))
-	end,
-	controls = function()
-		local towrite = ""
-		local phase = nil
-		for k,v in pairs(controls) do
-			towrite = towrite "===" .. k .. "===\n|" .. v .. "\n"
-		end
-		love.filesystem.write("controls.txt",towrite)
 	end
-}
+	table.sort(toremove, function(a,b)
+		return a > b
+	end)
+	for i,v in ipairs(toremove) do
+		table.remove(t2, v)
+	end
+	return pick(t2)
+end
+
+function push_limited(t, v, n)
+	t[#t + 1] = v
+	if #t > n then table.remove(t, 1) end
+end
 
 settingsargs = {
 	"playaudio",
@@ -391,7 +379,7 @@ else
 	if choicerand == 0 then choicerand = false
 	else choicerand = true end
 	settings.choice = choicerand
-	writeto.settings()
+	writeto("settings")
 end
 
 controls = {}
@@ -443,7 +431,20 @@ function love.load()
 		end
 	end
 	
-	if updateunlocked then writeto.unlockedcheats() end
+	if updateunlocked then writeto("unlockedcheats") end
+	
+	local _cheatswithvox = love.filesystem.getDirectoryItems("audial/sfx/vox/ogmosays/cheats")
+	local cheatswithvox = {}
+	for k,v in pairs(_cheatswithvox) do
+		cheatswithvox[v] = true
+	end
+	
+	for k,v in pairs(cheat.cheats) do
+		if not v.unlocked then
+			table.insert(cheat.lockedcheats, k)
+			if cheatswithvox[k .. ".ogg"] then table.insert(cheat.lockedcheats_withvox, k) end
+		end
+	end
 	
 	menu.changeSubstate("title")
 	statemachine.setstate("menu")
@@ -455,8 +456,13 @@ function love.load()
 	menu.changed.activecheats = false
 end
 
+function love.threaderror(thread, errorstr)
+  print("Thread error!\n"..errorstr)
+end
+
 function love.quit()
 	menu.handleWrites()
+	writer.thread:wait()
 end
 
 function love.update(dt)

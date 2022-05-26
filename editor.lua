@@ -4,10 +4,13 @@ editor = {
 	lmbtile = "t ",
 	rmbtile = "  ",
 	mmbtile = "t!",
+	currenttag = "spawn1",
 	mbtilekeys = {"lmbtile", "rmbtile", "mmbtile"}, --purely for reference
 	lastmbtouched = 1,
 	currentpage = 1,
+	currenttagspage = 1,
 	pages = {}, --gets contents of editor_pages on each editor begin (except when returning from testing)
+	tags_pages = {},
 	currentsymbolmap = nil,
 	maptileheight = 0,
 	maptilewidth = 0,
@@ -62,21 +65,24 @@ editor = {
 		"eyedropper",
 		"rectangle",
 		"fillrectangle",
-		"fill"
+		"fill",
+		"tags"
 	},
 	toolquads = {
 		["pencil"] = quad(0, 0, 16, 16, toolimg),
 		["eyedropper"] = quad(16, 0, 16, 16, toolimg),
 		["rectangle"] = quad(32, 0, 16, 16, toolimg),
 		["fillrectangle"] = quad(48, 0, 16, 16, toolimg),
-		["fill"] = quad(0, 16, 16, 16, toolimg)
+		["fill"] = quad(0, 16, 16, 16, toolimg),
+		["tags"] = quad(16, 16, 16, 16, toolimg)
 	},
 	toolbindings = {
 		["c"] = "pencil",
 		["e"] = "eyedropper",
 		["r"] = "rectangle",
 		["t"] = "fillrectangle",
-		["f"] = "fill"
+		["f"] = "fill",
+		["m"] = "tags",
 	},
 	tooltipScale = 0.75,
 	tooltip = nil,
@@ -85,8 +91,8 @@ editor = {
 }
 editor.textfields = {
 	--textfield:setup(256, 528, 160, 16, "saveload", "currentpath", "The level that should be saved to with Ctrl+S, or loaded with Ctrl+L.")
-	textfield:setup(252, 528, 80, 16, "currentlevelset", "currentlevelset", "name of levelset the level is in", set("\\", "/", ":", "*", "?", "\"", "<", ">", "|")), --excluded characters set is windows-centric :/
-	textfield:setup(340, 528, 80, 16, "currentlevel", "currentlevel", "name of level, within levelset, to save/load", set("\\", ":", "*", "?", "\"", "<", ">", "|"))
+	textfield:setup(400, 525, 80, 16, "currentlevelset", "currentlevelset", "name of levelset the level is in", set("\\", "/", ":", "*", "?", "\"", "<", ">", "|")), --excluded characters set is windows-centric :/
+	textfield:setup(400, 545, 80, 16, "currentlevel", "currentlevel", "name of level, within levelset, to save/load", set("\\", ":", "*", "?", "\"", "<", ">", "|"))
 }
 editor.focusedfield = nil
 
@@ -94,12 +100,13 @@ editor.buttons = {
 	
 }
 
-local tooltips = { --thank you again to titku for writing these. i swear she's just always sitting in cocon waiting for me to almost write some stupid placeholders so she can make them less stupid lol -bert
+local tooltips = { --thank you again to titku for writing (most of) these. i swear she's just always sitting in cocon waiting for me to almost write some stupid placeholders so she can make them less stupid lol -bert
 	["pencil"] = "Pencil: Place a single tile at the spot you click on. Hotkey: C",
 	["fill"] = "Fill: Fill a contiguous space with one type of tile. Hotkey: F",
 	["eyedropper"] = "Eyedropper: Retrieve the tile at the spot you click on. Hotkey: E",
 	["rectangle"] = "Rectangle: Efficiently draw a rectangular outline. Hotkey: R",
-	["fillrectangle"] = "Filled rectangle: Efficiently draw a filled rectangle. Hotkey: T"
+	["fillrectangle"] = "Filled rectangle: Efficiently draw a filled rectangle. Hotkey: T",
+	["tags"] = "tags: use this to place \"tags\" like spawn numbers. hotkey: M"
 }
 
 for i, v in ipairs(editor.tools) do
@@ -142,6 +149,7 @@ function editor.loadLevel(levelfile)
 	
 	local newcomments = {}
 	local newsymbolmaps = {}
+	local newtagmaps = {}
 	local newexits = {}
 	local newmusic = ""
 	local newoptions = {}
@@ -352,6 +360,7 @@ table.insert(editor.buttons, button:setup(
 function editor.begin()
 	if not editor.returningfromgame then
 		for k,v in pairs(editor_pages) do editor.pages[k] = v end
+		for k,v in pairs(editor_tags_pages) do editor.tags_pages[k] = v end
 		love.window.updateMode(512 + editor.addedwidth, 512 + editor.addedheight)
 		audio.playsong("groove")
 	end
@@ -381,47 +390,74 @@ function getSymbolTooltip(symbol)
 end
 
 function editor.trySymbolRotate(dir)
-	--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotating), so which do we rotate?
-	--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
-	local rotatetile = nil
-	local hasrotations = {false, false, false}
-	for k,v in ipairs(editor.mbtilekeys) do
-		hasrotations[k] = not not levelsymbols[editor[v]].rotations
-	end
-	
-	local mbtotry = editor.lastmbtouched
-	if not hasrotations[mbtotry] then
-		mbtotry = 1
-		local mbstried = 0
-		while not hasrotations[mbtotry] do
-			mbstried = mbstried + 1
-			mbtotry = ((mbtotry + 1) % 3) + 1 --see if another mouse button has a rotateable tile
-			if mbstried >= 3 then break end
+	if currenttool ~= "tags" then
+		--some tricky design here. these are the "rotate" keys, which rotate a tile, but there's also three mouse buttons available (inspired by rocks'n'diamonds, which didn't have rotating), so which do we rotate?
+		--we assume the tile under the last moutse button the player touched. if that tile isn't rotatable, we check all mouse buttons for rotatable tiles in the order lmb, rmb, mmb.
+		local rotatetile = nil
+		local hasrotations = {false, false, false}
+		for k,v in ipairs(editor.mbtilekeys) do
+			hasrotations[k] = not not levelsymbols[editor[v]].rotations
 		end
-	end
-	
-	rotatetile = editor.mbtilekeys[mbtotry] or "lmbtile"
-	
-	local rotations = levelsymbols[editor[rotatetile]].rotations
-	if rotations then
-		if dir == "back" and rotations[1] then
-			for rownum,row in ipairs(editor.pages[editor.currentpage]) do
-				for k,symbol in ipairs(row) do
-					if symbol == editor[rotatetile] then
-						editor.pages[editor.currentpage][rownum][k] = rotations[1]
+		
+		local mbtotry = editor.lastmbtouched
+		if not hasrotations[mbtotry] then
+			mbtotry = 1
+			local mbstried = 0
+			while not hasrotations[mbtotry] do
+				mbstried = mbstried + 1
+				mbtotry = ((mbtotry + 1) % 3) + 1 --see if another mouse button has a rotateable tile
+				if mbstried >= 3 then break end
+			end
+		end
+		
+		rotatetile = editor.mbtilekeys[mbtotry] or "lmbtile"
+		
+		local rotations = levelsymbols[editor[rotatetile]].rotations
+		--we need to not only rotate the tile but also rotate its representation in the page it's from. this will probably be changed once multiple pages are acutally in; indicators of the tiles you currently have on the mouse buttons will be somewhere not tied to what page you're on
+		if rotations then
+			if dir == "back" and rotations[1] then
+				for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+					for k,symbol in ipairs(row) do
+						if symbol == editor[rotatetile] then
+							editor.pages[editor.currentpage][rownum][k] = rotations[1]
+						end
 					end
 				end
-			end
-			editor[rotatetile] = rotations[1]
-		elseif dir == "forward" and rotations[2] then
-			for rownum,row in ipairs(editor.pages[editor.currentpage]) do
-				for k,symbol in ipairs(row) do
-					if symbol == editor[rotatetile] then
-						editor.pages[editor.currentpage][rownum][k] = rotations[2]
+				editor[rotatetile] = rotations[1]
+			elseif dir == "forward" and rotations[2] then
+				for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+					for k,symbol in ipairs(row) do
+						if symbol == editor[rotatetile] then
+							editor.pages[editor.currentpage][rownum][k] = rotations[2]
+						end
 					end
 				end
+				editor[rotatetile] = rotations[2]
 			end
-			editor[rotatetile] = rotations[2]
+		end
+	else
+		--logic is a bit simpler if we're rotating a tag since (currently) there can only be one tag selected, so we don't need to try to deduce what it is beforehand
+		local rotations = tags[editor.currenttag].rotations
+		if rotations then
+			if dir == "back" and rotations[1] then
+				for rownum,row in ipairs(editor.tags_pages[editor.currenttagspage]) do
+					for k,tag in ipairs(row) do
+						if tag == editor.currenttag then
+							editor.tags_pages[editor.currenttagspage][rownum][k] = rotations[1]
+						end
+					end
+				end
+				editor.currenttag = rotations[1]
+			elseif dir == "forward" and rotations[2] then
+				for rownum,row in ipairs(editor.pages[editor.currentpage]) do
+					for k,symbol in ipairs(row) do
+						if symbol == editor[rotatetile] then
+							editor.pages[editor.currentpage][rownum][k] = rotations[2]
+						end
+					end
+				end
+				editor.currenttag = rotations[2]
+			end
 		end
 	end
 end

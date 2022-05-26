@@ -35,6 +35,9 @@ menu = {
 	mousepos = {x = 0, y = 0},
 	cancheat = true,
 	logoname = "J4R Logo 2x",
+	logox = nil,
+	logoy = 10,
+	logo_ogmobox = {x = 10, y = 16, width = 32, height = 26},
 	onLoad = function() end,
 	stack = {},
 	pickerstack = {},
@@ -46,7 +49,15 @@ menu = {
 	fulloptions = {},
 	itemsperpage = 7,
 	misctext = love.graphics.newText(font, ""),
+	ogmosays = love.audio.newQueueableSource(48000, 16, 1),
+	ogmosays_playing = false,
+	ogmosays_saidcheat = 0,
+	ogmosays_musicmult = 0.25,
+	ogmosays_pt1last2 = {},
+	ogmosays_pt2last2 = {},
 }
+menu.logox = math.floor((menu.width - graphics.load(menu.logoname):getWidth()) / 2)
+menu.logoy = 10
 
 function menu.begin()
 	--[[
@@ -55,12 +66,69 @@ function menu.begin()
 	menu.changeSubstate("title")
 	]]
 	audio.flushpauses()
-	if not cheat.isactive("jumper4imaginary") then
+	if not cheat.isactive("jumper4imaginary") then --kind of hacky i guess
 		audio.playsong("34")
 	else
 		audio.playsong("trollful horns")
 	end
 	menu.cheatcode = ""
+end
+
+local function mouseonogmo()
+	if menu.logoname == "J4R Logo 2x" then
+		local mousex = love.mouse.getX()
+		local mousey = love.mouse.getY()
+		if
+				(mousex > (menu.logox + menu.logo_ogmobox.x) and mousex < (menu.logox + menu.logo_ogmobox.x + menu.logo_ogmobox.width))
+			and (mousey > (menu.logoy + menu.logo_ogmobox.y) and mousey < (menu.logoy + menu.logo_ogmobox.y + menu.logo_ogmobox.height))
+		then
+			return true
+		end
+	end
+	return false
+end
+
+function menu.playogmosays()
+	if not menu.ogmosays_playing then
+		menu.ogmosays_playing = true
+		print(#cheat.lockedcheats_withvox)
+		if #cheat.lockedcheats_withvox == 0 then menu.ogmosays_saidcheat = 2 end
+		local part1path = "audial/sfx/vox/ogmosays/says"
+		local part1pool = love.filesystem.getDirectoryItems(part1path)
+		local part1name = pick_butnot(part1pool, menu.ogmosays_pt1last2[1], menu.ogmosays_pt1last2[2])
+		push_limited(menu.ogmosays_pt1last2, part1name, 2)
+		local part1 = love.sound.newSoundData(part1path .. "/" .. part1name)
+		menu.ogmosays:queue(part1)
+		local part2path
+		local part2pool
+		local part2name
+		local part2
+		if menu.ogmosays_saidcheat < 2 then --make it so clicking ogmo only says a cheat twice per session, to make it more interesting
+			part2path = "audial/sfx/vox/ogmosays/cheats"
+			part2pool = cheat.lockedcheats_withvox
+			part2name = pick_butnot(part2pool, menu.ogmosays_pt2last2[1], menu.ogmosays_pt2last2[2])
+			push_limited(menu.ogmosays_pt2last2, part2name, 2)
+			part2 = love.sound.newSoundData(part2path .. "/" .. part2name .. ".ogg")
+			menu.ogmosays_saidcheat = menu.ogmosays_saidcheat + 1
+		else
+			part2path = "audial/sfx/vox/ogmosays/misc"
+			part2pool = love.filesystem.getDirectoryItems(part2path)
+			part2name = pick_butnot(part2pool, menu.ogmosays_pt2last2[1], menu.ogmosays_pt2last2[2])
+			push_limited(menu.ogmosays_pt2last2, part2name, 2)
+			part2 = love.sound.newSoundData(part2path .. "/" .. part2name)
+		end
+		menu.ogmosays:queue(part2)
+		local song = audio.loadedsongs[audio.activesong]
+		if song then
+			if audio.activesongoneshot then
+				song:setVolume(audio.musicvolume * menu.ogmosays_musicmult)
+			else
+				if song.intro ~= nil then song.intro:setVolume(audio.musicvolume * menu.ogmosays_musicmult) end
+				song.loop:setVolume(audio.musicvolume * menu.ogmosays_musicmult)
+			end
+		end
+		menu.ogmosays:play()
+	end
 end
 
 function menu.changelogo(logoname)
@@ -69,10 +137,26 @@ function menu.changelogo(logoname)
 		graphics.load(menu.logoname)
 		graphics.load(menu.logoname .. " blink")
 		menu.blinktimer = nil
+		menu.logox = math.floor((menu.width - graphics.load(menu.logoname):getWidth()) / 2)
+		menu.logoy = 10
 	end
 end
 
 function menu.update(dt)
+	if menu.ogmosays_playing then
+		if not menu.ogmosays:isPlaying() then
+			local song = audio.loadedsongs[audio.activesong]
+			if song then
+				if audio.activesongoneshot then
+					song:setVolume(audio.musicvolume)
+				else
+					if song.intro ~= nil then song.intro:setVolume(audio.musicvolume) end
+					song.loop:setVolume(audio.musicvolume)
+				end
+			end
+			menu.ogmosays_playing = false
+		end
+	end
 	if menu.blinktimer and menu.blinktimer > 0 then menu.blinktimer = menu.blinktimer - 1 end
 	if menu.blinktimer and menu.blinktimer <= 0 then menu.blinktimer = nil end
 	menu.onUpdate()
@@ -108,6 +192,11 @@ function menu.update(dt)
 	
 	if menu.cheatcodetimer > 0 then menu.cheatcodetimer = menu.cheatcodetimer - 1
 	else menu.cheatcodetimer = 0; menu.cheatcode = ""; end
+	
+	
+	if love.mouse.isDown(2) and mouseonogmo() then
+		menu.blinktimer = 1
+	end
 	
 	
 	--oh god this entire part is just for a "scribble stuff on the menu" cheat
@@ -182,6 +271,12 @@ function menu.keypressed(key)
     end
 end
 
+function menu.mousepressed(x, y, button)
+	if mouseonogmo() and button == 1 then
+		menu.playogmosays()
+	end
+end
+
 function menu.textinput(t)
 	if menu.cancheat then
 		menu.cheatcode = menu.cheatcode .. t
@@ -195,8 +290,7 @@ function menu.textinput(t)
 			cheat.invoke(thischeat)
 			if not thischeat.unlocked and not thischeat.hidden then
 				print(menu.cheatcode .. " unlocked via typing!")
-				thischeat.unlocked = true
-				table.insert(cheat.unlockedcheats, menu.cheatcode)
+				cheat.unlock(menu.cheatcode)
 				menu.changed.unlockedcheats = true
 			end
 			menu.cheatcode = ""
@@ -230,7 +324,7 @@ function menu.draw()
 		local imagetoshow
 		if menu.blinktimer then imagetoshow = graphics.load(menu.logoname .. " blink") end
 		if not imagetoshow then imagetoshow = graphics.load(menu.logoname) end
-		love.graphics.draw(imagetoshow, math.floor((menu.width - imagetoshow:getWidth()) / 2), 10)
+		love.graphics.draw(imagetoshow, menu.logox, menu.logoy)
 	end
 	menu.misctext:setf(table.concat(menu.stack, " > "), menu.width, "left")
 	love.graphics.draw(menu.misctext)
@@ -260,6 +354,7 @@ end
 function menu.stop()
 	menu.handleWrites()
 	menu.niftyimg = {}
+	menu.ogmosays:stop()
 end
 
 function menu.movePicker(dir)
@@ -330,7 +425,7 @@ function menu.handleWrites()
 	for k,v in pairs(menu.changed) do
 		if v then
 			print(k .. " changed, writing")
-			writeto[k]()
+			writeto(k)
 		end
 	end
 	menu.changed = {}
@@ -364,6 +459,7 @@ function menu.changeSubstate(substate, neutral, ignorewriting)
 	menu.backname = ss.backname
 	menu.backtooltip = ss.backtooltip
 	menu.alwaysshowcheatamt = ss.alwaysshowcheatamt
+	menu.ischeatmenu = ss.ischeatmenu
 	if #menu.options > menu.itemsperpage then
 		menu.pages = math.ceil(#menu.options / menu.itemsperpage)
 		menu.fulloptions = table.copy(menu.options)

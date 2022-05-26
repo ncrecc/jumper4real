@@ -107,7 +107,7 @@ cheat = {
 		},
 		smallsteps = {
 			name = "small steps",
-			tooltip = "move ogmos by 1 px using the [ and ] keys",
+			tooltip = "move ogmos by 1 px, ignoring walls, using the [ and ] keys",
 			active = false
 		},
 		ogmolith = {
@@ -116,7 +116,7 @@ cheat = {
 			action = function()
 				game.ogmoskin = "ogmolith"
 				game.ogmosnapto = 16
-				_G["ogmo"].quads = ogmos[game.ogmoskin].quads
+				_G["ogmo"].quads = ogmos[game.ogmoskin].quads --this was orignially located somewhere with a local "ogmo" variable so it needed to specify _G
 			end
 		},
 		widescreen = {
@@ -138,12 +138,75 @@ cheat = {
 		},
 		wrongway = {
 			name = "wrong way",
-			tooltip = "launchers now spin counterclockwise, like in the original jumper games",
+			tooltip = "launchers now spin counterclockwise and faster",
 			active = false
+		},
+		jumparound = {
+			name = "jump up and get down",
+			tooltip = "ogmo attempts to jump whenever possible",
+			active = false
+		},
+		oldskoolbutlikewithak = {
+			name = "oldskool but, like, with a k",
+			tooltip = "old skool friction & acceleration - stop and start instantly",
+			active = false
+		},
+		ogmobleatsforplentyofcheats = {
+			name = "ogmo bleats for plenty of cheats",
+			tooltip = "when used from cheats menu, unlocks ALL the cheats!",
+			action = function()
+				if menu.ischeatmenu then
+					audio.playsfx("cheat")
+					local lockedcheats_old = table.copy(cheat.lockedcheats)
+					for i,v in ipairs(lockedcheats_old) do
+						if not cheat.cheats[v].hidden then
+							cheat.unlock(v)
+						end
+					end
+					menu.changed.unlockedcheats = true
+					menu.refresh()
+				end
+			end
+		},
+		ogmoshoutsmakecheatsgoout = {
+			name = "ogmo shouts \"make cheats go out\"",
+			tooltip = "when used from cheats menu, disables & re-locks ALL the cheats",
+			action = function()
+				if menu.ischeatmenu then
+					audio.playsfx("cheat")
+					local activecheats_old = table.copy(cheat.activecheats)
+					for i,v in ipairs(activecheats_old) do
+						cheat.disable(v)
+					end
+					
+					cheat.unlockedcheats = {}
+					cheat.lockedcheats = {}
+					cheat.lockedcheats_withvox = {}
+					cheat.activecheats = {}
+					
+					local _cheatswithvox = love.filesystem.getDirectoryItems("audial/sfx/vox/ogmosays/cheats")
+					local cheatswithvox = {}
+					for k,v in pairs(_cheatswithvox) do
+						cheatswithvox[v] = true
+					end
+					
+					for k,v in pairs(cheat.cheats) do
+						if not v.unlocked then
+							table.insert(cheat.lockedcheats, k)
+							if cheatswithvox[k .. ".ogg"] then table.insert(cheat.lockedcheats_withvox, k) end
+						end
+					end
+					menu.changed.unlockedcheats = true
+					menu.back()
+				end
+			end
 		}
 	},
-	unlockedcheats = {},
-	activecheats = {},
+	unlockedcheats = {}, --set in love.load
+	lockedcheats = {}, --set in love.load
+	lockedcheats_withvox = {}, --set in love.load
+	activecheats = {}, --set in love.load
+	
 	get = function(name)
 		if cheat.cheats[name] then return cheat.cheats[name] end
 		return false
@@ -155,6 +218,22 @@ cheat = {
 	isunlocked = function(name)
 		if cheat.cheats[name] and cheat.cheats[name].unlocked then return true end
 		return false
+	end,
+	unlock = function(name)
+		table.insert(cheat.unlockedcheats, name)
+		cheat.cheats[name].unlocked = true
+		for i,v in ipairs(cheat.lockedcheats) do
+			if v == name then
+				table.remove(cheat.lockedcheats, i)
+				break
+			end
+		end
+		for i,v in ipairs(cheat.lockedcheats_withvox) do --this redundancy could potentially be eliminated with a third table that maps indexes in lockedcheats to indexes in lockedcheats_withvox but is it worth the hassle?
+			if v == name then
+				table.remove(cheat.lockedcheats_withvox, i)
+				break
+			end
+		end
 	end,
 	enable = function(thischeat)
 		if thischeat.active == nil then error("tried to enable a non-bool cheat") end
