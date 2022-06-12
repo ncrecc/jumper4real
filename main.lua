@@ -38,6 +38,29 @@ function table.copy(src, dest, overwrite) --taken from the knytt stories mod "kn
 	return dest
 end
 
+require "split"
+require "correctnewlines"
+
+function getfilenamefrompath(path)
+	local arrayiguess
+	arrayiguess = split(path, "/")
+	if #arrayiguess == 1 then
+	arrayiguess = split(path, "\\") end
+	return arrayiguess[#arrayiguess]
+end
+
+function stripfileextension(filename)
+	local arrayagain
+	arrayagain = split(filename, "%.")
+	if #arrayagain == 1 then return arrayagain[1] end
+	arrayagain[#arrayagain] = nil
+	return table.concat(arrayagain, ".")
+end
+
+function justfilename(str)
+	return stripfileextension(getfilenamefrompath(str))
+end
+
 function quad(...)
 	return love.graphics.newQuad(...)
 end
@@ -74,17 +97,16 @@ function printAsTooltip(str, scale)
 	)
 end
 
-require "correctnewlines"
 require "writer"
 
 require "hex2color"
 require "class"
-require "split"
 
 require "audio"
-require "levelsymbols"
-require "tiles"
 require "graphics"
+require "levelsymbols"
+require "tags"
+require "tiles"
 
 --[[do
 	local teststring = "mycoolstringy"
@@ -100,12 +122,81 @@ end]]
 
 --if levelsymbols["="] ~= nil then error("ERROR: equals sign (=) cannot be a level symbol") end
 
+function strtobool(str) --lol
+	local bools = {["true"] = true, ["false"] = false}
+	return bools[str]
+end
+
+function booltostr(bool) --lol
+	if(bool) then return "true" else return "false" end
+end
+
+settingsargs = {
+	"playaudio",
+	"playsfx",
+	"playmusic",
+	"choice",
+	"seetheunseeable"
+}
+
+settings = {
+	playaudio = true,
+	playsfx = true,
+	playmusic = true,
+	choice = nil,
+	seetheunseeable = true
+}
+
+local settingsfile = love.filesystem.read("settings.txt")
+if settingsfile ~= nil then
+	settingsfile = correctnewlines(settingsfile) --probably unnecessary
+	local ustemp = split(settingsfile, "\n")
+	for i=1, #settingsargs do
+		settings[settingsargs[i]] = strtobool(ustemp[i])
+	end
+else
+	--Randomize the Choice variable the very first time the player starts the game, which should lead to some interesting results and reinforce that there is no canonical Choice value!
+--	local choicerand = math.random()
+	local choicerand = love.math.random(0, 1)
+	if choicerand == 0 then choicerand = false
+	else choicerand = true end
+	settings.choice = choicerand
+	writeto("settings")
+end
+
+controls = {}
+
+do
+	local controlsfile = love.filesystem.read("controls.txt")
+	if controlsfile == nil then
+		controlsfile = love.filesystem.read("defaultcontrols.txt")
+		love.filesystem.write("controls.txt",controlsfile)
+	end
+	
+	local phase = nil
+	
+	controlsfile = correctnewlines(controlsfile)
+	controlsfile = split(controlsfile, "\n")
+	for i, row in ipairs(controlsfile) do
+		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
+			phase = string.sub(row, 4, -4)
+		else
+			if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
+			if phase ~= nil then controls[phase] = row end
+		end
+	end
+end
+
 objects = {}
 require "game"
 require "cheat"
 require "level"
+
+require "object"
+require "mob"
 objects["ogmo"] = require "objection/ogmo"
 require "ogmos"
+
 require "textfield"
 require "button"
 require "menu_substates"
@@ -133,7 +224,7 @@ objectfiles = love.filesystem.getDirectoryItems("objection")
 for i=1, #objectfiles do
 	local s = objectfiles[i]
 	if s ~= "ogmo.lua" and string.sub(s, #s - 3) == ".lua" then
-		object = require ("objection/" .. string.sub(s, 1, #s - 4))
+		local object = require ("objection/" .. string.sub(s, 1, #s - 4))
 		objects[string.sub(s, 1, #s - 4)] = object
 	end
 end
@@ -179,7 +270,7 @@ function ormasks(masks) --all masks should be the same size for this to work as 
 	for y=1, #mask do
 		for x=1, #mask[y] do
 			if not mask[y][x] then
-				result = false
+				local result = false
 				for masknum=2, #masks do
 					if masks[masknum] and masks[masknum][y][x] then
 						result = true
@@ -312,15 +403,6 @@ for objectname,object in pairs(objects) do
 	end
 end
 
-function strtobool(str) --lol
-	local bools = {["true"] = true, ["false"] = false}
-	return bools[str]
-end
-
-function booltostr(bool) --lol
-	if(bool) then return "true" else return "false" end
-end
-
 function pick(t)
 	if #t == 0 then return nil end
 	return t[love.math.random(1, #t)]
@@ -347,62 +429,6 @@ end
 function push_limited(t, v, n)
 	t[#t + 1] = v
 	if #t > n then table.remove(t, 1) end
-end
-
-settingsargs = {
-	"playaudio",
-	"playsfx",
-	"playmusic",
-	"choice",
-	"seetheunseeable"
-}
-
-settings = {
-	playaudio = true,
-	playsfx = true,
-	playmusic = true,
-	choice = nil,
-	seetheunseeable = true
-}
-
-local settingsfile = love.filesystem.read("settings.txt")
-if settingsfile ~= nil then
-	settingsfile = correctnewlines(settingsfile) --probably unnecessary
-	local ustemp = split(settingsfile, "\n")
-	for i=1, #settingsargs do
-		settings[settingsargs[i]] = strtobool(ustemp[i])
-	end
-else
-	--Randomize the Choice variable the very first time the player starts the game, which should lead to some interesting results and reinforce that there is no canonical Choice value!
---	local choicerand = math.random()
-	local choicerand = love.math.random(0, 1)
-	if choicerand == 0 then choicerand = false
-	else choicerand = true end
-	settings.choice = choicerand
-	writeto("settings")
-end
-
-controls = {}
-
-do
-	local controlsfile = love.filesystem.read("controls.txt")
-	if controlsfile == nil then
-		controlsfile = love.filesystem.read("defaultcontrols.txt")
-		love.filesystem.write("controls.txt",controlsfile)
-	end
-	
-	local phase = nil
-	
-	controlsfile = correctnewlines(controlsfile)
-	controlsfile = split(controlsfile, "\n")
-	for i, row in ipairs(controlsfile) do
-		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
-			phase = string.sub(row, 4, -4)
-		else
-			if string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
-			if phase ~= nil then controls[phase] = row end
-		end
-	end
 end
 
 function love.load()

@@ -160,3 +160,6 @@ myc
 
 yes i mentally calculated this
 ]]
+
+string.split = split
+string.nwidesplit = nwidesplit

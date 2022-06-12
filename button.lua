@@ -21,8 +21,8 @@ function button:init(x, y, id, image, imagequad, action, onUpdate, tooltip, onDr
 	self.onDraw = onDraw
 end
 
-function button:setup(x, y, id, image, imagequad, action, onUpdate, tooltip)
-	return button:new(x, y, id, image, imagequad, action, onUpdate, tooltip)
+function button:setup(x, y, id, image, imagequad, action, onUpdate, tooltip, onDraw)
+	return button:new(x, y, id, image, imagequad, action, onUpdate, tooltip, onDraw)
 end
 
 function button:update()
@@ -30,21 +30,18 @@ function button:update()
 end
 
 function button:draw()
-	if self.onDraw then
-		self.onDraw(self) --i don't think this is going to be used at all?
+	local mystate = "normal"
+	if self.depressed then mystate = "depressed" end
+	love.graphics.draw(graphics.load("ui/editorbutton"), button.quads[mystate], self.x, self.y)
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(self.iconrgba[1], self.iconrgba[2], self.iconrgba[3], self.iconrgba[4])
+	if self.imagequad then
+		love.graphics.draw(graphics.load("ui/" .. self.image), self.imagequad, self.x, self.y)
 	else
-		local mystate = "normal"
-		if self.depressed then mystate = "depressed" end
-		love.graphics.draw(graphics.load("ui/editorbutton"), button.quads[mystate], self.x, self.y)
-		local r, g, b, a = love.graphics.getColor()
-		love.graphics.setColor(self.iconrgba[1], self.iconrgba[2], self.iconrgba[3], self.iconrgba[4])
-		if self.imagequad then
-			love.graphics.draw(graphics.load("ui/" .. self.image), self.imagequad, self.x, self.y)
-		else
-			love.graphics.draw(graphics.load("ui/" .. self.image), self.x, self.y)
-		end
-		love.graphics.setColor(r, g, b, a)
+		love.graphics.draw(graphics.load("ui/" .. self.image), self.x, self.y)
 	end
+	love.graphics.setColor(r, g, b, a)
+	if self.onDraw then self:onDraw() end
 end
 
 --return button

@@ -1,8 +1,8 @@
 -- to friggin do!
 -- add coyote time
 -- add walljump coyote time (thx xelu)
-ogmo = class:new()
-
+ogmo = mob:new()
+-- ogmo (he/it)
 
 --[[
   **QUADS**
@@ -193,7 +193,7 @@ function ogmo:setup(x, y, options, level, edge, magicvalue)
 	if (not magicvalue) and level.entrance == 0 then magicvalue = 0 end
 	if (not magicvalue) then magicvalue = 1 end
 	]] --uncommenting this, and removing 'type(magicvalue) == "number"' from the next line, makes it so un-numbered ogmos will only show when level.entrance is 0 or 1
-	if type(magicvalue) == "number" and level.entrance ~= magicvalue then return nil end
+	if type(magicvalue) == "number" and level.entrance.number ~= magicvalue then return nil end
 	local gost = options["gost"]
 	if not gost then level.playeramt = level.playeramt + 1 end
 	if edge and not gost then

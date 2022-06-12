@@ -1,4 +1,4 @@
-launcher = class:new()
+launcher = object:new()
 
 launcher.quads = {
 	["normal_inactive"] =		quad(     0,   0,  16, 16, 160, 48),

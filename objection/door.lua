@@ -1,4 +1,4 @@
-door = class:new()
+door = object:new()
 
 function door.editordraw(x, y, options)
 	love.graphics.draw(graphics.load("door"), x, y)

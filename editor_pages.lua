@@ -13,6 +13,7 @@ editor_pages = {
 editor_tags_pages = {
 	[1] = {
 		{"spawn1", "variant1", "nomoveuntilcollide", "preservecareen"},
-		{"edgeup", "edgenone", "invisible", "fake"}
+		{"edgeup", "edgenone", "invisible", "fake"},
+		{"camerafocus","preservejumpstate","preservevmom", "faceup"}
 	}
 }

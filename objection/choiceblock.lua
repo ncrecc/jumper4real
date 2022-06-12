@@ -1,4 +1,4 @@
-choiceblock = class:new()
+choiceblock = object:new()
 
 choiceblock.quads = {
 	["solid"] = love.graphics.newQuad(0, 0, 16, 16, 32, 16),

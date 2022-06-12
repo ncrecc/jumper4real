@@ -4,3 +4,5 @@ function correctnewlines (str)
 	newstr = string.gsub(newstr, "\r", "\n")
 	return newstr
 end
+
+string.correctnewlines = correctnewlines

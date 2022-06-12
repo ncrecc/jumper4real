@@ -93,8 +93,8 @@ menu_substates = {
 				name = "sfx: ",
 				vartoggle = "playsfx",
 				tooltip = "Play sound effects?",
-				action = function() --this might look nonsensical but note that if vartoggle is defined, then the corresponding variable gets toggled in settings, *then* if action is defined it runs action
-					if settings["playsfx"] then
+				action = function()
+					if settings["playsfx"] then --this might look nonsensical but note that if vartoggle is defined, then the corresponding variable gets toggled in settings, *then* if action is defined it runs action
 						audio.changesfxvolume(1)
 					else
 						audio.changesfxvolume(0)

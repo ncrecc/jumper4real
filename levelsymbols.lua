@@ -33,6 +33,7 @@ levelsymbols = {
 	},
 	["M "] = {
 		name = "Ogmo",
+		hasogmo = true,
 		categories = {"mobs"},
 		order = 5,
 		tiles = {},

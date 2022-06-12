@@ -11,7 +11,10 @@ editor = {
 	currenttagspage = 1,
 	pages = {}, --gets contents of editor_pages on each editor begin (except when returning from testing)
 	tags_pages = {},
+	symbolmap = nil,
 	currentsymbolmap = nil,
+	tagmap = false,
+	dotagchecksweep = false,
 	maptileheight = 0,
 	maptilewidth = 0,
 	background = "#341160",
@@ -35,6 +38,12 @@ editor = {
 	mapview_y = 0,
 	mapview_width = 32,
 	mapview_height = 32,
+	
+	tag_draw_x_offsets = {0, 8, 0, 8, 4},
+	tag_draw_y_offsets = {0, 0, 8, 8, 4},
+	tag_draw_alpha = 0.666,
+	tag_draw_alpha_default =  0.666,
+	tag_draw_alpha_tagsselected = 1,
 	
 	scrollVert_HoldMoveDelayResetToLong = 10, --frames
 	scrollVert_HoldMoveDelayResetToShort = 5,
@@ -82,12 +91,12 @@ editor = {
 		["r"] = "rectangle",
 		["t"] = "fillrectangle",
 		["f"] = "fill",
-		["m"] = "tags",
+		["g"] = "tags",
 	},
 	tooltipScale = 0.75,
 	tooltip = nil,
 	hoveredelement = nil,
-	dodebugprint = false
+	dodebugprint = false,
 }
 editor.textfields = {
 	--textfield:setup(256, 528, 160, 16, "saveload", "currentpath", "The level that should be saved to with Ctrl+S, or loaded with Ctrl+L.")
@@ -106,7 +115,7 @@ local tooltips = { --thank you again to titku for writing (most of) these. i swe
 	["eyedropper"] = "Eyedropper: Retrieve the tile at the spot you click on. Hotkey: E",
 	["rectangle"] = "Rectangle: Efficiently draw a rectangular outline. Hotkey: R",
 	["fillrectangle"] = "Filled rectangle: Efficiently draw a filled rectangle. Hotkey: T",
-	["tags"] = "tags: use this to place \"tags\" like spawn numbers. hotkey: M"
+	["tags"] = "tags: use this to place \"tags\" like spawn numbers. hotkey: G"
 }
 
 for i, v in ipairs(editor.tools) do
@@ -126,149 +135,153 @@ for i, v in ipairs(editor.tools) do
 	))
 end
 
-function editor.loadLevel(levelfile)
-	--[[for i=1, #game.loadedobjects do
-		for ii=1, #game.loadedobjects[i] do
-			game.loadedobjects[i][ii]:obliterate()
+function editor.packTagmap(tagmap)
+	local currentruns = {}
+	local runmap = {}
+	local e = {} --empty
+	
+	local function clear(t)
+		for k,v in pairs(t) do
+			currentruns[k] = nil
 		end
-	end]]
-	--collectgarbage()
-	--levelfile = love.filesystem.read(levelfilename)
-	if levelfile == nil then print "hey your level file ain't jack shit" end
-	--print("levelsets/" .. levelfilename .. ".txt")
+	end
 	
-	--print(levelfile)
-	
-	--initial parsing (e.g. sections)
-	--witness kept saying i was "applying for the fucking iso" for not just using plain seperators instead of using the header/content thing
-	local phase = nil
-	local subphase = nil
-	
-	levelfile = correctnewlines(levelfile)
-	levelfile = split(levelfile, "\n")
-	
-	local newcomments = {}
-	local newsymbolmaps = {}
-	local newtagmaps = {}
-	local newexits = {}
-	local newmusic = ""
-	local newoptions = {}
-	local newbackground = ""
-	local newhints = {}
-	local y_tiled = 0
-	local maplength = nil
-	local symbolmapisempty = true
-	
-	for i, row in ipairs(levelfile) do
-		local justsetphase = false
-		if string.sub(row, 1, 3) == "===" and string.sub(row, -3, -1) == "===" then
-			if phase == "MAP" and symbolmapisempty then
-				print("uh oh, layer " .. subphase .. " was empty")
-				newsymbolmaps[subphase].isempty = true
-			end
-			local phasedata = split(string.sub(row, 4, -4), ":")
-			phase, subphase = phasedata[1], phasedata[2]
-			if tonumber(subphase) ~= nil then subphase = tonumber(subphase) end
-			y_tiled = 0
-			justsetphase = true
-			symbolmapisempty = true
-		elseif not phase then
-			table.insert(newcomments, row)
-		end
-		--writes padding the beginning of each non-header row with | fixes the problem of === in user input potentially screwing things up. here adding | is optional to ensure... trivial backward-compatibility
-		if phase and string.sub(row, 1, 1) == "|" then row = string.sub(row, 2, -1) end
-		if not justsetphase then
-			if phase == "MAP" then
-				if subphase == nil then subphase = 1 end
-				if newsymbolmaps[subphase] == nil then newsymbolmaps[subphase] = {} end
-				
-				if maplength == nil then maplength = #row
-				elseif maplength ~= #row then print("mate this row length is inconsistent... subphase: " .. subphase .. ", map length: " .. maplength .. " row length: " .. #row .. ", row (following line):\n" .. row .. "|end") end
-				
-				--map parsing
-				y_tiled = y_tiled + 1
-				
-				local splitrow = nwidesplit(row, "", 2)
-				if symbolmapisempty then
-					for ii=1, #splitrow do
-						if splitrow[ii] ~= "  " then
-							symbolmapisempty = false
+	local function terminateruns(t, t2, y)
+		for k,v in pairs(t) do
+			local run = v
+			run.kind = k
+			local startingx = run.x
+			local merged_into_above_run = false
+			if y > 1 then
+				local aboveruns = runmap[y - 1][startingx]
+				if aboveruns then
+					for _,aboverun in ipairs(aboveruns) do
+						if aboverun.kind == run.kind and aboverun.width == run.width then
+							aboverun.height = aboverun.height + 1
+							merged_into_above_run = true
 							break
 						end
 					end
 				end
-				table.insert(newsymbolmaps[subphase], splitrow)
-			elseif phase == "EXITS" then
-				table.insert(newexits, row)
-			elseif phase == "MUSIC" then
-				newmusic = row
-			elseif phase == "OPTIONS" then
-				table.insert(newoptions, row)
-			elseif phase == "BACKGROUND" then
-				newbackground = row
-			elseif phase == "HINTS" then
-				table.insert(newhints, row)
+			end
+			if not merged_into_above_run then
+				print("run at " .. tostring(y) .. "," .. tostring(startingx))
+				local runs = runmap[y][startingx] --multiple runs can start from the same position
+				if not runs then runmap[y][startingx] = {}; runs = runmap[y][startingx]; end
+				runs[#runs + 1] = run
+				print(run)
+				print(runmap[y][startingx], runmap[y][startingx][#runmap[y][startingx]])
+			end
+			t[k] = nil
+			t2[k] = nil
+		end
+	end
+	
+	--for each row, we generate horizontal "runs" and merge them into any identical runs in the above row. this is how we generate the rectangles that are used in the level format
+	for y=1, #tagmap do
+		runmap[y] = {}
+		if next(currentruns) then print("currentruns isn't empty!") end
+		for x=1, #tagmap[y] do
+			runmap[y][x] = false
+			local tags = tagmap[y][x] or e
+			local missing = {}
+			for k,v in pairs(currentruns) do
+				missing[k] = v
+			end
+			for _,tag in ipairs(tags) do
+				if not currentruns[tag] then
+					currentruns[tag] = {width = 0, height = 1, ["x"] = x}
+				end
+				currentruns[tag].width = currentruns[tag].width + 1
+				missing[tag] = nil
+			end
+			terminateruns(missing, currentruns, y)
+		end
+		terminateruns(currentruns, currentruns, y)
+	end
+	
+	local returnarray = {}
+	
+	for y=1, #runmap do
+		for x=1, #runmap[y] do
+			if runmap[y][x] then print(runmap[y][x], #runmap[y][x]) end
+			if runmap[y][x] and #runmap[y][x] > 0 then
+				print("found anything")
+				local runs = runmap[y][x]
+				--stabilization
+				table.sort(runs, function(a, b) return a.kind < b.kind or a.width < b.width or a.height < b.height end)
+				for i,v in ipairs(runs) do
+					returnarray[#returnarray + 1] = "|" .. v.kind .. ":" .. x .. "," .. y .. "-" .. x + v.width .. "," .. y + v.height
+				end
 			end
 		end
 	end
 	
-	if newbackground == "" then newbackground = editor.background end
-	return newcomments, newsymbolmaps, newexits, newmusic, newoptions, newbackground, newhints
+	return returnarray
 end
 
 function editor.packLevel(dontconcat)
-	--levelfile = "" --previously "dontconcat" was "splitme" and instead of adding things to a table it did levelfile = levelfile .. something .. "\n" which pil told me is really inefficient due to how much memory gets moved around with creation of new strings
+	--levelfile = "" --previously "dontconcat" was "splitme" and instead of adding things to a table it did levelfile = levelfile .. something .. "\n" which pil told me is really inefficient due to how much memory gets moved around with creation of new strings. i take all my lua advice from public image ltd
 	levelfile = {}
-	for i=1, #editor.comments do
-		levelfile[#levelfile + 1] = editor.comments[i]
-		--levelfile = levelfile .. editor.comments[i] .. "\n"
+	local function append(s)
+		levelfile[#levelfile + 1] = s
+	end
+	if #editor.level.comments > 0 then
+		append("===COMMENTS===")
+		for i=1, #editor.level.comments do
+			append("|" .. editor.level.comments[i])
+		end
 	end
 	local firstmap = true
-	for i=1, #editor.symbolmaps do
-		if not editor.symbolmaps[i].isempty then
-			levelfile[#levelfile + 1] = "===MAP:" .. i .. "==="
-			for y=1, #editor.symbolmaps[i] do
+	for i=1, #editor.level.symbolmaps do
+		if not editor.level.symbolmaps[i].isempty then
+			append("===MAP:" .. i .. "===")
+			for y=1, #editor.level.symbolmaps[i] do
 				local row = {"|"}
-				for x=1, #editor.symbolmaps[i][y] do
+				for x=1, #editor.level.symbolmaps[i][y] do
 					--this part also involved string concatting. not as serious here but with super big maps might cause noticeable delay?
-					row[#row + 1] = editor.symbolmaps[i][y][x]
+					row[#row + 1] = editor.level.symbolmaps[i][y][x]
 				end
-				levelfile[#levelfile + 1] = table.concat(row)
+				append(table.concat(row))
+			end
+			if editor.level.tagmaps[i] then
+				append(">tag")
+				local tag_lines = editor.packTagmap(editor.level.tagmaps[i])
+				print(#tag_lines)
+				for _,v in ipairs(tag_lines) do append(v) end
 			end
 		end
 	end
-	if #editor.exits > 0 then
-		levelfile[#levelfile + 1] = "===EXITS==="
-		for i=1, #editor.exits do
-			levelfile[#levelfile + 1] = "|" .. editor.exits[i]
+	if #editor.level.exits > 0 then
+		append("===EXITS===")
+		for i=1, #editor.level.exits do
+			append("|" .. editor.level.exits[i])
 		end
 	end
-	if editor.music then
-		levelfile[#levelfile + 1] = "===MUSIC==="
-		levelfile[#levelfile + 1] = "|" .. editor.music
+	if editor.level.music then
+		append("===MUSIC===")
+		append("|" .. editor.level.music)
 	end
-	if #editor.options > 0 then
-		levelfile[#levelfile + 1] = "===OPTIONS==="
-		for i=1, #editor.options do
-			if editor.options[i] ~= "" then levelfile[#levelfile + 1] = "|" .. editor.options[i] end
+	if #editor.level.options > 0 then
+		append("===OPTIONS===")
+		for i=1, #editor.level.options do
+			if editor.level.options[i] ~= "" then append("|" .. editor.level.options[i]) end
 		end
 	end
-	if editor.background then
-		levelfile[#levelfile + 1] = "===BACKGROUND==="
-		levelfile[#levelfile + 1] = "|" .. editor.background
+	if editor.level.background then
+		append("===BACKGROUND===")
+		append("|" .. editor.level.background)
 	
 	end
-	if #editor.hints > 0 then
-		levelfile[#levelfile + 1] = "===HINTS===\n"
-		for i=1, #editor.hints do
-			levelfile[#levelfile + 1] = "|" .. editor.hints[i]
+	if #editor.level.hints > 0 then
+		append("===HINTS===\n")
+		for i=1, #editor.level.hints do
+			append("|" .. editor.level.hints[i])
 		end
 	end
 	if not dontconcat then return table.concat(levelfile, "\n")
 	else return levelfile end
 end
-
-editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(love.filesystem.read("defaultlevel.txt"))
 
 
 
@@ -285,31 +298,49 @@ function editor.makeEmptySymbolMap(w, h)
 	return newmap
 end
 
-function editor.handleLoadedLevel()
+function editor.makeEmptyTagMap(w, h)
+	local newmap = {}
+	for i=1, h do
+		local newrow = {}
+		for ii=1, w do
+			newrow[ii] = false
+		end
+		newmap[i] = newrow
+	end
+	return newmap
+end
+
+function editor.loadLevel(data, notapath)
+	if notapath then
+		editor.level = level:new(data)
+	else
+		editor.level = level:new(love.filesystem.read(data))
+	end
 	local firstnonemptysymbolmap = nil
 	local emptysymbolmaps = {}
 	for i=1, editor.visiblesymbolmaps do
-		if not editor.symbolmaps[i] then
+		if not editor.level.symbolmaps[i] then
 			table.insert(emptysymbolmaps, i)
-		elseif editor.symbolmaps[i] and not editor.symbolmaps[i].isempty then
+		elseif editor.level.symbolmaps[i] and not editor.level.symbolmaps[i].isempty then
 			if not firstnonemptysymbolmap then firstnonemptysymbolmap = i end
-			if editor.maptileheight < #editor.symbolmaps[i] then editor.maptileheight = #editor.symbolmaps[i] end
-			if editor.symbolmaps[i][1] and editor.maptilewidth < #editor.symbolmaps[i][1] then editor.maptilewidth = #editor.symbolmaps[i][1] end
+			if editor.maptileheight < #editor.level.symbolmaps[i] then editor.maptileheight = #editor.level.symbolmaps[i] end
+			if editor.level.symbolmaps[i][1] and editor.maptilewidth < #editor.level.symbolmaps[i][1] then editor.maptilewidth = #editor.level.symbolmaps[i][1] end
 		end
 	end
 	print("detected maptilewidth: " .. editor.maptilewidth)
 	print("detected maptileheight: " .. editor.maptileheight)
 	for i=1, #emptysymbolmaps do
-		editor.symbolmaps[emptysymbolmaps[i]] = editor.makeEmptySymbolMap(editor.maptilewidth, editor.maptileheight)
+		editor.level.symbolmaps[emptysymbolmaps[i]] = editor.makeEmptySymbolMap(editor.maptilewidth, editor.maptileheight)
 	end
 	
 	if firstnonemptysymbolmap == nil then firstnonemptysymbolmap = 1; print("all symbol maps were empty!"); end
 	
 	editor.currentsymbolmap = editor.defaultsymbolmap
-	editor.symbolmap = editor.symbolmaps[editor.currentsymbolmap]
+	editor.symbolmap = editor.level.symbolmaps[editor.currentsymbolmap]
+	editor.tagmap = editor.level.tagmaps[editor.currentsymbolmap]
 end
 
-editor.handleLoadedLevel()
+editor.loadLevel("defaultlevel.txt")
 
 local numberquads = {}
 
@@ -318,8 +349,8 @@ for i=1, 99 do
 end
 
 for i=1, editor.visiblesymbolmaps do
-	if not editor.symbolmaps[i] then
-		editor.symbolmaps[i] = editor.makeEmptySymbolMap(editor.maptilewidth, editor.maptileheight)
+	if not editor.level.symbolmaps[i] then
+		editor.level.symbolmaps[i] = editor.makeEmptySymbolMap(editor.maptilewidth, editor.maptileheight)
 	end
 	table.insert(editor.buttons, button:setup(
 		528 + (16 * ((i - 1) % 3)),
@@ -329,7 +360,7 @@ for i=1, editor.visiblesymbolmaps do
 		numberquads[i],
 		function(self) editor.currentsymbolmap = i end,
 		function(self)
-			if editor.symbolmaps[i].isempty then
+			if editor.level.symbolmaps[i].isempty then
 				self.iconrgba[4] = 0.5
 			else
 				self.iconrgba[4] = 1
@@ -338,7 +369,12 @@ for i=1, editor.visiblesymbolmaps do
 				self.depressed = true
 			else self.depressed = false end
 		end,
-		"Click to make Layer " .. i .. " the active layer."
+		"Click to make Layer " .. i .. " the active layer.",
+		function(self)
+			if editor.level.tagmaps[i] then
+				love.graphics.draw(graphics.load("ui/layer_contains_tag"), self.x, self.y)
+			end
+		end
 	))
 end
 
@@ -365,7 +401,6 @@ function editor.begin()
 		audio.playsong("groove")
 	end
 	editor.returningfromgame = false
-	editor.levelpackedfortesting = nil
 end
 
 function editor.checkemptymap()
@@ -382,7 +417,69 @@ function editor.checkemptymap()
 	else editor.symbolmap.isempty = false end
 end
 
-function getSymbolTooltip(symbol)
+function editor.checkemptytagmap()
+	if editor.tagmap then
+		local thismapempty = true
+		for y_tiled=1, #editor.symbolmap do
+			for x_tiled=1, #editor.symbolmap[y_tiled] do
+				if editor.tagmap[y_tiled][x_tiled] then
+					thismapempty = false
+					break
+				end
+			end
+		end
+		if thismapempty then
+			editor.tagmap = false
+			editor.level.tagmaps[editor.currentsymbolmap] = false
+		end
+	end
+end
+
+function editor.removeWrongTags(x1, y1, x2, y2)
+	if editor.tagmap then
+		local tagremoved = false
+		if not x2 then x2 = x1 end
+		if not y2 then y2 = y1 end
+		if x1 > x2 then x1, x2 = x2, x1 end
+		if y1 > y2 then y1, y2 = y2, y1 end
+		for y_tiled=y1, y2 do
+			for x_tiled=x1, x2 do
+				if editor.tagmap[y_tiled][x_tiled] then
+					if editor.symbolmap[y_tiled][x_tiled] == "  " then
+						editor.tagmap[y_tiled][x_tiled] = false
+						tagremoved = true
+					else
+						local symbol = editor.symbolmap[y_tiled][x_tiled]
+						local i = 1
+						while true do
+							i = i + 1
+							if i > #editor.tagmap[y_tiled][x_tiled] then break end
+							local tag = editor.tagmap[y_tiled][x_tiled][i]
+							if
+								tags[tag].kind ~= "any" and (
+									(tags[tag].kind == "object" and #levelsymbols[symbol].objects == 0) or
+									(tags[tag].kind == "ogmo" and not levelsymbols[symbol].hasogmo) or
+									(tags[tag].kind == "tile" and #levelsymbols[symbol].tiles == 0)
+								)
+							then
+								table.remove(editor.tagmap[y_tiled][x_tiled], i)
+								i = i - 1
+								if #editor.tagmap[y_tiled][x_tiled] == 0 then
+									editor.tagmap[y_tiled][x_tiled] = false
+									tagremoved = true
+									break
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		if tagremoved then editor.checkemptytagmap() end
+	end
+end
+
+function editor.getSymbolTooltip(symbol)
 	local tooltip = ""
 	if symbol.name ~= "Ogmo" then tooltip = symbol.name .. ": " .. symbol.tooltip
 	else tooltip = ogmos[game.ogmoskin].name .. ": " .. ogmos[game.ogmoskin].description end
@@ -463,6 +560,11 @@ function editor.trySymbolRotate(dir)
 end
 
 function editor.update(dt)
+	if editor.currenttool == "tags" then
+		editor.tag_draw_alpha = editor.tag_draw_alpha_tagsselected
+	else
+		editor.tag_draw_alpha = editor.tag_draw_alpha_default
+	end
 	--scrolling holdkey logic... for two dimensions
 	--vertical
 	if editor.scrollVert_HoldMoveDelayCurrent > 0 then
@@ -528,7 +630,8 @@ function editor.update(dt)
 	end
 	
 	
-	editor.symbolmap = editor.symbolmaps[editor.currentsymbolmap]
+	editor.symbolmap = editor.level.symbolmaps[editor.currentsymbolmap]
+	editor.tagmap = editor.level.tagmaps[editor.currentsymbolmap]
 	editor.hoveredelement = nil
 	editor.tooltip = nil
 	local xpos, ypos = love.mouse.getPosition()
@@ -545,18 +648,62 @@ function editor.update(dt)
 				elseif love.mouse.isDown(3) then tile = editor.mmbtile
 				else tile = editor.lmbtile end
 				
+				local tag = editor.currenttag
+				if love.mouse.isDown(2) then tag = false end
+				
 				
 				
 				if editor.currenttool == "pencil" then
 					editor.symbolmap[ypos_tiled][xpos_tiled] = tile
 					if tile ~= "  " then editor.symbolmap.isempty = false
 					else editor.checkemptymap() end
+					editor.removeWrongTags(xpos_tiled, ypos_tiled)
+				
+				
+				elseif editor.currenttool == "tags" then
+					if not (tag and editor.symbolmap[ypos_tiled][xpos_tiled] == "  ") then --can't tag empty space
+						local istagright = true
+						local symbol = editor.symbolmap[ypos_tiled][xpos_tiled]
+						if tag and tags[tag].kind ~= "any" and (
+							(tags[tag].kind == "object" and #levelsymbols[symbol].objects == 0) or
+							(tags[tag].kind == "ogmo" and not levelsymbols[symbol].hasogmo) or
+							(tags[tag].kind == "tile" and #levelsymbols[symbol].tiles == 0)
+						) then istagright = false end
+						if istagright then
+							if tag and not editor.tagmap then
+								editor.tagmap = editor.makeEmptyTagMap(editor.maptilewidth, editor.maptileheight)
+								editor.level.tagmaps[editor.currentsymbolmap] = editor.tagmap
+								editor.tagmap[ypos_tiled][xpos_tiled] = {tag}
+							else
+								if editor.tagmap then
+									if not tag then
+										editor.tagmap[ypos_tiled][xpos_tiled] = false
+										editor.checkemptytagmap()
+									else
+										if not editor.tagmap[ypos_tiled][xpos_tiled] then
+											editor.tagmap[ypos_tiled][xpos_tiled] = {tag}
+										else
+											local tagnotin = true
+											for i,v in ipairs(editor.tagmap[ypos_tiled][xpos_tiled]) do
+												if v == tag then
+													tagnotin = false
+													break
+												end
+											end
+											if tagnotin then table.insert(editor.tagmap[ypos_tiled][xpos_tiled], tag) end
+										end
+									end
+								end
+							end
+						end
+					end
 				
 				
 				elseif editor.currenttool == "fill" then
 					local step = 0
 					local replacetile = mousedtile
 					if tile ~= replacetile then
+						editor.dotagchecksweep = true
 						editor.symbolmap[ypos_tiled][xpos_tiled] = "fill"
 						while step < 1000 do
 							local nofillsdone = true
@@ -592,7 +739,7 @@ function editor.update(dt)
 				end
 			end
 			if editor.currenttool == "eyedropper" then
-				editor.tooltip = getSymbolTooltip(levelsymbols[mousedtile])
+				editor.tooltip = editor.getSymbolTooltip(levelsymbols[mousedtile])
 				if love.mouse.isDown(1, 2, 3) then editor.eyedropperused = true end
 				if love.mouse.isDown(1) then editor.lmbtile = mousedtile
 				elseif love.mouse.isDown(2) then editor.rmbtile = mousedtile
@@ -606,7 +753,7 @@ function editor.update(dt)
 		if editor.pages[editor.currentpage][ypos_tiled_fortilebar] ~= nil then
 			if editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar] ~= nil then
 				local symbol = editor.pages[editor.currentpage][ypos_tiled_fortilebar][xpos_tiled_fortilebar]
-				editor.tooltip = getSymbolTooltip(levelsymbols[symbol])
+				editor.tooltip = editor.getSymbolTooltip(levelsymbols[symbol])
 				if love.mouse.isDown(1) then editor.lmbtile = symbol end
 				if love.mouse.isDown(2) then editor.rmbtile = symbol end
 				if love.mouse.isDown(3) then editor.mmbtile = symbol end
@@ -639,6 +786,7 @@ function editor.keypressed(key)
 	end
 	if editor.focusedfield == nil then
 		if (love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl")) and (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and key == "s" then --previously just ctrl+s but i got paranoid about accidentally saving the current map as something instead of loading since there's no "really save?" prompt
+			if not editor.level.name then editor.level.name = editor.currentlevel end
 			local fulllevelpath = "ext_levelsets/" .. editor.currentlevelset .. "/levels/" .. editor.currentlevel .. ".txt"
 			local levelfile = editor.packLevel(false)
 			--love.filesystem.write("boink.txt",levelfile)
@@ -668,17 +816,16 @@ function editor.keypressed(key)
 			local fulllevelpath = "ext_levelsets/" .. currentlevelset .. "/levels/" .. editor.currentlevel .. ".txt"
 			if love.filesystem.getInfo(fulllevelpath) == nil then print("mate you're not loading shit: " .. fulllevelpath .. " is invalid")
 			else
-				editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(love.filesystem.read(fulllevelpath))
-				editor.handleLoadedLevel()
+				--editor.level.comments, editor.level.symbolmaps, editor.level.exits, editor.level.music, editor.level.options, editor.level.background, editor.level.hints = editor.loadLevel(love.filesystem.read(fulllevelpath))
+				editor.loadLevel(fulllevelpath)
 				print("loaded level " .. fulllevelpath .. "!")
 			end
 		elseif key == "tab" then
-			editor.levelpackedfortesting = editor.packLevel(true)
+			editor.level:gamify(0) --0 refers to entrance number
 			editor.transitioningtogame = true
 			game.editormode = true
-			local testlevel = level:new(editor.levelpackedfortesting, nil, 0)
-			game.templatelevels[1] = testlevel
-			game.activelevels[1] = testlevel:clone()
+			game.templatelevels[1] = editor.level
+			game.activelevels[1] = editor.level:clone()
 			statemachine.setstate("game")
 		elseif key == "," then
 			editor.trySymbolRotate("back")
@@ -773,6 +920,7 @@ function editor.mousereleased(x, y, button)
 						if tile ~= "  " then editor.symbolmap.isempty = false
 						else editor.checkemptymap() end
 					end
+					editor.removeWrongTags(origmousex_tiled, origmousey_tiled, mousex_tiled, mousey_tiled)
 				end
 			end
 		end
@@ -790,9 +938,9 @@ end
 
 function editor.filedropped(file)
 	file:open("r")
-	editor.comments, editor.symbolmaps, editor.exits, editor.music, editor.options, editor.background, editor.hints = editor.loadLevel(file:read())
+	editor.loadLevel(file:read(), true)
 	file:close()
-	editor.handleLoadedLevel()
+	if not editor.level.name then editor.level.name = justfilename(file:getFilename()) end --"If the file object originated from the love.filedropped callback, the filename will be the full platform-dependent file path."
 	print("loaded dropped-in level " .. file:getFilename() .. "!")
 end
 
@@ -844,18 +992,32 @@ function editor.drawSymbol(realsymbol, x, y)
 	end
 end
 
+function editor.drawTags(tagarray, x, y)
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(r, g, b, editor.tag_draw_alpha)
+	local tags_img = graphics.load("ui/tags")
+	for i, tag in ipairs(tagarray) do
+		local i2 = i
+		if i2 > 5 then i2 = 5 end
+		local x2 = x + editor.tag_draw_x_offsets[i2]
+		local y2 = y + editor.tag_draw_y_offsets[i2]
+		love.graphics.draw(tags_img, tags[tag].quad, x2, y2)
+	end
+	love.graphics.setColor(r, g, b, a)
+end
+
 function editor.draw()
 	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(hextocolor(editor.background))
+	love.graphics.setColor(hextocolor(editor.level.background))
 	love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 	love.graphics.setColor(0.2, 0.2, 0.2)
 	love.graphics.rectangle("fill", 0, 512, 512 + editor.addedwidth, 512)
 	love.graphics.rectangle("fill", 512, 0, editor.addedwidth, 512)
 	love.graphics.setColor(r, g, b, a)
 	local symbolmapstodraw
-	if editor.viewallsymbolmaps then symbolmapstodraw = editor.symbolmaps
+	if editor.viewallsymbolmaps then symbolmapstodraw = editor.level.symbolmaps
 	else symbolmapstodraw = {editor.symbolmap} end
-	for _, symbolmap in ipairs(symbolmapstodraw) do
+	for i, symbolmap in ipairs(symbolmapstodraw) do
 		local onscreeny_tiled = 0
 		for y_tiled = editor.mapview_y + 1, editor.mapview_y + editor.mapview_height do
 			onscreeny_tiled = onscreeny_tiled + 1
@@ -866,6 +1028,10 @@ function editor.draw()
 					onscreenx_tiled = onscreenx_tiled + 1
 					if symbolmap[y_tiled][x_tiled] then
 						editor.drawSymbol(symbolmap[y_tiled][x_tiled], (onscreenx_tiled - 1) * tilesize, (onscreeny_tiled - 1) * tilesize)
+						--if this is the currently selected layer, also draw tags
+						if (not editor.viewallsymbolmaps or i == editor.currentsymbolmap) and editor.tagmap and editor.tagmap[y_tiled] and editor.tagmap[y_tiled][x_tiled] then
+							editor.drawTags(editor.tagmap[y_tiled][x_tiled], (onscreenx_tiled - 1) * tilesize, (onscreeny_tiled - 1) * tilesize)
+						end
 						if love.mouse.isDown(1, 2, 3) and editor.originalmousepress ~= nil and (editor.currenttool == "rectangle" or editor.currenttool == "fillrectangle") then
 							local mousex, mousey = love.mouse.getPosition()
 							local mousex_tiled = 1 + math.floor(mousex / tilesize)

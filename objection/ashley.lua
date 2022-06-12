@@ -1,4 +1,4 @@
-ashley = class:new()
+ashley = mob:new()
 
 function ashley:init(x, y, red, fast)
 	self.type = "ashley"

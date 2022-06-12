@@ -31,6 +31,7 @@ end
 function graphics.load(imagename)
 	local new = false
 	if graphics.loadedimages[imagename] == nil then
+		if not love.filesystem.getInfo("imagery/" .. imagename .. ".png") then return false end
 		new = true
 		graphics.loadedimages[imagename] = love.graphics.newImage("imagery/" .. imagename .. ".png")
 	end
@@ -55,6 +56,8 @@ end
 function graphics.loadimagedata(imagename)
 	local new = false
 	if graphics.loadedimagedata[imagename] == nil then
+		if not love.filesystem.getInfo("imagery/" .. imagename .. ".png") then return false end
+		new = true
 		graphics.loadedimagedata[imagename] = love.image.newImageData("imagery/" .. imagename .. ".png")
 	end
 	return graphics.loadedimagedata[imagename], new

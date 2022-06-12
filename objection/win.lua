@@ -1,4 +1,4 @@
-win = class:new()
+win = obj:new()
 
 function win:editorimg()
 	return graphics.load("win")

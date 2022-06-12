@@ -1,4 +1,4 @@
-jumparrow = class:new()
+jumparrow = object:new()
 
 jumparrow.automask = true
 

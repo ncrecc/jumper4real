@@ -58,8 +58,8 @@ function game.loadLevel(filepath, entrance)
 	local leveldata = love.filesystem.read(filepath..".txt")
 	if leveldata == nil then print "hey your level file ain't jack shit"; leveldata = love.filesystem.read("void.txt"); end
 	leveldata = correctnewlines(leveldata)
-	leveldata = split(leveldata, "\n")
-	local baselevel = level:new(leveldata, filepath, entrance)
+	local baselevel = level:new(leveldata)
+	baselevel:gamify(entrance, true)
 	--check for diane levels... later
 	game.templatelevels = {}
 	game.activelevels = {}

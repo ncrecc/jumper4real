@@ -1,4 +1,4 @@
-hintblock = class:new()
+hintblock = object:new()
 
 function hintblock.editordraw(x, y, options)
 	love.graphics.draw(graphics.load("hintblock"), x, y)
